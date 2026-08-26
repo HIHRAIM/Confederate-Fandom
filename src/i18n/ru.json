@@ -1,0 +1,94 @@
+{
+  "help": {
+    "status": "verified",
+    "text": "TeleRadiopedia-Bot держит на заглавной вики три последних поста новостного канала.\n\n/status — что сейчас в трёх новостях\n/update — обновить новости сразу; со словом «force» ещё и перезалить картинки\n/backfill — прочитать публичное превью канала: добрать посты, вышедшие до добавления бота, и подхватить их правки; со словом «all» обновить вообще все посты\n/help — эта справка"
+  },
+  "not_admin": {
+    "status": "verified",
+    "text": "Команда только для администраторов бота."
+  },
+  "status": {
+    "status": "verified",
+    "text": "Канал-источник: {channel}\nВики: {wiki}\nСохранено постов: {posts}\nНовости обновляются в {schedule} каждого часа.\nПоследний проход: {last_pass}{error}\n\n{slots}"
+  },
+  "status_error": {
+    "status": "verified",
+    "text": "\nПоследняя ошибка: {error}"
+  },
+  "status_never": {
+    "status": "verified",
+    "text": "ещё не было"
+  },
+  "status_slot": {
+    "status": "verified",
+    "text": "{slot}. {date} — {link}\n    {text}"
+  },
+  "status_slot_empty": {
+    "status": "verified",
+    "text": "{slot}. пусто"
+  },
+  "update_started": {
+    "status": "verified",
+    "text": "Обновляю новости…"
+  },
+  "update_done": {
+    "status": "verified",
+    "text": "Готово: правок шаблонов — {templates}, загрузок файлов — {files}."
+  },
+  "update_unchanged": {
+    "status": "verified",
+    "text": "Менять нечего: на вики уже то же, что в канале."
+  },
+  "update_partial": {
+    "status": "verified",
+    "text": "Удалось собрать только {have} новостей из {count} — в канале не хватает постов с текстом. Остальные места оставлены как были."
+  },
+  "update_no_news": {
+    "status": "verified",
+    "text": "В канале ещё нет ни одного поста с текстом, публиковать нечего."
+  },
+  "update_failed": {
+    "status": "verified",
+    "text": "Проход не удался: {error}"
+  },
+  "update_busy": {
+    "status": "verified",
+    "text": "Проход уже идёт."
+  },
+  "service_started": {
+    "status": "verified",
+    "text": "TeleRadiopedia-Bot запущен."
+  },
+  "service_stopped": {
+    "status": "verified",
+    "text": "TeleRadiopedia-Bot остановлен."
+  },
+  "service_publish_done": {
+    "status": "verified",
+    "text": "Новости обновлены: шаблонов — {templates}, файлов — {files}. Самая свежая: {link}"
+  },
+  "service_publish_failed": {
+    "status": "verified",
+    "text": "Проход по новостям не удался: {error}"
+  },
+  "service_channel_failed": {
+    "status": "verified",
+    "text": "Не удалось прочитать канал-источник {channel}: {error}"
+  },
+  "backfill_started": {
+    "status": "verified",
+    "text": "Читаю публичное превью канала…"
+  },
+  "backfill_done": {
+    "status": "verified",
+    "text": "Из превью: добавлено {added}, обновлено {updated} — из {seen}."
+  },
+  "backfill_failed": {
+    "status": "verified",
+    "text": "Не удалось прочитать превью: {error}"
+  },
+  "backfill_no_channel": {
+    "status": "verified",
+    "text": "У канала-источника нет публичного @имени, а значит и превью, которое можно прочитать."
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "help": {
+    "status": "unverified",
+    "text": "TeleRadiopedia-Bot тримає на головній вікі три останні дописи новинного каналу.\n\n/status — що зараз у трьох новинах\n/update — оновити новини негайно; зі словом «force» ще й перезавантажити картинки\n/backfill — прочитати публічне превʼю каналу: дібрати дописи, що вийшли до додавання бота, і підхопити їхні правки; зі словом «all» оновити геть усі дописи\n/help — ця довідка"
+  },
+  "not_admin": {
+    "status": "unverified",
+    "text": "Команда лише для адміністраторів бота."
+  },
+  "status": {
+    "status": "unverified",
+    "text": "Канал-джерело: {channel}\nВікі: {wiki}\nЗбережено дописів: {posts}\nНовини оновлюються о {schedule} щогодини.\nОстанній прохід: {last_pass}{error}\n\n{slots}"
+  },
+  "status_error": {
+    "status": "unverified",
+    "text": "\nОстання помилка: {error}"
+  },
+  "status_never": {
+    "status": "unverified",
+    "text": "ще не було"
+  },
+  "status_slot": {
+    "status": "unverified",
+    "text": "{slot}. {date} — {link}\n    {text}"
+  },
+  "status_slot_empty": {
+    "status": "unverified",
+    "text": "{slot}. порожньо"
+  },
+  "update_started": {
+    "status": "unverified",
+    "text": "Оновлюю новини…"
+  },
+  "update_done": {
+    "status": "unverified",
+    "text": "Готово: правок шаблонів — {templates}, завантажень файлів — {files}."
+  },
+  "update_unchanged": {
+    "status": "unverified",
+    "text": "Змінювати нічого: на вікі вже те саме, що в каналі."
+  },
+  "update_partial": {
+    "status": "unverified",
+    "text": "Вдалося зібрати лише {have} новин із {count} — у каналі бракує дописів із текстом. Решту місць залишено як були."
+  },
+  "update_no_news": {
+    "status": "unverified",
+    "text": "У каналі ще немає жодного допису з текстом, публікувати нічого."
+  },
+  "update_failed": {
+    "status": "unverified",
+    "text": "Прохід не вдався: {error}"
+  },
+  "update_busy": {
+    "status": "unverified",
+    "text": "Прохід уже триває."
+  },
+  "service_started": {
+    "status": "unverified",
+    "text": "TeleRadiopedia-Bot запущено."
+  },
+  "service_stopped": {
+    "status": "unverified",
+    "text": "TeleRadiopedia-Bot зупинено."
+  },
+  "service_publish_done": {
+    "status": "unverified",
+    "text": "Новини оновлено: шаблонів — {templates}, файлів — {files}. Найсвіжіша: {link}"
+  },
+  "service_publish_failed": {
+    "status": "unverified",
+    "text": "Прохід по новинах не вдався: {error}"
+  },
+  "service_channel_failed": {
+    "status": "unverified",
+    "text": "Не вдалося прочитати канал-джерело {channel}: {error}"
+  },
+  "backfill_started": {
+    "status": "unverified",
+    "text": "Читаю публічне превʼю каналу…"
+  },
+  "backfill_done": {
+    "status": "unverified",
+    "text": "З превʼю: додано {added}, оновлено {updated} — із {seen}."
+  },
+  "backfill_failed": {
+    "status": "unverified",
+    "text": "Не вдалося прочитати превʼю: {error}"
+  },
+  "backfill_no_channel": {
+    "status": "unverified",
+    "text": "У каналу-джерела немає публічного @імені, а отже й превʼю, яке можна прочитати."
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "help": {
+    "status": "unverified",
+    "text": "TeleRadiopedia-Bot utrzymuje na stronie głównej wiki trzy najnowsze wpisy kanału informacyjnego.\n\n/status — co znajduje się teraz w trzech wiadomościach\n/update — odśwież wiadomości natychmiast; ze słowem „force” także ponownie wyślij obrazki\n/backfill — odczytaj publiczny podgląd kanału: odzyskaj wpisy sprzed dodania bota i wychwyć ich zmiany; ze słowem „all” odśwież wszystkie wpisy\n/help — ta pomoc"
+  },
+  "not_admin": {
+    "status": "unverified",
+    "text": "Polecenie tylko dla administratorów bota."
+  },
+  "status": {
+    "status": "unverified",
+    "text": "Kanał źródłowy: {channel}\nWiki: {wiki}\nZapisane wpisy: {posts}\nWiadomości są odświeżane o {schedule} każdej godziny.\nOstatni przebieg: {last_pass}{error}\n\n{slots}"
+  },
+  "status_error": {
+    "status": "unverified",
+    "text": "\nOstatni błąd: {error}"
+  },
+  "status_never": {
+    "status": "unverified",
+    "text": "jeszcze nie było"
+  },
+  "status_slot": {
+    "status": "unverified",
+    "text": "{slot}. {date} — {link}\n    {text}"
+  },
+  "status_slot_empty": {
+    "status": "unverified",
+    "text": "{slot}. pusto"
+  },
+  "update_started": {
+    "status": "unverified",
+    "text": "Odświeżam wiadomości…"
+  },
+  "update_done": {
+    "status": "unverified",
+    "text": "Gotowe: edycji szablonów — {templates}, wysłanych plików — {files}."
+  },
+  "update_unchanged": {
+    "status": "unverified",
+    "text": "Nie ma czego zmieniać: na wiki jest już to samo, co na kanale."
+  },
+  "update_partial": {
+    "status": "unverified",
+    "text": "Udało się zbudować tylko {have} z {count} wiadomości — na kanale brakuje wpisów z tekstem. Pozostałe miejsca zostały bez zmian."
+  },
+  "update_no_news": {
+    "status": "unverified",
+    "text": "Na kanale nie ma jeszcze żadnego wpisu z tekstem, nie ma czego publikować."
+  },
+  "update_failed": {
+    "status": "unverified",
+    "text": "Przebieg się nie udał: {error}"
+  },
+  "update_busy": {
+    "status": "unverified",
+    "text": "Przebieg już trwa."
+  },
+  "service_started": {
+    "status": "unverified",
+    "text": "TeleRadiopedia-Bot uruchomiony."
+  },
+  "service_stopped": {
+    "status": "unverified",
+    "text": "TeleRadiopedia-Bot zatrzymany."
+  },
+  "service_publish_done": {
+    "status": "unverified",
+    "text": "Wiadomości odświeżone: szablonów — {templates}, plików — {files}. Najnowsza: {link}"
+  },
+  "service_publish_failed": {
+    "status": "unverified",
+    "text": "Przebieg wiadomości się nie udał: {error}"
+  },
+  "service_channel_failed": {
+    "status": "unverified",
+    "text": "Nie udało się odczytać kanału źródłowego {channel}: {error}"
+  },
+  "backfill_started": {
+    "status": "unverified",
+    "text": "Czytam publiczny podgląd kanału…"
+  },
+  "backfill_done": {
+    "status": "unverified",
+    "text": "Z podglądu: dodano {added}, odświeżono {updated} — z {seen}."
+  },
+  "backfill_failed": {
+    "status": "unverified",
+    "text": "Nie udało się odczytać podglądu: {error}"
+  },
+  "backfill_no_channel": {
+    "status": "unverified",
+    "text": "Kanał źródłowy nie ma publicznej nazwy @, a więc i podglądu do odczytania."
+  }
+}

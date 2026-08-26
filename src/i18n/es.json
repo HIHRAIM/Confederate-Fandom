@@ -1,0 +1,94 @@
+{
+  "help": {
+    "status": "unverified",
+    "text": "TeleRadiopedia-Bot mantiene en la portada de la wiki las tres últimas publicaciones del canal de noticias.\n\n/status — qué contienen ahora las tres noticias\n/update — actualizar las noticias ahora mismo; con la palabra «force» también vuelve a subir las imágenes\n/backfill — lee la vista previa pública del canal: recupera las publicaciones anteriores a la incorporación del bot y recoge sus ediciones; con la palabra «all» actualiza todas las publicaciones\n/help — esta ayuda"
+  },
+  "not_admin": {
+    "status": "unverified",
+    "text": "Esta orden es solo para los administradores del bot."
+  },
+  "status": {
+    "status": "unverified",
+    "text": "Canal de origen: {channel}\nWiki: {wiki}\nPublicaciones guardadas: {posts}\nLas noticias se actualizan a los {schedule} de cada hora.\nÚltima pasada: {last_pass}{error}\n\n{slots}"
+  },
+  "status_error": {
+    "status": "unverified",
+    "text": "\nÚltimo error: {error}"
+  },
+  "status_never": {
+    "status": "unverified",
+    "text": "todavía ninguna"
+  },
+  "status_slot": {
+    "status": "unverified",
+    "text": "{slot}. {date} — {link}\n    {text}"
+  },
+  "status_slot_empty": {
+    "status": "unverified",
+    "text": "{slot}. vacío"
+  },
+  "update_started": {
+    "status": "unverified",
+    "text": "Actualizando las noticias…"
+  },
+  "update_done": {
+    "status": "unverified",
+    "text": "Listo: plantillas editadas — {templates}, archivos subidos — {files}."
+  },
+  "update_unchanged": {
+    "status": "unverified",
+    "text": "No hay nada que cambiar: la wiki ya dice lo mismo que el canal."
+  },
+  "update_partial": {
+    "status": "unverified",
+    "text": "Solo se han podido componer {have} de {count} noticias: al canal le faltan publicaciones con texto. Los demás huecos se han dejado como estaban."
+  },
+  "update_no_news": {
+    "status": "unverified",
+    "text": "En el canal todavía no hay ninguna publicación con texto, no hay nada que publicar."
+  },
+  "update_failed": {
+    "status": "unverified",
+    "text": "La pasada ha fallado: {error}"
+  },
+  "update_busy": {
+    "status": "unverified",
+    "text": "Ya hay una pasada en curso."
+  },
+  "service_started": {
+    "status": "unverified",
+    "text": "TeleRadiopedia-Bot iniciado."
+  },
+  "service_stopped": {
+    "status": "unverified",
+    "text": "TeleRadiopedia-Bot detenido."
+  },
+  "service_publish_done": {
+    "status": "unverified",
+    "text": "Noticias actualizadas: plantillas — {templates}, archivos — {files}. La más reciente: {link}"
+  },
+  "service_publish_failed": {
+    "status": "unverified",
+    "text": "La pasada de noticias ha fallado: {error}"
+  },
+  "service_channel_failed": {
+    "status": "unverified",
+    "text": "No se ha podido leer el canal de origen {channel}: {error}"
+  },
+  "backfill_started": {
+    "status": "unverified",
+    "text": "Leyendo la vista previa pública del canal…"
+  },
+  "backfill_done": {
+    "status": "unverified",
+    "text": "De la vista previa: {added} añadidas, {updated} actualizadas, de {seen}."
+  },
+  "backfill_failed": {
+    "status": "unverified",
+    "text": "No se ha podido leer la vista previa: {error}"
+  },
+  "backfill_no_channel": {
+    "status": "unverified",
+    "text": "El canal de origen no tiene un @nombre público, así que no hay vista previa que leer."
+  }
+}

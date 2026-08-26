@@ -1,0 +1,94 @@
+{
+  "help": {
+    "status": "verified",
+    "text": "TeleRadiopedia-Bot keeps the three latest posts of the news channel on the wiki's main page.\n\n/status — what the three news slots hold right now\n/update — rebuild the news at once; add \"force\" to re-upload the pictures too\n/backfill — read the channel's public preview: recover the posts published before the bot was added and pick up their edits; add \"all\" to refresh every post\n/help — this text"
+  },
+  "not_admin": {
+    "status": "verified",
+    "text": "This command is for the bot's administrators only."
+  },
+  "status": {
+    "status": "verified",
+    "text": "Source channel: {channel}\nWiki: {wiki}\nStored posts: {posts}\nThe news are rebuilt at {schedule} past every hour.\nLast pass: {last_pass}{error}\n\n{slots}"
+  },
+  "status_error": {
+    "status": "verified",
+    "text": "\nLast error: {error}"
+  },
+  "status_never": {
+    "status": "verified",
+    "text": "never yet"
+  },
+  "status_slot": {
+    "status": "verified",
+    "text": "{slot}. {date} — {link}\n    {text}"
+  },
+  "status_slot_empty": {
+    "status": "verified",
+    "text": "{slot}. empty"
+  },
+  "update_started": {
+    "status": "verified",
+    "text": "Rebuilding the news…"
+  },
+  "update_done": {
+    "status": "verified",
+    "text": "Done: templates edited — {templates}, files uploaded — {files}."
+  },
+  "update_unchanged": {
+    "status": "verified",
+    "text": "Nothing to change: the wiki already says what the channel does."
+  },
+  "update_partial": {
+    "status": "verified",
+    "text": "Only {have} of {count} news could be built — there are not enough posts with text in the channel. The remaining slots were left as they were."
+  },
+  "update_no_news": {
+    "status": "verified",
+    "text": "There is no post with text in the channel yet, so there is nothing to publish."
+  },
+  "update_failed": {
+    "status": "verified",
+    "text": "The pass failed: {error}"
+  },
+  "update_busy": {
+    "status": "verified",
+    "text": "A pass is already running."
+  },
+  "service_started": {
+    "status": "verified",
+    "text": "TeleRadiopedia-Bot started."
+  },
+  "service_stopped": {
+    "status": "verified",
+    "text": "TeleRadiopedia-Bot stopped."
+  },
+  "service_publish_done": {
+    "status": "verified",
+    "text": "News updated: templates — {templates}, files — {files}. Newest: {link}"
+  },
+  "service_publish_failed": {
+    "status": "verified",
+    "text": "The news pass failed: {error}"
+  },
+  "service_channel_failed": {
+    "status": "verified",
+    "text": "The source channel {channel} could not be read: {error}"
+  },
+  "backfill_started": {
+    "status": "verified",
+    "text": "Reading the channel's public preview…"
+  },
+  "backfill_done": {
+    "status": "verified",
+    "text": "From the preview: {added} post(s) added, {updated} refreshed, out of {seen}."
+  },
+  "backfill_failed": {
+    "status": "verified",
+    "text": "The preview could not be read: {error}"
+  },
+  "backfill_no_channel": {
+    "status": "verified",
+    "text": "The source channel has no public @name, so it has no preview to read."
+  }
+}
