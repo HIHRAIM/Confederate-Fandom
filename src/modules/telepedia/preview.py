@@ -37,7 +37,7 @@ import aiohttp
 
 import richtext
 
-logger = logging.getLogger("tprp.preview")
+logger = logging.getLogger("fd.preview")
 
 PREVIEW_URL = "https://t.me/s/{channel}"
 

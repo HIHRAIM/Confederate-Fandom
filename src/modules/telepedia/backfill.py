@@ -23,10 +23,10 @@ out of that rule when a post really was edited while the bot was away.
 import logging
 
 import db
-import preview
+from modules.telepedia import preview
 from config import PREVIEW_LIMIT
 
-logger = logging.getLogger("tprp.backfill")
+logger = logging.getLogger("fd.backfill")
 
 async def sync(chat_id, channel, limit=None, refresh_all=False):
     """Read the preview and bring the stored posts in line with it.
@@ -51,6 +51,8 @@ async def sync(chat_id, channel, limit=None, refresh_all=False):
             added += 1
             continue
         if not refresh_all and row["source"] != "preview":
+            if _fill_forward(chat_id, row, post):
+                updated += 1
             continue
         if not _differs(row, post):
             continue
@@ -79,6 +81,24 @@ def _store(chat_id, post):
         photo_file_id=url,
         photo_unique_id=preview.picture_key(url) if url else None,
     )
+
+def _fill_forward(chat_id, row, post):
+    """Give a post the bot heard itself the repost line it never got; True
+    when something was filled in.
+
+    The rule above protects what the Bot API said — but it cannot protect what
+    it never stored. A post collected before the bot knew about reposts has
+    both columns empty, and no edit will ever arrive to fill them, so its card
+    would be missing the line for as long as it stays on the main page. The
+    preview knows where that post came from, and saying so is not rewriting
+    anything: an empty field is filled, a filled one is left alone."""
+    if row["forward_type"] or not post["forward_type"]:
+        return False
+    db.set_post_forward(chat_id, row["message_id"],
+                        post["forward_type"], post["forward_name"])
+    logger.info("post %s: filled in the repost line from the preview (%s)",
+                row["message_id"], post["forward_name"])
+    return True
 
 def _differs(row, post):
     """Whether the preview now says something else than the stored row does.

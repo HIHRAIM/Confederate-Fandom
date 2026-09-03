@@ -1,11 +1,795 @@
 {
+  "add_where_before_categories": {
+    "status": "verified",
+    "text": "before the categories (after the article's text)"
+  },
+  "add_where_bottom": {
+    "status": "verified",
+    "text": "at the very bottom of the page"
+  },
+  "add_where_top": {
+    "status": "verified",
+    "text": "at the very top of the page"
+  },
+  "backfill_done": {
+    "status": "verified",
+    "text": "From the preview: {added} post(s) added, {updated} refreshed, out of {seen}."
+  },
+  "backfill_failed": {
+    "status": "verified",
+    "text": "The preview could not be read: {error}"
+  },
+  "backfill_no_channel": {
+    "status": "verified",
+    "text": "The source channel has no public @name, so it has no preview to read."
+  },
+  "backfill_started": {
+    "status": "verified",
+    "text": "Reading the channel's public preview…"
+  },
+  "category_action_add": {
+    "status": "verified",
+    "text": "add it"
+  },
+  "category_action_move": {
+    "status": "verified",
+    "text": "move it to another"
+  },
+  "category_action_remove": {
+    "status": "verified",
+    "text": "remove it"
+  },
+  "dialog_bad_choice": {
+    "status": "verified",
+    "text": "There is no such number in the list. Answer with one of them."
+  },
+  "dialog_bad_flags": {
+    "status": "verified",
+    "text": "Numbers separated by spaces, or «0» for none of them."
+  },
+  "dialog_bad_time": {
+    "status": "verified",
+    "text": "The time is written «HH:MM», for example «20:00»."
+  },
+  "dialog_bad_value": {
+    "status": "verified",
+    "text": "That answer was not understood. Try again."
+  },
+  "dialog_failed": {
+    "status": "verified",
+    "text": "The dialog broke down: {error}"
+  },
+  "dialog_flags": {
+    "status": "verified",
+    "text": "Anything extra — mark what you want, numbers separated by spaces:"
+  },
+  "dialog_flags_hint": {
+    "status": "verified",
+    "text": "«0» means none of them."
+  },
+  "dialog_limit": {
+    "status": "verified",
+    "text": "At most how many pages? «0» or «-» means all of them."
+  },
+  "dialog_namespaces": {
+    "status": "verified",
+    "text": "In which namespaces? Numbers separated by commas; «0» or «-» means articles only."
+  },
+  "dialog_opened": {
+    "status": "verified",
+    "text": "The dialog is open in this channel — answer with ordinary messages."
+  },
+  "dialog_pick_mechanics": {
+    "status": "verified",
+    "text": "Which ones? Numbers or codes, separated by spaces."
+  },
+  "dialog_source": {
+    "status": "verified",
+    "text": "Where do the pages come from?"
+  },
+  "dialog_source_argument_backlinks": {
+    "status": "verified",
+    "text": "Which page should they link to?"
+  },
+  "dialog_source_argument_category": {
+    "status": "verified",
+    "text": "Which category? Without the «Category:» prefix."
+  },
+  "dialog_source_argument_fileuse": {
+    "status": "verified",
+    "text": "Which file? Without the «File:» prefix."
+  },
+  "dialog_source_argument_links": {
+    "status": "verified",
+    "text": "Which page's links should be taken?"
+  },
+  "dialog_source_argument_prefix": {
+    "status": "verified",
+    "text": "What does the title start with?"
+  },
+  "dialog_source_argument_search": {
+    "status": "verified",
+    "text": "What to search the wiki for?"
+  },
+  "dialog_source_argument_template": {
+    "status": "verified",
+    "text": "Which template? Without the «Template:» prefix."
+  },
+  "dialog_source_argument_titles": {
+    "status": "verified",
+    "text": "Send the titles — one per line, or separated by «|»."
+  },
+  "dialog_summary": {
+    "status": "verified",
+    "text": "The edit summary? A single dash «-» and the bot writes what it actually did."
+  },
+  "dialog_when": {
+    "status": "verified",
+    "text": "Once, or regularly?"
+  },
+  "dialog_when_minutes": {
+    "status": "verified",
+    "text": "At which minutes past the hour? For example «0,30»."
+  },
+  "dialog_when_time": {
+    "status": "verified",
+    "text": "At what time? For example «20:00»."
+  },
+  "dialog_when_weekdays": {
+    "status": "verified",
+    "text": "On which weekdays? Numbers separated by commas, 0 is Monday. For example «0,3»."
+  },
+  "dialog_wiki": {
+    "status": "verified",
+    "text": "Which wiki? The whole domain, for example telepedia.fandom.com/ru — a link to an article works too."
+  },
+  "dialog_wiki_checking": {
+    "status": "verified",
+    "text": "Checking the wiki…"
+  },
+  "dialog_wiki_failed": {
+    "status": "verified",
+    "text": "That wiki could not be opened: {error}"
+  },
+  "flag_add_again": {
+    "status": "verified",
+    "text": "add it even when that text is already on the page"
+  },
+  "flag_add_newline": {
+    "status": "verified",
+    "text": "separate it with a blank line"
+  },
+  "flag_cosmetic": {
+    "status": "verified",
+    "text": "cosmetics: spaces, headings, blank lines"
+  },
+  "flag_delete_talk": {
+    "status": "verified",
+    "text": "the talk page as well"
+  },
+  "flag_extra_components": {
+    "status": "verified",
+    "text": "the debatable foreign components (веб-, топ- and the rest)"
+  },
+  "flag_fix_labels": {
+    "status": "verified",
+    "text": "correct the labels of links too, [[Target|label]]"
+  },
+  "flag_iw_no_propagate": {
+    "status": "verified",
+    "text": "do not collect links from the sister language versions"
+  },
+  "flag_iw_sort_only": {
+    "status": "verified",
+    "text": "only move them to the end and sort them, add nothing"
+  },
+  "flag_list_categories": {
+    "status": "verified",
+    "text": "the categories"
+  },
+  "flag_list_redirects": {
+    "status": "verified",
+    "text": "where a redirect points"
+  },
+  "flag_list_size": {
+    "status": "verified",
+    "text": "the size"
+  },
+  "flag_list_timestamp": {
+    "status": "verified",
+    "text": "the date of the last edit"
+  },
+  "flag_move_subpages": {
+    "status": "verified",
+    "text": "move the subpages too"
+  },
+  "flag_move_talk": {
+    "status": "verified",
+    "text": "move the talk page too"
+  },
+  "flag_no_redirect": {
+    "status": "verified",
+    "text": "leave no redirect behind (needs an administrator's right)"
+  },
+  "flag_no_typos": {
+    "status": "verified",
+    "text": "no typo list, orthography only"
+  },
+  "flag_nocase": {
+    "status": "verified",
+    "text": "ignore case"
+  },
+  "flag_piv_solid": {
+    "status": "verified",
+    "text": "split the solid «пів» (півгодини -> пів години)"
+  },
+  "flag_protect": {
+    "status": "verified",
+    "text": "leave links, templates, tables and file names alone"
+  },
+  "flag_punct_commas": {
+    "status": "verified",
+    "text": "commas before «но» and «зато» (and typography)"
+  },
+  "flag_punct_off": {
+    "status": "verified",
+    "text": "no punctuation at all"
+  },
+  "flag_punct_typo": {
+    "status": "verified",
+    "text": "typography: ellipses, doubled marks"
+  },
+  "flag_quotes": {
+    "status": "verified",
+    "text": "straight quotes into «guillemets» (risky with an odd number of them)"
+  },
+  "flag_regex": {
+    "status": "verified",
+    "text": "a regular expression (\\1, \\2 work in the replacement)"
+  },
+  "flag_rollback": {
+    "status": "verified",
+    "text": "by rollback (faster, needs the rollback right)"
+  },
+  "flag_skip_refs": {
+    "status": "verified",
+    "text": "leave <ref> footnotes alone"
+  },
+  "flag_template_list": {
+    "status": "verified",
+    "text": "the list of pages, not just the number"
+  },
+  "flag_template_redirects": {
+    "status": "verified",
+    "text": "count the redirects to the template too"
+  },
+  "flag_unlink_bold": {
+    "status": "verified",
+    "text": "make the words bold in place of the link"
+  },
+  "go_usage": {
+    "status": "verified",
+    "text": "How it works: /go <task number> runs it, /go <number> dry previews it without editing."
+  },
+  "graph_shape_dot": {
+    "status": "verified",
+    "text": "a .dot file for Graphviz"
+  },
+  "graph_shape_tree": {
+    "status": "verified",
+    "text": "an indented list"
+  },
   "help": {
     "status": "verified",
-    "text": "TeleRadiopedia-Bot keeps the three latest posts of the news channel on the wiki's main page.\n\n/status — what the three news slots hold right now\n/update — rebuild the news at once; add \"force\" to re-upload the pictures too\n/backfill — read the channel's public preview: recover the posts published before the bot was added and pick up their edits; add \"all\" to refresh every post\n/help — this text"
+    "text": "Confederate Fandom — a bot for Fandom wikis: news on the main pages, a nightly standardisation of names, and the scripts run on request.\n\nWiki work\n/tasks — what the bot can do, as a numbered list\n/run [numbers or codes] — set up a run; the bot asks which wiki, where the pages come from and what to do\n/go <number> — start a prepared task; /go <number> dry previews it without editing\n/jobs — what is running and how the last tasks ended\n/stop <number> — stop a task\n/schedule — the repeating runs; /schedule on|off|del <number>\n\nNews\n/status — what the three slots hold and when the last pass ran\n/update — rebuild the news now; with «force», the pictures too\n/backfill — read the channel's web preview; with «all», refresh what the bot heard itself as well\n\nAccess\n/wikiadmin — who is a wiki administrator; /wikiadmin <@name or ID> <Fandom account> appoints one\n/remwikiadmin <@name or ID> — remove one\n\nThe commands are for the bot's administrators; the wiki work is also for wiki administrators who hold rights on that wiki."
+  },
+  "jobs_active": {
+    "status": "verified",
+    "text": "\nTasks:"
+  },
+  "jobs_finished": {
+    "status": "verified",
+    "text": "{id} — {wiki} [{state}] {edited} edits, {failed} failures {error}"
+  },
+  "jobs_header": {
+    "status": "verified",
+    "text": "Running now: {running}\nWaiting: {waiting}"
+  },
+  "jobs_task": {
+    "status": "verified",
+    "text": "{id} — {wiki} [{state}] {mechanics}: {checked}/{total}, {edited} edits, {failed} failures"
+  },
+  "mech_addtext": {
+    "status": "verified",
+    "text": "Add text"
+  },
+  "mech_addtext_desc": {
+    "status": "verified",
+    "text": "add a block of text at the top, at the bottom or before the categories"
+  },
+  "mech_category": {
+    "status": "verified",
+    "text": "Categories"
+  },
+  "mech_category_desc": {
+    "status": "verified",
+    "text": "add, remove or move a category across pages"
+  },
+  "mech_category_graph": {
+    "status": "verified",
+    "text": "Category tree"
+  },
+  "mech_category_graph_desc": {
+    "status": "verified",
+    "text": "the tree of subcategories under one, as text or as a .dot file"
+  },
+  "mech_cosmetic": {
+    "status": "verified",
+    "text": "Cosmetic changes"
+  },
+  "mech_cosmetic_desc": {
+    "status": "verified",
+    "text": "spaces in headings, indents, blank lines, a dash instead of a hyphen"
+  },
+  "mech_delete": {
+    "status": "verified",
+    "text": "Delete pages"
+  },
+  "mech_delete_desc": {
+    "status": "verified",
+    "text": "delete a list of pages; this cannot be undone by editing"
+  },
+  "mech_delinker": {
+    "status": "verified",
+    "text": "Deleted files"
+  },
+  "mech_delinker_desc": {
+    "status": "verified",
+    "text": "take out of the articles the files that have already been deleted"
+  },
+  "mech_image": {
+    "status": "verified",
+    "text": "Files in articles"
+  },
+  "mech_image_desc": {
+    "status": "verified",
+    "text": "swap a file for another, or take it out of everywhere it is shown"
+  },
+  "mech_interwiki": {
+    "status": "verified",
+    "text": "Interlanguage links"
+  },
+  "mech_interwiki_desc": {
+    "status": "verified",
+    "text": "complete the links between the language versions, move them to the end and sort them"
+  },
+  "mech_listpages": {
+    "status": "verified",
+    "text": "List pages"
+  },
+  "mech_listpages_desc": {
+    "status": "verified",
+    "text": "write the page list to a file; changes nothing"
+  },
+  "mech_movepages": {
+    "status": "verified",
+    "text": "Move pages"
+  },
+  "mech_movepages_desc": {
+    "status": "verified",
+    "text": "rename pages by a rule: a prefix, a suffix or a regular expression"
+  },
+  "mech_pravopys_uk": {
+    "status": "verified",
+    "text": "Ukrainian orthography 2019"
+  },
+  "mech_pravopys_uk_desc": {
+    "status": "verified",
+    "text": "§126, §35 and §36 of the Ukrainian orthography, plus the typo list"
+  },
+  "mech_protect": {
+    "status": "verified",
+    "text": "Protect pages"
+  },
+  "mech_protect_desc": {
+    "status": "verified",
+    "text": "set or lift protection on editing, moving and re-uploading"
+  },
+  "mech_punct_ru": {
+    "status": "verified",
+    "text": "Punctuation (Russian)"
+  },
+  "mech_punct_ru_desc": {
+    "status": "verified",
+    "text": "spaces around marks, typography and the commas that are always required"
+  },
+  "mech_redirect": {
+    "status": "verified",
+    "text": "Redirects"
+  },
+  "mech_redirect_desc": {
+    "status": "verified",
+    "text": "fix double ones, point links straight at the target, find the broken ones"
+  },
+  "mech_replace": {
+    "status": "verified",
+    "text": "Replace text"
+  },
+  "mech_replace_desc": {
+    "status": "verified",
+    "text": "find and replace text or a regular expression across pages"
+  },
+  "mech_revertbot": {
+    "status": "verified",
+    "text": "Revert edits"
+  },
+  "mech_revertbot_desc": {
+    "status": "verified",
+    "text": "undo one account's run of edits at the top of the history"
+  },
+  "mech_templatecount": {
+    "status": "verified",
+    "text": "Template count"
+  },
+  "mech_templatecount_desc": {
+    "status": "verified",
+    "text": "how many pages use the templates, and the list of them if asked"
+  },
+  "mech_typos_ru": {
+    "status": "verified",
+    "text": "Spelling (Russian)"
+  },
+  "mech_typos_ru_desc": {
+    "status": "verified",
+    "text": "607 typo rules, punctuation and cosmetics; the summary says what was actually corrected"
+  },
+  "mech_unlink": {
+    "status": "verified",
+    "text": "Unlink a page"
+  },
+  "mech_unlink_desc": {
+    "status": "verified",
+    "text": "remove the links to a page and leave the words behind"
+  },
+  "move_mode_prefix_add": {
+    "status": "verified",
+    "text": "add at the start"
+  },
+  "move_mode_prefix_remove": {
+    "status": "verified",
+    "text": "remove from the start"
+  },
+  "move_mode_regex": {
+    "status": "verified",
+    "text": "by a regular expression"
+  },
+  "move_mode_suffix_add": {
+    "status": "verified",
+    "text": "add at the end"
+  },
+  "move_mode_suffix_remove": {
+    "status": "verified",
+    "text": "remove from the end"
   },
   "not_admin": {
     "status": "verified",
     "text": "This command is for the bot's administrators only."
+  },
+  "pageset_all": {
+    "status": "verified",
+    "text": "every page of the wiki"
+  },
+  "pageset_backlinks": {
+    "status": "verified",
+    "text": "the pages that link to one page"
+  },
+  "pageset_category": {
+    "status": "verified",
+    "text": "the pages of a category"
+  },
+  "pageset_fileuse": {
+    "status": "verified",
+    "text": "the pages that use a file"
+  },
+  "pageset_links": {
+    "status": "verified",
+    "text": "the pages one page links to"
+  },
+  "pageset_new": {
+    "status": "verified",
+    "text": "recently created pages"
+  },
+  "pageset_prefix": {
+    "status": "verified",
+    "text": "the pages whose title starts with"
+  },
+  "pageset_recent": {
+    "status": "verified",
+    "text": "recently changed pages"
+  },
+  "pageset_search": {
+    "status": "verified",
+    "text": "search results"
+  },
+  "pageset_template": {
+    "status": "verified",
+    "text": "the pages that use a template"
+  },
+  "pageset_titles": {
+    "status": "verified",
+    "text": "a list of titles I will send"
+  },
+  "param_add_flags": {
+    "status": "verified",
+    "text": "How to add it?"
+  },
+  "param_add_text": {
+    "status": "verified",
+    "text": "What text to add? Several lines are fine."
+  },
+  "param_add_where": {
+    "status": "verified",
+    "text": "Where to add it?"
+  },
+  "param_category_action": {
+    "status": "verified",
+    "text": "What to do with the category?"
+  },
+  "param_category_name": {
+    "status": "verified",
+    "text": "Which category? Without the «Category:» prefix."
+  },
+  "param_category_to": {
+    "status": "verified",
+    "text": "Move it to which category?"
+  },
+  "param_cosmetic_flags": {
+    "status": "verified",
+    "text": "What to keep the cosmetics away from?"
+  },
+  "param_delete_flags": {
+    "status": "verified",
+    "text": "What else to delete?"
+  },
+  "param_delinker_days": {
+    "status": "verified",
+    "text": "How many days of the deletion log to read?"
+  },
+  "param_find": {
+    "status": "verified",
+    "text": "What to look for? (Plain text, or a regular expression — switched on by a flag below.)"
+  },
+  "param_graph_depth": {
+    "status": "verified",
+    "text": "How many levels deep?"
+  },
+  "param_graph_root": {
+    "status": "verified",
+    "text": "Start from which category? Without the prefix."
+  },
+  "param_graph_shape": {
+    "status": "verified",
+    "text": "In what shape?"
+  },
+  "param_image_from": {
+    "status": "verified",
+    "text": "Which file to swap or remove? Without the «File:» prefix."
+  },
+  "param_image_to": {
+    "status": "verified",
+    "text": "Swap it for which file? A single dash «-» removes it altogether."
+  },
+  "param_interwiki_flags": {
+    "status": "verified",
+    "text": "How to handle the interlanguage links?"
+  },
+  "param_list_flags": {
+    "status": "verified",
+    "text": "What to write about each page?"
+  },
+  "param_move_argument": {
+    "status": "verified",
+    "text": "What exactly to add to, remove from or find in the title?"
+  },
+  "param_move_flags": {
+    "status": "verified",
+    "text": "What else should the move do?"
+  },
+  "param_move_mode": {
+    "status": "verified",
+    "text": "How should the title change?"
+  },
+  "param_move_to": {
+    "status": "verified",
+    "text": "Replace what was found in the title with what? \\1, \\2 work."
+  },
+  "param_pravopys_uk_flags": {
+    "status": "verified",
+    "text": "What else to do beside the orthography?"
+  },
+  "param_protect_expiry": {
+    "status": "verified",
+    "text": "For how long? «infinite» means for good."
+  },
+  "param_protect_level": {
+    "status": "verified",
+    "text": "Allow whom?"
+  },
+  "param_protect_what": {
+    "status": "verified",
+    "text": "Protect what?"
+  },
+  "param_punct_ru_flags": {
+    "status": "verified",
+    "text": "How far should the punctuation go?"
+  },
+  "param_redirect_mode": {
+    "status": "verified",
+    "text": "What to do with the redirects?"
+  },
+  "param_replace": {
+    "status": "verified",
+    "text": "Replace it with what? A single dash «-» deletes what was found."
+  },
+  "param_replace_flags": {
+    "status": "verified",
+    "text": "How to search?"
+  },
+  "param_revert_flags": {
+    "status": "verified",
+    "text": "How to undo them?"
+  },
+  "param_revert_user": {
+    "status": "verified",
+    "text": "Whose edits should be undone? The account name on the wiki."
+  },
+  "param_template_flags": {
+    "status": "verified",
+    "text": "What else is wanted?"
+  },
+  "param_templates": {
+    "status": "verified",
+    "text": "Which templates to count? Comma-separated, without «Template:»."
+  },
+  "param_typos_ru_flags": {
+    "status": "verified",
+    "text": "What else to do beside the typos?"
+  },
+  "param_unlink_flags": {
+    "status": "verified",
+    "text": "What to do with the link's words?"
+  },
+  "param_unlink_title": {
+    "status": "verified",
+    "text": "Which page should the links be taken off?"
+  },
+  "protect_level_all": {
+    "status": "verified",
+    "text": "everybody — that is, lift the protection"
+  },
+  "protect_level_autoconfirmed": {
+    "status": "verified",
+    "text": "autoconfirmed accounts"
+  },
+  "protect_level_sysop": {
+    "status": "verified",
+    "text": "administrators only (and content moderators)"
+  },
+  "protect_what_edit": {
+    "status": "verified",
+    "text": "editing"
+  },
+  "protect_what_move": {
+    "status": "verified",
+    "text": "moving"
+  },
+  "protect_what_upload": {
+    "status": "verified",
+    "text": "re-uploading the file (for files, this is the one that matters)"
+  },
+  "redirect_mode_broken": {
+    "status": "verified",
+    "text": "find the broken ones and write them into the report (edit nothing)"
+  },
+  "redirect_mode_double": {
+    "status": "verified",
+    "text": "fix the double ones (a redirect to a redirect)"
+  },
+  "redirect_mode_links": {
+    "status": "verified",
+    "text": "point links that go through a redirect straight at the target"
+  },
+  "run_unknown": {
+    "status": "verified",
+    "text": "No such mechanic: {what}. The full list is /tasks."
+  },
+  "schedule_created": {
+    "status": "verified",
+    "text": "Schedule {id} created: {wiki}, {mechanics}, {when}."
+  },
+  "schedule_daily": {
+    "status": "verified",
+    "text": "every day at {time}"
+  },
+  "schedule_deleted": {
+    "status": "verified",
+    "text": "Schedule {id} deleted."
+  },
+  "schedule_empty": {
+    "status": "verified",
+    "text": "There are no repeating runs."
+  },
+  "schedule_header": {
+    "status": "verified",
+    "text": "Repeating runs:"
+  },
+  "schedule_hourly": {
+    "status": "verified",
+    "text": "every hour at minutes {minutes}"
+  },
+  "schedule_line": {
+    "status": "verified",
+    "text": "{id} — {wiki}: {mechanics}, {when} [{state}]"
+  },
+  "schedule_off": {
+    "status": "verified",
+    "text": "Schedule {id} switched off."
+  },
+  "schedule_on": {
+    "status": "verified",
+    "text": "Schedule {id} switched on."
+  },
+  "schedule_state_off": {
+    "status": "verified",
+    "text": "off"
+  },
+  "schedule_state_on": {
+    "status": "verified",
+    "text": "on"
+  },
+  "schedule_unknown": {
+    "status": "verified",
+    "text": "There is no schedule {id}."
+  },
+  "schedule_usage": {
+    "status": "verified",
+    "text": "How it works: /schedule lists them, /schedule on|off|del <number>."
+  },
+  "schedule_weekly": {
+    "status": "verified",
+    "text": "on {days} at {time}"
+  },
+  "service_channel_failed": {
+    "status": "verified",
+    "text": "The source channel {channel} could not be read: {error}"
+  },
+  "service_publish_done": {
+    "status": "verified",
+    "text": "News updated: templates — {templates}, files — {files}. Newest: {link}"
+  },
+  "service_publish_failed": {
+    "status": "verified",
+    "text": "The news pass failed: {error}"
+  },
+  "service_species_done": {
+    "status": "verified",
+    "text": "Pokemon names: {checked} page(s) walked, {edited} corrected, {replaced} replacement(s), {failed} failure(s). Forms left for a human: {unknown}"
+  },
+  "service_species_failed": {
+    "status": "verified",
+    "text": "The walk over the Pokemon names failed: {error}"
+  },
+  "service_species_no_flag": {
+    "status": "verified",
+    "text": "The nightly walk over the Pokemon names was skipped: the account has no bot flag on {wiki}, and hundreds of unflagged edits would flood Recent changes. It needs the local bot group and the High-volume editing grant on the BotPassword."
+  },
+  "service_started": {
+    "status": "verified",
+    "text": "Confederate Fandom started."
+  },
+  "service_stopped": {
+    "status": "verified",
+    "text": "Confederate Fandom stopped."
   },
   "status": {
     "status": "verified",
@@ -19,6 +803,10 @@
     "status": "verified",
     "text": "never yet"
   },
+  "status_short": {
+    "status": "verified",
+    "text": "Source channel: {channel}\nNews wikis: {wiki}\nThe news are rebuilt at {schedule} past every hour.\nRunning now: {running}\nWaiting: {waiting}\nLast error: {error}"
+  },
   "status_slot": {
     "status": "verified",
     "text": "{slot}. {date} — {link}\n    {text}"
@@ -27,68 +815,164 @@
     "status": "verified",
     "text": "{slot}. empty"
   },
-  "update_started": {
+  "stop_done": {
     "status": "verified",
-    "text": "Rebuilding the news…"
+    "text": "Task {id} stopped. What is already written on the wiki stays written."
   },
-  "update_done": {
+  "stop_usage": {
     "status": "verified",
-    "text": "Done: templates edited — {templates}, files uploaded — {files}."
+    "text": "How it works: /stop <task number>."
   },
-  "update_unchanged": {
+  "task_by_schedule": {
     "status": "verified",
-    "text": "Nothing to change: the wiki already says what the channel does."
+    "text": " (by schedule {id})"
   },
-  "update_partial": {
+  "task_confirmed": {
     "status": "verified",
-    "text": "Only {have} of {count} news could be built — there are not enough posts with text in the channel. The remaining slots were left as they were."
+    "text": "Task {id} confirmed, starting it."
   },
-  "update_no_news": {
+  "task_created": {
     "status": "verified",
-    "text": "There is no post with text in the channel yet, so there is nothing to publish."
+    "text": "Task {id} created: {wiki}, mechanics — {mechanics}. Counting the pages…"
   },
-  "update_failed": {
+  "task_destructive": {
     "status": "verified",
-    "text": "The pass failed: {error}"
+    "text": "⚠ Some of this cannot be undone by editing: deletion, moving, protection, rollback."
+  },
+  "task_done": {
+    "status": "verified",
+    "text": "✔ Task {id} — {wiki}\nPages walked: {checked}, edits: {edited}, failed: {failed}\n{notes}"
+  },
+  "task_done_dry": {
+    "status": "verified",
+    "text": "✔ Task {id} — {wiki} (preview, nothing was written)\nPages walked: {checked}, would change: {edited}, failed: {failed}\n{notes}"
+  },
+  "task_failed": {
+    "status": "verified",
+    "text": "✖ Task {id} — {wiki} failed: {error}"
+  },
+  "task_not_waiting": {
+    "status": "verified",
+    "text": "Task {id} is «{state}» — there is nothing to confirm."
+  },
+  "task_plan_failed": {
+    "status": "verified",
+    "text": "✖ Task {id} could not be prepared: {error}"
+  },
+  "task_planned": {
+    "status": "verified",
+    "text": "Task {id} — {wiki}\nMechanics: {mechanics}\nPages: {pages}\n{sample}\n{warning}\n{notes}\n\nRun it: /go {id}\nSee first what it would do, writing nothing: /go {id} dry"
+  },
+  "task_progress": {
+    "status": "verified",
+    "text": "… task {id} — {wiki}: {checked} of {total} done, {edited} edits"
+  },
+  "task_refused": {
+    "status": "verified",
+    "text": "✖ Task {id} — {wiki}: {reason}"
+  },
+  "task_started": {
+    "status": "verified",
+    "text": "▶ Task {id} — {wiki}\nMechanics: {mechanics}\nPages: {pages}\nAsked by: {who}{how}"
+  },
+  "task_stopped": {
+    "status": "verified",
+    "text": "⏹ Task {id} — {wiki} stopped. {checked} walked, {edited} edits."
+  },
+  "task_unknown": {
+    "status": "verified",
+    "text": "There is no task {id}."
+  },
+  "tasks_destructive_mark": {
+    "status": "verified",
+    "text": "⚠ cannot be undone by editing"
+  },
+  "tasks_header": {
+    "status": "verified",
+    "text": "What the bot can be told to do. Answer with a number or a code — several, separated by spaces, are fine."
   },
   "update_busy": {
     "status": "verified",
     "text": "A pass is already running."
   },
-  "service_started": {
+  "update_done": {
     "status": "verified",
-    "text": "TeleRadiopedia-Bot started."
+    "text": "Done: templates edited — {templates}, files uploaded — {files}."
   },
-  "service_stopped": {
+  "update_failed": {
     "status": "verified",
-    "text": "TeleRadiopedia-Bot stopped."
+    "text": "The pass failed: {error}"
   },
-  "service_publish_done": {
+  "update_no_news": {
     "status": "verified",
-    "text": "News updated: templates — {templates}, files — {files}. Newest: {link}"
+    "text": "There is no post with text in the channel yet, so there is nothing to publish."
   },
-  "service_publish_failed": {
+  "update_partial": {
     "status": "verified",
-    "text": "The news pass failed: {error}"
+    "text": "Only {have} of {count} news could be built — there are not enough posts with text in the channel. The remaining slots were left as they were."
   },
-  "service_channel_failed": {
+  "update_started": {
     "status": "verified",
-    "text": "The source channel {channel} could not be read: {error}"
+    "text": "Rebuilding the news…"
   },
-  "backfill_started": {
+  "update_unchanged": {
     "status": "verified",
-    "text": "Reading the channel's public preview…"
+    "text": "Nothing to change: the wiki already says what the channel does."
   },
-  "backfill_done": {
+  "weekday_names": {
     "status": "verified",
-    "text": "From the preview: {added} post(s) added, {updated} refreshed, out of {seen}."
+    "text": "Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday"
   },
-  "backfill_failed": {
+  "when_daily": {
     "status": "verified",
-    "text": "The preview could not be read: {error}"
+    "text": "every day, at the given time"
   },
-  "backfill_no_channel": {
+  "when_hourly": {
     "status": "verified",
-    "text": "The source channel has no public @name, so it has no preview to read."
+    "text": "every hour, at the given minutes"
+  },
+  "when_once": {
+    "status": "verified",
+    "text": "once"
+  },
+  "when_weekly": {
+    "status": "verified",
+    "text": "on the given weekdays, at the given time"
+  },
+  "wikiadmin_added": {
+    "status": "verified",
+    "text": "{name} ({user_id}) is now a wiki administrator, Fandom account {wiki_user}. Their rights on each wiki are checked before every run."
+  },
+  "wikiadmin_empty": {
+    "status": "verified",
+    "text": "No wiki administrators have been appointed yet."
+  },
+  "wikiadmin_header": {
+    "status": "verified",
+    "text": "Wiki administrators:"
+  },
+  "wikiadmin_line": {
+    "status": "verified",
+    "text": "{platform}: {name} ({user_id}) — on Fandom: {wiki_user}"
+  },
+  "wikiadmin_no_user": {
+    "status": "verified",
+    "text": "It is not clear who is meant. Reply to their message, or give an @name or a numeric ID."
+  },
+  "wikiadmin_no_wiki_user": {
+    "status": "verified",
+    "text": "Their Fandom account name is needed too — that is what the bot checks on the wiki."
+  },
+  "wikiadmin_not_found": {
+    "status": "verified",
+    "text": "{user_id} was not a wiki administrator anyway."
+  },
+  "wikiadmin_removed": {
+    "status": "verified",
+    "text": "{user_id} is no longer a wiki administrator."
+  },
+  "wikiadmin_updated": {
+    "status": "verified",
+    "text": "{name} ({user_id}) now has the Fandom account {wiki_user}."
   }
 }

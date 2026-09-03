@@ -24,7 +24,7 @@ import tempfile
 
 from wiki.site import get_site
 
-logger = logging.getLogger("tprp.wiki")
+logger = logging.getLogger("fd.wiki")
 
 UPLOAD_IGNORED_WARNINGS = (
     "exists",

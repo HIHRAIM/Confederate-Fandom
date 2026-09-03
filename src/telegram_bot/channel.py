@@ -26,7 +26,7 @@ import db
 import richtext
 from telegram_bot.client import is_source_chat, router
 
-logger = logging.getLogger("tprp.channel")
+logger = logging.getLogger("fd.channel")
 
 def _photo_of(message):
     """(file_id, file_unique_id) of the post's picture, or (None, None).

@@ -1,11 +1,795 @@
 {
+  "add_where_before_categories": {
+    "status": "unverified",
+    "text": "antes de las categorías (después del texto del artículo)"
+  },
+  "add_where_bottom": {
+    "status": "unverified",
+    "text": "al final de la página"
+  },
+  "add_where_top": {
+    "status": "unverified",
+    "text": "al principio de la página"
+  },
+  "backfill_done": {
+    "status": "unverified",
+    "text": "De la vista previa: {added} añadidas, {updated} actualizadas, de {seen}."
+  },
+  "backfill_failed": {
+    "status": "unverified",
+    "text": "No se ha podido leer la vista previa: {error}"
+  },
+  "backfill_no_channel": {
+    "status": "unverified",
+    "text": "El canal de origen no tiene un @nombre público, así que no hay vista previa que leer."
+  },
+  "backfill_started": {
+    "status": "unverified",
+    "text": "Leyendo la vista previa pública del canal…"
+  },
+  "category_action_add": {
+    "status": "unverified",
+    "text": "añadir"
+  },
+  "category_action_move": {
+    "status": "unverified",
+    "text": "cambiar por otra"
+  },
+  "category_action_remove": {
+    "status": "unverified",
+    "text": "quitar"
+  },
+  "dialog_bad_choice": {
+    "status": "unverified",
+    "text": "No hay tal número en la lista. Responda con uno de ellos."
+  },
+  "dialog_bad_flags": {
+    "status": "unverified",
+    "text": "Números separados por espacios, o «0» para ninguno."
+  },
+  "dialog_bad_time": {
+    "status": "unverified",
+    "text": "La hora se escribe «HH:MM», por ejemplo «20:00»."
+  },
+  "dialog_bad_value": {
+    "status": "unverified",
+    "text": "No entendí la respuesta. Inténtelo de nuevo."
+  },
+  "dialog_failed": {
+    "status": "unverified",
+    "text": "El diálogo falló: {error}"
+  },
+  "dialog_flags": {
+    "status": "unverified",
+    "text": "Extras — marque lo que quiera, números separados por espacios:"
+  },
+  "dialog_flags_hint": {
+    "status": "unverified",
+    "text": "«0» significa ninguno."
+  },
+  "dialog_limit": {
+    "status": "unverified",
+    "text": "¿Como máximo cuántas páginas? «0» o «-» significa todas."
+  },
+  "dialog_namespaces": {
+    "status": "unverified",
+    "text": "¿En qué espacios de nombres? Números separados por comas; «0» o «-» son solo artículos."
+  },
+  "dialog_opened": {
+    "status": "unverified",
+    "text": "El diálogo está abierto en este canal — responda con mensajes normales."
+  },
+  "dialog_pick_mechanics": {
+    "status": "unverified",
+    "text": "¿Cuáles? Números o códigos, separados por espacios."
+  },
+  "dialog_source": {
+    "status": "unverified",
+    "text": "¿De dónde salen las páginas?"
+  },
+  "dialog_source_argument_backlinks": {
+    "status": "unverified",
+    "text": "¿A qué página deben enlazar?"
+  },
+  "dialog_source_argument_category": {
+    "status": "unverified",
+    "text": "¿Qué categoría? Sin el prefijo."
+  },
+  "dialog_source_argument_fileuse": {
+    "status": "unverified",
+    "text": "¿Qué archivo? Sin el prefijo."
+  },
+  "dialog_source_argument_links": {
+    "status": "unverified",
+    "text": "¿De qué página tomar los enlaces?"
+  },
+  "dialog_source_argument_prefix": {
+    "status": "unverified",
+    "text": "¿Por qué empieza el título?"
+  },
+  "dialog_source_argument_search": {
+    "status": "unverified",
+    "text": "¿Qué buscar en la wiki?"
+  },
+  "dialog_source_argument_template": {
+    "status": "unverified",
+    "text": "¿Qué plantilla? Sin el prefijo."
+  },
+  "dialog_source_argument_titles": {
+    "status": "unverified",
+    "text": "Envíe los títulos — uno por línea, o separados por «|»."
+  },
+  "dialog_summary": {
+    "status": "unverified",
+    "text": "¿El resumen de la edición? Un guion «-» y el bot escribe lo que hizo de verdad."
+  },
+  "dialog_when": {
+    "status": "unverified",
+    "text": "¿Una vez, o con regularidad?"
+  },
+  "dialog_when_minutes": {
+    "status": "unverified",
+    "text": "¿En qué minutos de la hora? Por ejemplo «0,30»."
+  },
+  "dialog_when_time": {
+    "status": "unverified",
+    "text": "¿A qué hora? Por ejemplo «20:00»."
+  },
+  "dialog_when_weekdays": {
+    "status": "unverified",
+    "text": "¿En qué días de la semana? Números separados por comas, 0 es lunes. Por ejemplo «0,3»."
+  },
+  "dialog_wiki": {
+    "status": "unverified",
+    "text": "¿En qué wiki? El dominio completo, por ejemplo telepedia.fandom.com/ru — un enlace a un artículo también vale."
+  },
+  "dialog_wiki_checking": {
+    "status": "unverified",
+    "text": "Comprobando la wiki…"
+  },
+  "dialog_wiki_failed": {
+    "status": "unverified",
+    "text": "No se pudo abrir esa wiki: {error}"
+  },
+  "flag_add_again": {
+    "status": "unverified",
+    "text": "añadirlo aunque ese texto ya esté en la página"
+  },
+  "flag_add_newline": {
+    "status": "unverified",
+    "text": "separarlo con una línea en blanco"
+  },
+  "flag_cosmetic": {
+    "status": "unverified",
+    "text": "cosmética: espacios, títulos, líneas en blanco"
+  },
+  "flag_delete_talk": {
+    "status": "unverified",
+    "text": "también la página de discusión"
+  },
+  "flag_extra_components": {
+    "status": "unverified",
+    "text": "los componentes extranjeros discutibles (веб-, топ- y los demás)"
+  },
+  "flag_fix_labels": {
+    "status": "unverified",
+    "text": "corregir también las etiquetas de los enlaces [[Destino|etiqueta]]"
+  },
+  "flag_iw_no_propagate": {
+    "status": "unverified",
+    "text": "no recoger enlaces de las versiones lingüísticas hermanas"
+  },
+  "flag_iw_sort_only": {
+    "status": "unverified",
+    "text": "solo moverlos al final y ordenarlos, sin añadir nada"
+  },
+  "flag_list_categories": {
+    "status": "unverified",
+    "text": "las categorías"
+  },
+  "flag_list_redirects": {
+    "status": "unverified",
+    "text": "adónde apunta una redirección"
+  },
+  "flag_list_size": {
+    "status": "unverified",
+    "text": "el tamaño"
+  },
+  "flag_list_timestamp": {
+    "status": "unverified",
+    "text": "la fecha de la última edición"
+  },
+  "flag_move_subpages": {
+    "status": "unverified",
+    "text": "trasladar también las subpáginas"
+  },
+  "flag_move_talk": {
+    "status": "unverified",
+    "text": "trasladar también la página de discusión"
+  },
+  "flag_no_redirect": {
+    "status": "unverified",
+    "text": "no dejar redirección (requiere permiso de administrador)"
+  },
+  "flag_no_typos": {
+    "status": "unverified",
+    "text": "sin la lista de erratas, solo la ortografía"
+  },
+  "flag_nocase": {
+    "status": "unverified",
+    "text": "ignorar mayúsculas y minúsculas"
+  },
+  "flag_piv_solid": {
+    "status": "unverified",
+    "text": "separar el «пів» unido (півгодини → пів години)"
+  },
+  "flag_protect": {
+    "status": "unverified",
+    "text": "no tocar enlaces, plantillas, tablas ni nombres de archivo"
+  },
+  "flag_punct_commas": {
+    "status": "unverified",
+    "text": "comas antes de «но» y «зато» (y tipografía)"
+  },
+  "flag_punct_off": {
+    "status": "unverified",
+    "text": "sin puntuación en absoluto"
+  },
+  "flag_punct_typo": {
+    "status": "unverified",
+    "text": "tipografía: puntos suspensivos, signos repetidos"
+  },
+  "flag_quotes": {
+    "status": "unverified",
+    "text": "comillas rectas a «angulares» (arriesgado con un número impar)"
+  },
+  "flag_regex": {
+    "status": "unverified",
+    "text": "expresión regular (\\1, \\2 funcionan en el reemplazo)"
+  },
+  "flag_rollback": {
+    "status": "unverified",
+    "text": "por reversión rápida (más rápido, requiere el permiso de reversor)"
+  },
+  "flag_skip_refs": {
+    "status": "unverified",
+    "text": "no tocar las notas <ref>"
+  },
+  "flag_template_list": {
+    "status": "unverified",
+    "text": "la lista de páginas, no solo el número"
+  },
+  "flag_template_redirects": {
+    "status": "unverified",
+    "text": "contar también las redirecciones a la plantilla"
+  },
+  "flag_unlink_bold": {
+    "status": "unverified",
+    "text": "poner el texto en negrita en lugar del enlace"
+  },
+  "go_usage": {
+    "status": "unverified",
+    "text": "Cómo funciona: /go <número de tarea> la ejecuta, /go <número> dry la previsualiza sin editar."
+  },
+  "graph_shape_dot": {
+    "status": "unverified",
+    "text": "un archivo .dot para Graphviz"
+  },
+  "graph_shape_tree": {
+    "status": "unverified",
+    "text": "una lista con sangrías"
+  },
   "help": {
     "status": "unverified",
-    "text": "TeleRadiopedia-Bot mantiene en la portada de la wiki las tres últimas publicaciones del canal de noticias.\n\n/status — qué contienen ahora las tres noticias\n/update — actualizar las noticias ahora mismo; con la palabra «force» también vuelve a subir las imágenes\n/backfill — lee la vista previa pública del canal: recupera las publicaciones anteriores a la incorporación del bot y recoge sus ediciones; con la palabra «all» actualiza todas las publicaciones\n/help — esta ayuda"
+    "text": "Confederate Fandom — un bot para wikis de Fandom: noticias en las portadas, una estandarización nocturna de nombres y los scripts ejecutados a petición.\n\nTrabajo en la wiki\n/tasks — lo que el bot sabe hacer, en lista numerada\n/run [números o códigos] — preparar un trabajo; el bot pregunta qué wiki, de dónde salen las páginas y qué hacer\n/go <número> — iniciar una tarea preparada; /go <número> dry la previsualiza sin editar\n/jobs — qué se está ejecutando y cómo acabaron las últimas tareas\n/stop <número> — detener una tarea\n/schedule — las ejecuciones regulares; /schedule on|off|del <número>\n\nNoticias\n/status — qué hay en los tres espacios y cuándo fue la última pasada\n/update — rehacer las noticias ahora; con «force», también las imágenes\n/backfill — leer la vista previa web del canal; con «all», actualizar también lo que el bot oyó\n\nAcceso\n/wikiadmin — quién es administrador de wiki; /wikiadmin <@nombre o ID> <cuenta en Fandom> lo nombra\n/remwikiadmin <@nombre o ID> — lo retira\n\nLos comandos son para los administradores del bot; el trabajo en la wiki también para administradores de wiki con permisos en esa wiki."
+  },
+  "jobs_active": {
+    "status": "unverified",
+    "text": "\nTareas:"
+  },
+  "jobs_finished": {
+    "status": "unverified",
+    "text": "{id} — {wiki} [{state}] {edited} ediciones, {failed} fallos {error}"
+  },
+  "jobs_header": {
+    "status": "unverified",
+    "text": "Ejecutando ahora: {running}\nEn cola: {waiting}"
+  },
+  "jobs_task": {
+    "status": "unverified",
+    "text": "{id} — {wiki} [{state}] {mechanics}: {checked}/{total}, {edited} ediciones, {failed} fallos"
+  },
+  "mech_addtext": {
+    "status": "unverified",
+    "text": "Añadir texto"
+  },
+  "mech_addtext_desc": {
+    "status": "unverified",
+    "text": "añadir un bloque de texto al principio, al final o antes de las categorías"
+  },
+  "mech_category": {
+    "status": "unverified",
+    "text": "Categorías"
+  },
+  "mech_category_desc": {
+    "status": "unverified",
+    "text": "añadir, quitar o cambiar una categoría en las páginas"
+  },
+  "mech_category_graph": {
+    "status": "unverified",
+    "text": "Árbol de categorías"
+  },
+  "mech_category_graph_desc": {
+    "status": "unverified",
+    "text": "el árbol de subcategorías desde una, como texto o archivo .dot"
+  },
+  "mech_cosmetic": {
+    "status": "unverified",
+    "text": "Cambios cosméticos"
+  },
+  "mech_cosmetic_desc": {
+    "status": "unverified",
+    "text": "espacios en los títulos, sangrías, líneas en blanco, raya en vez de guion"
+  },
+  "mech_delete": {
+    "status": "unverified",
+    "text": "Borrar páginas"
+  },
+  "mech_delete_desc": {
+    "status": "unverified",
+    "text": "borrar una lista de páginas; no se deshace editando"
+  },
+  "mech_delinker": {
+    "status": "unverified",
+    "text": "Archivos borrados"
+  },
+  "mech_delinker_desc": {
+    "status": "unverified",
+    "text": "quitar de los artículos los archivos que ya se han borrado"
+  },
+  "mech_image": {
+    "status": "unverified",
+    "text": "Archivos en los artículos"
+  },
+  "mech_image_desc": {
+    "status": "unverified",
+    "text": "cambiar un archivo por otro, o quitarlo de donde se muestre"
+  },
+  "mech_interwiki": {
+    "status": "unverified",
+    "text": "Enlaces interlingüísticos"
+  },
+  "mech_interwiki_desc": {
+    "status": "unverified",
+    "text": "completar los enlaces entre las versiones lingüísticas, moverlos al final y ordenarlos"
+  },
+  "mech_listpages": {
+    "status": "unverified",
+    "text": "Lista de páginas"
+  },
+  "mech_listpages_desc": {
+    "status": "unverified",
+    "text": "escribir la lista de páginas en un archivo; no cambia nada"
+  },
+  "mech_movepages": {
+    "status": "unverified",
+    "text": "Renombrar páginas"
+  },
+  "mech_movepages_desc": {
+    "status": "unverified",
+    "text": "renombrar páginas según una regla: prefijo, sufijo o expresión regular"
+  },
+  "mech_pravopys_uk": {
+    "status": "unverified",
+    "text": "Ortografía ucraniana de 2019"
+  },
+  "mech_pravopys_uk_desc": {
+    "status": "unverified",
+    "text": "§126, §35 y §36 de la ortografía ucraniana, más la lista de erratas"
+  },
+  "mech_protect": {
+    "status": "unverified",
+    "text": "Proteger páginas"
+  },
+  "mech_protect_desc": {
+    "status": "unverified",
+    "text": "poner o quitar la protección de edición, traslado y resubida"
+  },
+  "mech_punct_ru": {
+    "status": "unverified",
+    "text": "Puntuación (ruso)"
+  },
+  "mech_punct_ru_desc": {
+    "status": "unverified",
+    "text": "solo espacios alrededor de los signos, tipografía y las comas obligatorias"
+  },
+  "mech_redirect": {
+    "status": "unverified",
+    "text": "Redirecciones"
+  },
+  "mech_redirect_desc": {
+    "status": "unverified",
+    "text": "arreglar las dobles, apuntar los enlaces al destino, encontrar las rotas"
+  },
+  "mech_replace": {
+    "status": "unverified",
+    "text": "Reemplazar texto"
+  },
+  "mech_replace_desc": {
+    "status": "unverified",
+    "text": "buscar y reemplazar texto o una expresión regular en las páginas"
+  },
+  "mech_revertbot": {
+    "status": "unverified",
+    "text": "Revertir ediciones"
+  },
+  "mech_revertbot_desc": {
+    "status": "unverified",
+    "text": "deshacer la serie de ediciones de una cuenta en lo alto del historial"
+  },
+  "mech_templatecount": {
+    "status": "unverified",
+    "text": "Recuento de plantillas"
+  },
+  "mech_templatecount_desc": {
+    "status": "unverified",
+    "text": "cuántas páginas usan las plantillas, y la lista si se pide"
+  },
+  "mech_typos_ru": {
+    "status": "unverified",
+    "text": "Ortografía (ruso)"
+  },
+  "mech_typos_ru_desc": {
+    "status": "unverified",
+    "text": "607 reglas de erratas, puntuación y cosmética; el resumen dice qué se corrigió realmente"
+  },
+  "mech_unlink": {
+    "status": "unverified",
+    "text": "Quitar enlaces"
+  },
+  "mech_unlink_desc": {
+    "status": "unverified",
+    "text": "quitar los enlaces a una página y dejar el texto"
+  },
+  "move_mode_prefix_add": {
+    "status": "unverified",
+    "text": "añadir al principio"
+  },
+  "move_mode_prefix_remove": {
+    "status": "unverified",
+    "text": "quitar del principio"
+  },
+  "move_mode_regex": {
+    "status": "unverified",
+    "text": "por expresión regular"
+  },
+  "move_mode_suffix_add": {
+    "status": "unverified",
+    "text": "añadir al final"
+  },
+  "move_mode_suffix_remove": {
+    "status": "unverified",
+    "text": "quitar del final"
   },
   "not_admin": {
     "status": "unverified",
     "text": "Esta orden es solo para los administradores del bot."
+  },
+  "pageset_all": {
+    "status": "unverified",
+    "text": "todas las páginas de la wiki"
+  },
+  "pageset_backlinks": {
+    "status": "unverified",
+    "text": "las páginas que enlazan a una dada"
+  },
+  "pageset_category": {
+    "status": "unverified",
+    "text": "las páginas de una categoría"
+  },
+  "pageset_fileuse": {
+    "status": "unverified",
+    "text": "las páginas que usan un archivo"
+  },
+  "pageset_links": {
+    "status": "unverified",
+    "text": "las páginas a las que enlaza una dada"
+  },
+  "pageset_new": {
+    "status": "unverified",
+    "text": "páginas creadas recientemente"
+  },
+  "pageset_prefix": {
+    "status": "unverified",
+    "text": "las páginas cuyo título empieza por"
+  },
+  "pageset_recent": {
+    "status": "unverified",
+    "text": "páginas cambiadas recientemente"
+  },
+  "pageset_search": {
+    "status": "unverified",
+    "text": "resultados de búsqueda"
+  },
+  "pageset_template": {
+    "status": "unverified",
+    "text": "las páginas que usan una plantilla"
+  },
+  "pageset_titles": {
+    "status": "unverified",
+    "text": "una lista de títulos que enviaré"
+  },
+  "param_add_flags": {
+    "status": "unverified",
+    "text": "¿Cómo añadirlo?"
+  },
+  "param_add_text": {
+    "status": "unverified",
+    "text": "¿Qué texto añadir? Pueden ser varias líneas."
+  },
+  "param_add_where": {
+    "status": "unverified",
+    "text": "¿Dónde añadirlo?"
+  },
+  "param_category_action": {
+    "status": "unverified",
+    "text": "¿Qué hacer con la categoría?"
+  },
+  "param_category_name": {
+    "status": "unverified",
+    "text": "¿Qué categoría? Sin el prefijo «Categoría:»."
+  },
+  "param_category_to": {
+    "status": "unverified",
+    "text": "¿Cambiar por qué categoría?"
+  },
+  "param_cosmetic_flags": {
+    "status": "unverified",
+    "text": "¿Qué proteger de la cosmética?"
+  },
+  "param_delete_flags": {
+    "status": "unverified",
+    "text": "¿Qué más borrar?"
+  },
+  "param_delinker_days": {
+    "status": "unverified",
+    "text": "¿Cuántos días del registro de borrados leer?"
+  },
+  "param_find": {
+    "status": "unverified",
+    "text": "¿Qué buscar? (Texto o expresión regular — se activa con una opción de abajo.)"
+  },
+  "param_graph_depth": {
+    "status": "unverified",
+    "text": "¿Cuántos niveles de profundidad?"
+  },
+  "param_graph_root": {
+    "status": "unverified",
+    "text": "¿Desde qué categoría empezar? Sin el prefijo."
+  },
+  "param_graph_shape": {
+    "status": "unverified",
+    "text": "¿En qué forma?"
+  },
+  "param_image_from": {
+    "status": "unverified",
+    "text": "¿Qué archivo cambiar o quitar? Sin el prefijo «Archivo:»."
+  },
+  "param_image_to": {
+    "status": "unverified",
+    "text": "¿Cambiarlo por qué archivo? Un guion «-» lo quita del todo."
+  },
+  "param_interwiki_flags": {
+    "status": "unverified",
+    "text": "¿Cómo tratar los enlaces interlingüísticos?"
+  },
+  "param_list_flags": {
+    "status": "unverified",
+    "text": "¿Qué escribir de cada página?"
+  },
+  "param_move_argument": {
+    "status": "unverified",
+    "text": "¿Qué exactamente añadir, quitar o buscar en el título?"
+  },
+  "param_move_flags": {
+    "status": "unverified",
+    "text": "¿Qué más debe hacer el traslado?"
+  },
+  "param_move_mode": {
+    "status": "unverified",
+    "text": "¿Cómo cambiar el título?"
+  },
+  "param_move_to": {
+    "status": "unverified",
+    "text": "¿Con qué reemplazar lo hallado en el título? \\1, \\2 funcionan."
+  },
+  "param_pravopys_uk_flags": {
+    "status": "unverified",
+    "text": "¿Qué más hacer además de la ortografía?"
+  },
+  "param_protect_expiry": {
+    "status": "unverified",
+    "text": "¿Por cuánto tiempo? «infinite» significa indefinidamente."
+  },
+  "param_protect_level": {
+    "status": "unverified",
+    "text": "¿A quién permitir?"
+  },
+  "param_protect_what": {
+    "status": "unverified",
+    "text": "¿Proteger qué?"
+  },
+  "param_punct_ru_flags": {
+    "status": "unverified",
+    "text": "¿Hasta dónde debe llegar la puntuación?"
+  },
+  "param_redirect_mode": {
+    "status": "unverified",
+    "text": "¿Qué hacer con las redirecciones?"
+  },
+  "param_replace": {
+    "status": "unverified",
+    "text": "¿Con qué reemplazar? Un guion «-» borra lo encontrado."
+  },
+  "param_replace_flags": {
+    "status": "unverified",
+    "text": "¿Cómo buscar?"
+  },
+  "param_revert_flags": {
+    "status": "unverified",
+    "text": "¿Cómo deshacer?"
+  },
+  "param_revert_user": {
+    "status": "unverified",
+    "text": "¿Las ediciones de quién deshacer? El nombre de la cuenta en la wiki."
+  },
+  "param_template_flags": {
+    "status": "unverified",
+    "text": "¿Qué más hace falta?"
+  },
+  "param_templates": {
+    "status": "unverified",
+    "text": "¿Qué plantillas contar? Separadas por comas, sin «Plantilla:»."
+  },
+  "param_typos_ru_flags": {
+    "status": "unverified",
+    "text": "¿Qué más hacer además de las erratas?"
+  },
+  "param_unlink_flags": {
+    "status": "unverified",
+    "text": "¿Qué hacer con el texto del enlace?"
+  },
+  "param_unlink_title": {
+    "status": "unverified",
+    "text": "¿A qué página quitar los enlaces?"
+  },
+  "protect_level_all": {
+    "status": "unverified",
+    "text": "a todos — es decir, quitar la protección"
+  },
+  "protect_level_autoconfirmed": {
+    "status": "unverified",
+    "text": "cuentas autoconfirmadas"
+  },
+  "protect_level_sysop": {
+    "status": "unverified",
+    "text": "solo administradores (y moderadores de contenido)"
+  },
+  "protect_what_edit": {
+    "status": "unverified",
+    "text": "la edición"
+  },
+  "protect_what_move": {
+    "status": "unverified",
+    "text": "el traslado"
+  },
+  "protect_what_upload": {
+    "status": "unverified",
+    "text": "la resubida del archivo (para archivos, es lo que cuenta)"
+  },
+  "redirect_mode_broken": {
+    "status": "unverified",
+    "text": "encontrar las rotas y escribirlas en el informe (no editar nada)"
+  },
+  "redirect_mode_double": {
+    "status": "unverified",
+    "text": "arreglar las dobles (una redirección a otra)"
+  },
+  "redirect_mode_links": {
+    "status": "unverified",
+    "text": "apuntar los enlaces que pasan por una redirección al destino"
+  },
+  "run_unknown": {
+    "status": "unverified",
+    "text": "No existe tal mecánica: {what}. La lista completa es /tasks."
+  },
+  "schedule_created": {
+    "status": "unverified",
+    "text": "Programación {id} creada: {wiki}, {mechanics}, {when}."
+  },
+  "schedule_daily": {
+    "status": "unverified",
+    "text": "todos los días a las {time}"
+  },
+  "schedule_deleted": {
+    "status": "unverified",
+    "text": "Programación {id} borrada."
+  },
+  "schedule_empty": {
+    "status": "unverified",
+    "text": "No hay ejecuciones regulares."
+  },
+  "schedule_header": {
+    "status": "unverified",
+    "text": "Ejecuciones regulares:"
+  },
+  "schedule_hourly": {
+    "status": "unverified",
+    "text": "cada hora en los minutos {minutes}"
+  },
+  "schedule_line": {
+    "status": "unverified",
+    "text": "{id} — {wiki}: {mechanics}, {when} [{state}]"
+  },
+  "schedule_off": {
+    "status": "unverified",
+    "text": "Programación {id} desactivada."
+  },
+  "schedule_on": {
+    "status": "unverified",
+    "text": "Programación {id} activada."
+  },
+  "schedule_state_off": {
+    "status": "unverified",
+    "text": "desactivada"
+  },
+  "schedule_state_on": {
+    "status": "unverified",
+    "text": "activada"
+  },
+  "schedule_unknown": {
+    "status": "unverified",
+    "text": "No existe la programación {id}."
+  },
+  "schedule_usage": {
+    "status": "unverified",
+    "text": "Cómo funciona: /schedule los lista, /schedule on|off|del <número>."
+  },
+  "schedule_weekly": {
+    "status": "unverified",
+    "text": "los {days} a las {time}"
+  },
+  "service_channel_failed": {
+    "status": "unverified",
+    "text": "No se ha podido leer el canal de origen {channel}: {error}"
+  },
+  "service_publish_done": {
+    "status": "unverified",
+    "text": "Noticias actualizadas: plantillas — {templates}, archivos — {files}. La más reciente: {link}"
+  },
+  "service_publish_failed": {
+    "status": "unverified",
+    "text": "La pasada de noticias ha fallado: {error}"
+  },
+  "service_species_done": {
+    "status": "unverified",
+    "text": "Nombres de Pokémon: {checked} páginas recorridas, {edited} corregidas, {replaced} sustituciones, {failed} fallos. Formas para revisar a mano: {unknown}"
+  },
+  "service_species_failed": {
+    "status": "unverified",
+    "text": "El recorrido por los nombres de Pokémon ha fallado: {error}"
+  },
+  "service_species_no_flag": {
+    "status": "unverified",
+    "text": "El recorrido nocturno por los nombres de Pokémon se ha omitido: la cuenta no tiene la marca de bot en {wiki}, y cientos de ediciones sin marcar inundarían los cambios recientes. Hacen falta el grupo bot en la wiki y el permiso High-volume editing en la BotPassword."
+  },
+  "service_started": {
+    "status": "unverified",
+    "text": "Confederate Fandom iniciado."
+  },
+  "service_stopped": {
+    "status": "unverified",
+    "text": "Confederate Fandom detenido."
   },
   "status": {
     "status": "unverified",
@@ -19,6 +803,10 @@
     "status": "unverified",
     "text": "todavía ninguna"
   },
+  "status_short": {
+    "status": "unverified",
+    "text": "Canal de origen: {channel}\nWikis de noticias: {wiki}\nLas noticias se rehacen a los {schedule} de cada hora.\nEjecutando ahora: {running}\nEn cola: {waiting}\nÚltimo error: {error}"
+  },
   "status_slot": {
     "status": "unverified",
     "text": "{slot}. {date} — {link}\n    {text}"
@@ -27,68 +815,164 @@
     "status": "unverified",
     "text": "{slot}. vacío"
   },
-  "update_started": {
+  "stop_done": {
     "status": "unverified",
-    "text": "Actualizando las noticias…"
+    "text": "Tarea {id} detenida. Lo ya escrito en la wiki sigue escrito."
   },
-  "update_done": {
+  "stop_usage": {
     "status": "unverified",
-    "text": "Listo: plantillas editadas — {templates}, archivos subidos — {files}."
+    "text": "Cómo funciona: /stop <número de tarea>."
   },
-  "update_unchanged": {
+  "task_by_schedule": {
     "status": "unverified",
-    "text": "No hay nada que cambiar: la wiki ya dice lo mismo que el canal."
+    "text": " (por la programación {id})"
   },
-  "update_partial": {
+  "task_confirmed": {
     "status": "unverified",
-    "text": "Solo se han podido componer {have} de {count} noticias: al canal le faltan publicaciones con texto. Los demás huecos se han dejado como estaban."
+    "text": "Tarea {id} confirmada, iniciando."
   },
-  "update_no_news": {
+  "task_created": {
     "status": "unverified",
-    "text": "En el canal todavía no hay ninguna publicación con texto, no hay nada que publicar."
+    "text": "Tarea {id} creada: {wiki}, mecánicas — {mechanics}. Contando las páginas…"
   },
-  "update_failed": {
+  "task_destructive": {
     "status": "unverified",
-    "text": "La pasada ha fallado: {error}"
+    "text": "⚠ Parte de esto no se deshace editando: borrado, traslado, protección, reversión."
+  },
+  "task_done": {
+    "status": "unverified",
+    "text": "✔ Tarea {id} — {wiki}\nPáginas recorridas: {checked}, ediciones: {edited}, fallos: {failed}\n{notes}"
+  },
+  "task_done_dry": {
+    "status": "unverified",
+    "text": "✔ Tarea {id} — {wiki} (vista previa, no se escribió nada)\nPáginas recorridas: {checked}, cambiarían: {edited}, fallos: {failed}\n{notes}"
+  },
+  "task_failed": {
+    "status": "unverified",
+    "text": "✖ La tarea {id} — {wiki} falló: {error}"
+  },
+  "task_not_waiting": {
+    "status": "unverified",
+    "text": "La tarea {id} está en «{state}» — no hay nada que confirmar."
+  },
+  "task_plan_failed": {
+    "status": "unverified",
+    "text": "✖ No se pudo preparar la tarea {id}: {error}"
+  },
+  "task_planned": {
+    "status": "unverified",
+    "text": "Tarea {id} — {wiki}\nMecánicas: {mechanics}\nPáginas: {pages}\n{sample}\n{warning}\n{notes}\n\nEjecutar: /go {id}\nVer primero qué haría, sin escribir nada: /go {id} dry"
+  },
+  "task_progress": {
+    "status": "unverified",
+    "text": "… tarea {id} — {wiki}: {checked} de {total}, {edited} ediciones"
+  },
+  "task_refused": {
+    "status": "unverified",
+    "text": "✖ Tarea {id} — {wiki}: {reason}"
+  },
+  "task_started": {
+    "status": "unverified",
+    "text": "▶ Tarea {id} — {wiki}\nMecánicas: {mechanics}\nPáginas: {pages}\nPedida por: {who}{how}"
+  },
+  "task_stopped": {
+    "status": "unverified",
+    "text": "⏹ Tarea {id} — {wiki} detenida. {checked} recorridas, {edited} ediciones."
+  },
+  "task_unknown": {
+    "status": "unverified",
+    "text": "No existe la tarea {id}."
+  },
+  "tasks_destructive_mark": {
+    "status": "unverified",
+    "text": "⚠ no se deshace editando"
+  },
+  "tasks_header": {
+    "status": "unverified",
+    "text": "Lo que el bot puede hacer en la wiki. Responda con un número o un código — varios, separados por espacios."
   },
   "update_busy": {
     "status": "unverified",
     "text": "Ya hay una pasada en curso."
   },
-  "service_started": {
+  "update_done": {
     "status": "unverified",
-    "text": "TeleRadiopedia-Bot iniciado."
+    "text": "Listo: plantillas editadas — {templates}, archivos subidos — {files}."
   },
-  "service_stopped": {
+  "update_failed": {
     "status": "unverified",
-    "text": "TeleRadiopedia-Bot detenido."
+    "text": "La pasada ha fallado: {error}"
   },
-  "service_publish_done": {
+  "update_no_news": {
     "status": "unverified",
-    "text": "Noticias actualizadas: plantillas — {templates}, archivos — {files}. La más reciente: {link}"
+    "text": "En el canal todavía no hay ninguna publicación con texto, no hay nada que publicar."
   },
-  "service_publish_failed": {
+  "update_partial": {
     "status": "unverified",
-    "text": "La pasada de noticias ha fallado: {error}"
+    "text": "Solo se han podido componer {have} de {count} noticias: al canal le faltan publicaciones con texto. Los demás huecos se han dejado como estaban."
   },
-  "service_channel_failed": {
+  "update_started": {
     "status": "unverified",
-    "text": "No se ha podido leer el canal de origen {channel}: {error}"
+    "text": "Actualizando las noticias…"
   },
-  "backfill_started": {
+  "update_unchanged": {
     "status": "unverified",
-    "text": "Leyendo la vista previa pública del canal…"
+    "text": "No hay nada que cambiar: la wiki ya dice lo mismo que el canal."
   },
-  "backfill_done": {
+  "weekday_names": {
     "status": "unverified",
-    "text": "De la vista previa: {added} añadidas, {updated} actualizadas, de {seen}."
+    "text": "lunes,martes,miércoles,jueves,viernes,sábado,domingo"
   },
-  "backfill_failed": {
+  "when_daily": {
     "status": "unverified",
-    "text": "No se ha podido leer la vista previa: {error}"
+    "text": "todos los días, a la hora indicada"
   },
-  "backfill_no_channel": {
+  "when_hourly": {
     "status": "unverified",
-    "text": "El canal de origen no tiene un @nombre público, así que no hay vista previa que leer."
+    "text": "cada hora, en los minutos indicados"
+  },
+  "when_once": {
+    "status": "unverified",
+    "text": "una vez"
+  },
+  "when_weekly": {
+    "status": "unverified",
+    "text": "en los días de la semana indicados, a la hora indicada"
+  },
+  "wikiadmin_added": {
+    "status": "unverified",
+    "text": "{name} ({user_id}) es ahora administrador de wiki, cuenta en Fandom: {wiki_user}. Sus permisos en cada wiki se comprueban antes de cada ejecución."
+  },
+  "wikiadmin_empty": {
+    "status": "unverified",
+    "text": "Todavía no hay administradores de wiki."
+  },
+  "wikiadmin_header": {
+    "status": "unverified",
+    "text": "Administradores de wiki:"
+  },
+  "wikiadmin_line": {
+    "status": "unverified",
+    "text": "{platform}: {name} ({user_id}) — en Fandom: {wiki_user}"
+  },
+  "wikiadmin_no_user": {
+    "status": "unverified",
+    "text": "No está claro de quién se trata. Responda a su mensaje, o indique un @nombre o un ID numérico."
+  },
+  "wikiadmin_no_wiki_user": {
+    "status": "unverified",
+    "text": "Hace falta también el nombre de su cuenta en Fandom — eso es lo que el bot comprueba en la wiki."
+  },
+  "wikiadmin_not_found": {
+    "status": "unverified",
+    "text": "{user_id} no era administrador de wiki."
+  },
+  "wikiadmin_removed": {
+    "status": "unverified",
+    "text": "{user_id} ya no es administrador de wiki."
+  },
+  "wikiadmin_updated": {
+    "status": "unverified",
+    "text": "{name} ({user_id}) tiene ahora la cuenta {wiki_user} en Fandom."
   }
 }

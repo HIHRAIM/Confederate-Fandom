@@ -1,0 +1,50 @@
+"""The modules: the standing work the bot was built for.
+
+A module is one wiki's worth of ongoing work, with its own files and its own
+jobs — the shape dem_bot uses for its quizzes and its economy, and the shape
+this bot's two long-standing jobs now have too:
+
+| Module | Wikis | What it does |
+|---|---|---|
+| `telepedia` | Телепедия, Радиопедия | keeps three news cards on the main pages in step with a Telegram channel, four times an hour |
+| `pokemon` | Покемон Вики | standardises the Russian names of species once a night |
+
+The difference between a module and a mechanic (scripts/) is who asks for it.
+A mechanic runs when somebody types a command; a module runs to a schedule
+that somebody's readers depend on, which is why module jobs are registered at
+MODULE_PRIORITY and go ahead of the task queue when both are due
+(scheduler.py). A walk of nine thousand articles never makes the main page an
+hour late.
+
+Adding a module: a package here with a `jobs()` returning
+``{'name', 'run', 'minutes' | 'daily_at', 'at_start'}``, and one line in
+MODULES. Nothing else knows the list.
+"""
+import logging
+
+logger = logging.getLogger("fd.modules")
+
+from modules import pokemon, telepedia
+
+MODULES = (telepedia, pokemon)
+
+
+def register(scheduler):
+    """Put every module's jobs on the schedule. -> the ones to run at start-up.
+
+    Registered at MODULE_PRIORITY, which is what puts them ahead of the task
+    queue. The names come back so main.py can queue the ones that should not
+    wait for their first mark — a restart must not cost a quarter of an hour
+    of stale news.
+    """
+    at_start = []
+    for module in MODULES:
+        for job in module.jobs():
+            scheduler.register(job["name"], job["run"],
+                               minutes=job.get("minutes"),
+                               daily_at=job.get("daily_at"),
+                               priority=scheduler.MODULE_PRIORITY)
+            logger.info("module %s registered the job %s", module.CODE, job["name"])
+            if job.get("at_start"):
+                at_start.append(job["name"])
+    return at_start

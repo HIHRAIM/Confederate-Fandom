@@ -60,6 +60,24 @@ def save_post(chat_id, message_id, date, text, entities=None, source="api",
     )
     conn.commit()
 
+def set_post_forward(chat_id, message_id, forward_type, forward_name):
+    """Fill in where a stored post was reposted from, and nothing else.
+
+    A narrow update on purpose. Posts stored before the bot knew about
+    reposts — or by an older build of it — carry nothing in these two columns,
+    and the automatic sync is forbidden from rewriting a row that came from
+    Telegram (backfill.py). Filling an empty field is not rewriting: it adds
+    what was missing and leaves the text, the formatting and the picture as
+    the Bot API gave them."""
+    cur.execute(
+        """
+        UPDATE channel_posts SET forward_type=?, forward_name=?
+        WHERE chat_id=? AND message_id=?
+        """,
+        (forward_type or None, forward_name or None, int(chat_id), int(message_id)),
+    )
+    conn.commit()
+
 def post_entities(row):
     """The stored formatting of one post row, as the list richtext.py takes.
 

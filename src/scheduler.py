@@ -1,0 +1,187 @@
+"""The queue of jobs, the clock that fills it, and who goes first.
+
+The bot has more than one thing to do — keep the news of two wikis in step
+every quarter of an hour, walk a third wiki once a night, and run whatever
+somebody has asked of it through the commands — and it must never do two of
+them at the same time. Not because the sessions would clash: each wiki has its
+own cookie jar and its own login (wiki/site.py), so being signed in to several
+wikis at once is fine. The reason is simpler and harder: Pywikibot is
+synchronous, the bot runs it in one worker thread, and a job that walks nine
+thousand pages takes hours. Two jobs sharing that thread would either serialize
+in an undefined order or trip over each other's edits.
+
+So there is one worker and one queue. What is new here is that the queue is
+**ordered by priority**, and that is what makes the two kinds of work live
+together:
+
+* the **modules** — the news pass and the species walk — are what the bot
+  exists for and run to a schedule somebody else depends on. They have
+  priority 0 and go to the front.
+* the **task queue** is priority 10. It runs one *chunk* of one task and
+  returns, then puts itself back in the queue. So a walk of nine thousand
+  articles is not one job holding the worker for an hour; it is a hundred
+  short jobs, and a news pass that comes due slips in between two of them.
+
+A job already waiting is not queued twice — a night's walk that is somehow
+still going when the next quarter of an hour arrives does not collect four
+news passes behind it, only one.
+
+Registering a job is `register(name, run, minutes=…)` for the ones that happen
+at given minutes past the hour, or `daily_at="20:00"` for once a day. `run` is
+a coroutine and gets no arguments; whatever it wants to report, it reports
+itself.
+"""
+import asyncio
+import logging
+from datetime import datetime, timedelta
+
+logger = logging.getLogger("fd.scheduler")
+
+MODULE_PRIORITY = 0
+
+TASK_PRIORITY = 10
+
+_jobs = {}
+
+_queue = []
+
+_state = {"running": None, "started_at": None}
+
+_wakeup = asyncio.Event()
+
+
+def register(name, run, minutes=None, daily_at=None, priority=MODULE_PRIORITY):
+    """Add one job to the schedule.
+
+    `minutes` is a list of minutes past the hour; `daily_at` is "HH:MM" local
+    time. A job with neither runs only when something asks for it by name.
+    `priority` decides who waits for whom: lower goes first.
+    """
+    _jobs[name] = {"run": run, "minutes": tuple(minutes or ()),
+                   "daily_at": daily_at, "priority": int(priority)}
+
+
+def enqueue(name, reason="asked for"):
+    """Put a job in the queue unless it is already there or already running.
+
+    Inserted by priority, so a news pass queued while a hundred task chunks
+    are waiting still runs next. Returns whether it was added, which is what a
+    command needs to answer 'it is already running' rather than promising a
+    second pass.
+    """
+    if name not in _jobs:
+        logger.warning("no such job: %s", name)
+        return False
+    if _state["running"] == name or name in _queue:
+        logger.info("job %s is already %s — not queued again", name,
+                    "running" if _state["running"] == name else "waiting")
+        return False
+    priority = _jobs[name]["priority"]
+    position = len(_queue)
+    for index, other in enumerate(_queue):
+        if _jobs[other]["priority"] > priority:
+            position = index
+            break
+    _queue.insert(position, name)
+    _wakeup.set()
+    logger.info("job %s queued (%s); waiting: %s", name, reason, len(_queue))
+    return True
+
+
+def waiting_ahead(priority):
+    """Whether anything more important than `priority` is waiting its turn.
+
+    This is what a long job asks between chunks. The task runner checks it
+    after every chunk and hands the worker back when a module job is due, so
+    the main pages are never an hour behind a walk of the whole wiki.
+    """
+    return any(_jobs[name]["priority"] < priority for name in _queue)
+
+
+def running():
+    """The job under way, or None."""
+    return _state["running"]
+
+
+def waiting():
+    """The jobs waiting their turn, in order."""
+    return list(_queue)
+
+
+def next_due(name, now=None):
+    """When a job is next due, or None when it is not on the clock."""
+    job = _jobs.get(name)
+    if not job:
+        return None
+    now = now or datetime.now()
+    if job["daily_at"]:
+        hour, _, minute = job["daily_at"].partition(":")
+        target = now.replace(hour=int(hour), minute=int(minute or 0),
+                             second=0, microsecond=0)
+        return target if target > now else target + timedelta(days=1)
+    marks = sorted({int(m) % 60 for m in job["minutes"]})
+    if not marks:
+        return None
+    for mark in marks:
+        target = now.replace(minute=mark, second=0, microsecond=0)
+        if target > now:
+            return target
+    return (now + timedelta(hours=1)).replace(minute=marks[0], second=0,
+                                              microsecond=0)
+
+
+async def clock():
+    """Sleep until the next job is due, queue it, sleep again.
+
+    One sleep for all the jobs, so that a schedule of four passes an hour, one
+    a night and one every minute costs one timer rather than three loops
+    racing each other.
+    """
+    while True:
+        now = datetime.now()
+        due = [(next_due(name, now), name) for name in _jobs]
+        due = [(moment, name) for moment, name in due if moment]
+        if not due:
+            await asyncio.sleep(60)
+            continue
+        moment, name = min(due)
+        await asyncio.sleep(max(1.0, (moment - datetime.now()).total_seconds()))
+        for other, other_name in due:
+            if other <= datetime.now():
+                enqueue(other_name, reason="on the clock")
+
+
+async def worker():
+    """Run the queued jobs, one at a time, for as long as the bot lives.
+
+    Every failure stays inside its job: the queue must survive a job that
+    raises, or one bad night would take the news down with it.
+    """
+    while True:
+        if not _queue:
+            _wakeup.clear()
+            await _wakeup.wait()
+            continue
+        name = _queue.pop(0)
+        _state["running"] = name
+        _state["started_at"] = datetime.now()
+        started = _state["started_at"]
+        logger.info("job %s started", name)
+        try:
+            await _jobs[name]["run"]()
+        except asyncio.CancelledError:
+            _state["running"] = None
+            raise
+        except Exception:
+            logger.exception("job %s failed", name)
+        finally:
+            if _state["running"] == name:
+                logger.info("job %s finished in %s s", name,
+                            int((datetime.now() - started).total_seconds()))
+                _state["running"] = None
+                _state["started_at"] = None
+
+
+async def run():
+    """The scheduler as one task: the clock and the worker together."""
+    await asyncio.gather(clock(), worker())

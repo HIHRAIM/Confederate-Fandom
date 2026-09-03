@@ -1,6 +1,6 @@
 """Every CREATE TABLE of the bot, plus the additive column migrations.
 
-This module owns the shape of tprp.db and nothing else — no queries, no
+This module owns the shape of fd.db and nothing else — no queries, no
 business logic. `db.init()` calls `create_all()` once at start-up.
 
 The migration policy is strict because the database is live data: new tables
@@ -87,6 +87,107 @@ CREATE TABLE IF NOT EXISTS wiki_slots (
 CREATE TABLE IF NOT EXISTS state (
     key TEXT PRIMARY KEY,
     value TEXT
+);
+
+-- wiki_admins: the people the bot's owner has made "wiki administrators".
+-- They may run the script mechanics; the bot's own administrators
+-- (config.ADMINS) may do that and appoint these. platform is 'discord' or
+-- 'telegram' and user_id is the numeric id on that platform, which together
+-- are how a caller is recognised. wiki_user is their account name on Fandom:
+-- it is what the bot checks on the wiki before every run (wiki/rights.py:
+-- is_wiki_staff), and what goes into the log line saying who asked. The
+-- appointment is global; the standing is the wiki's own and is re-checked
+-- each time. Written by the /wikiadmin commands, read by tasks/access.py.
+CREATE TABLE IF NOT EXISTS wiki_admins (
+    platform TEXT NOT NULL,
+    user_id INTEGER NOT NULL,
+    wiki_user TEXT NOT NULL,
+    display_name TEXT,
+    added_by TEXT,
+    added_at INTEGER,
+    PRIMARY KEY (platform, user_id)
+);
+
+-- tasks: one run of one or more mechanics over one wiki.
+-- wiki is '<family>:<lang>' as utils.wiki_key spells it. mechanics is a JSON
+-- list of mechanic codes, run in that order over each page; params is a JSON
+-- object with everything the dialog collected. state moves
+-- pending -> running -> done | failed | stopped, and 'pending' is also where a
+-- task waits for its confirmation. cursor is the seq in task_pages the run
+-- has reached, which is what lets a long walk give the worker back to the
+-- news between chunks and pick up where it left off after a restart.
+-- requested_by_* name the person for the service log: the platform, their
+-- numeric id, the name they are shown under, and their Fandom account.
+-- schedule_id is the regular run that spawned this one, or NULL for a task
+-- somebody asked for by hand. report holds the counters as JSON; error holds
+-- the reason a failed task failed, without a traceback — the file the bot
+-- sends must carry wiki content and nothing of the machine it runs on.
+CREATE TABLE IF NOT EXISTS tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    wiki TEXT NOT NULL,
+    mechanics TEXT NOT NULL,
+    params TEXT NOT NULL DEFAULT '{}',
+    state TEXT NOT NULL DEFAULT 'pending',
+    dry_run INTEGER NOT NULL DEFAULT 0,
+    requested_by_platform TEXT,
+    requested_by_id INTEGER,
+    requested_by_name TEXT,
+    requested_by_wiki_user TEXT,
+    reply_chat TEXT,
+    schedule_id INTEGER,
+    created_at INTEGER,
+    started_at INTEGER,
+    finished_at INTEGER,
+    cursor INTEGER NOT NULL DEFAULT 0,
+    checked INTEGER NOT NULL DEFAULT 0,
+    edited INTEGER NOT NULL DEFAULT 0,
+    failed INTEGER NOT NULL DEFAULT 0,
+    report TEXT,
+    error TEXT
+);
+
+-- task_pages: the page list of one task, settled before the first edit.
+-- A long run has to be interruptible — the news pass may not wait an hour
+-- behind a walk of nine thousand articles — so the pages are materialised
+-- here in order and the run keeps only its position in tasks.cursor. That
+-- also survives a restart: the queue picks the task up at the next page
+-- rather than at the first. state is 'todo', 'done', 'skip' or 'fail'; note
+-- carries the reason for the last two.
+CREATE TABLE IF NOT EXISTS task_pages (
+    task_id INTEGER NOT NULL,
+    seq INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    state TEXT NOT NULL DEFAULT 'todo',
+    note TEXT,
+    PRIMARY KEY (task_id, seq)
+);
+
+-- schedules: a task that repeats. kind is 'hourly' (at the given minutes of
+-- every hour), 'daily' (at hour:minute every day) or 'weekly' (at
+-- hour:minute on the listed weekdays, 0 = Monday). minutes and weekdays are
+-- comma-separated lists. next_run is the unix timestamp the scheduler is
+-- waiting for and is recomputed after every firing, so a bot that was down
+-- over the hour runs once when it comes back rather than once per missed
+-- hour. enabled 0 keeps the row and stops the firing.
+CREATE TABLE IF NOT EXISTS schedules (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    wiki TEXT NOT NULL,
+    mechanics TEXT NOT NULL,
+    params TEXT NOT NULL DEFAULT '{}',
+    kind TEXT NOT NULL,
+    minutes TEXT,
+    hour INTEGER,
+    minute INTEGER,
+    weekdays TEXT,
+    enabled INTEGER NOT NULL DEFAULT 1,
+    created_by_platform TEXT,
+    created_by_id INTEGER,
+    created_by_name TEXT,
+    created_by_wiki_user TEXT,
+    reply_chat TEXT,
+    created_at INTEGER,
+    last_run INTEGER,
+    next_run INTEGER
 );
 """
 

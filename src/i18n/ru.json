@@ -1,11 +1,795 @@
 {
+  "add_where_before_categories": {
+    "status": "verified",
+    "text": "перед категориями (после текста статьи)"
+  },
+  "add_where_bottom": {
+    "status": "verified",
+    "text": "в самый конец страницы"
+  },
+  "add_where_top": {
+    "status": "verified",
+    "text": "в самое начало страницы"
+  },
+  "backfill_done": {
+    "status": "verified",
+    "text": "Из превью: добавлено {added}, обновлено {updated} — из {seen}."
+  },
+  "backfill_failed": {
+    "status": "verified",
+    "text": "Не удалось прочитать превью: {error}"
+  },
+  "backfill_no_channel": {
+    "status": "verified",
+    "text": "У канала-источника нет публичного @имени, а значит и превью, которое можно прочитать."
+  },
+  "backfill_started": {
+    "status": "verified",
+    "text": "Читаю публичное превью канала…"
+  },
+  "category_action_add": {
+    "status": "verified",
+    "text": "добавить"
+  },
+  "category_action_move": {
+    "status": "verified",
+    "text": "заменить на другую"
+  },
+  "category_action_remove": {
+    "status": "verified",
+    "text": "убрать"
+  },
+  "dialog_bad_choice": {
+    "status": "verified",
+    "text": "Такого номера в списке нет. Ответьте одним из номеров."
+  },
+  "dialog_bad_flags": {
+    "status": "verified",
+    "text": "Нужны номера через пробел, или «0», если ничего не нужно."
+  },
+  "dialog_bad_time": {
+    "status": "verified",
+    "text": "Время пишется как «ЧЧ:ММ», например «20:00»."
+  },
+  "dialog_bad_value": {
+    "status": "verified",
+    "text": "Не понял ответ. Попробуйте ещё раз."
+  },
+  "dialog_failed": {
+    "status": "verified",
+    "text": "Диалог сорвался: {error}"
+  },
+  "dialog_flags": {
+    "status": "verified",
+    "text": "Дополнительно — отметьте нужное номерами через пробел:"
+  },
+  "dialog_flags_hint": {
+    "status": "verified",
+    "text": "«0» — ничего из этого."
+  },
+  "dialog_limit": {
+    "status": "verified",
+    "text": "Сколько страниц взять максимум? «0» или «-» — все."
+  },
+  "dialog_namespaces": {
+    "status": "verified",
+    "text": "В каких пространствах имён? Номера через запятую; «0» или «-» — только статьи."
+  },
+  "dialog_opened": {
+    "status": "verified",
+    "text": "Открыл диалог в этом канале — отвечайте обычными сообщениями."
+  },
+  "dialog_pick_mechanics": {
+    "status": "verified",
+    "text": "Что запускаем? Номера или кодовые названия через пробел."
+  },
+  "dialog_source": {
+    "status": "verified",
+    "text": "Откуда брать страницы?"
+  },
+  "dialog_source_argument_backlinks": {
+    "status": "verified",
+    "text": "На какую страницу должны ссылаться?"
+  },
+  "dialog_source_argument_category": {
+    "status": "verified",
+    "text": "Какая категория? Без префикса «Категория:»."
+  },
+  "dialog_source_argument_fileuse": {
+    "status": "verified",
+    "text": "Какой файл? Без префикса «Файл:»."
+  },
+  "dialog_source_argument_links": {
+    "status": "verified",
+    "text": "С какой страницы брать ссылки?"
+  },
+  "dialog_source_argument_prefix": {
+    "status": "verified",
+    "text": "С чего начинается название?"
+  },
+  "dialog_source_argument_search": {
+    "status": "verified",
+    "text": "Что искать поиском вики?"
+  },
+  "dialog_source_argument_template": {
+    "status": "verified",
+    "text": "Какой шаблон? Без префикса «Шаблон:»."
+  },
+  "dialog_source_argument_titles": {
+    "status": "verified",
+    "text": "Пришлите названия — по одному в строке или через «|»."
+  },
+  "dialog_summary": {
+    "status": "verified",
+    "text": "Описание правки? Дефис «-» — бот напишет сам то, что реально сделал."
+  },
+  "dialog_when": {
+    "status": "verified",
+    "text": "Один раз или регулярно?"
+  },
+  "dialog_when_minutes": {
+    "status": "verified",
+    "text": "В какие минуты часа? Например «0,30»."
+  },
+  "dialog_when_time": {
+    "status": "verified",
+    "text": "В какое время? Например «20:00»."
+  },
+  "dialog_when_weekdays": {
+    "status": "verified",
+    "text": "В какие дни недели? Номера через запятую, 0 — понедельник. Например «0,3»."
+  },
+  "dialog_wiki": {
+    "status": "verified",
+    "text": "На какой вики работаем? Домен целиком, например telepedia.fandom.com/ru — можно и ссылку на статью."
+  },
+  "dialog_wiki_checking": {
+    "status": "verified",
+    "text": "Проверяю вики…"
+  },
+  "dialog_wiki_failed": {
+    "status": "verified",
+    "text": "Не получилось открыть эту вики: {error}"
+  },
+  "flag_add_again": {
+    "status": "verified",
+    "text": "добавить, даже если такой текст уже есть на странице"
+  },
+  "flag_add_newline": {
+    "status": "verified",
+    "text": "отделить пустой строкой"
+  },
+  "flag_cosmetic": {
+    "status": "verified",
+    "text": "косметика: пробелы, заголовки, пустые строки"
+  },
+  "flag_delete_talk": {
+    "status": "verified",
+    "text": "страницу обсуждения тоже"
+  },
+  "flag_extra_components": {
+    "status": "verified",
+    "text": "спорные иноязычные части (веб-, топ- и прочие «та ін.»)"
+  },
+  "flag_fix_labels": {
+    "status": "verified",
+    "text": "править и подписи ссылок [[Цель|подпись]]"
+  },
+  "flag_iw_no_propagate": {
+    "status": "verified",
+    "text": "не собирать ссылки с соседних языковых версий"
+  },
+  "flag_iw_sort_only": {
+    "status": "verified",
+    "text": "только перенести в конец и отсортировать, ничего не добавлять"
+  },
+  "flag_list_categories": {
+    "status": "verified",
+    "text": "категории"
+  },
+  "flag_list_redirects": {
+    "status": "verified",
+    "text": "куда ведёт перенаправление"
+  },
+  "flag_list_size": {
+    "status": "verified",
+    "text": "размер"
+  },
+  "flag_list_timestamp": {
+    "status": "verified",
+    "text": "дату последней правки"
+  },
+  "flag_move_subpages": {
+    "status": "verified",
+    "text": "переименовать и подстраницы"
+  },
+  "flag_move_talk": {
+    "status": "verified",
+    "text": "переименовать и страницу обсуждения"
+  },
+  "flag_no_redirect": {
+    "status": "verified",
+    "text": "не оставлять перенаправление (нужно право администратора)"
+  },
+  "flag_no_typos": {
+    "status": "verified",
+    "text": "без списка опечаток, только правопис"
+  },
+  "flag_nocase": {
+    "status": "verified",
+    "text": "не учитывать регистр"
+  },
+  "flag_piv_solid": {
+    "status": "verified",
+    "text": "разделять слитное «пів» (півгодини → пів години)"
+  },
+  "flag_protect": {
+    "status": "verified",
+    "text": "не трогать ссылки, шаблоны, таблицы и файлы"
+  },
+  "flag_punct_commas": {
+    "status": "verified",
+    "text": "запятые перед «но» и «зато» (и типографика)"
+  },
+  "flag_punct_off": {
+    "status": "verified",
+    "text": "без пунктуации вообще"
+  },
+  "flag_punct_typo": {
+    "status": "verified",
+    "text": "типографика: многоточия, дубли знаков"
+  },
+  "flag_quotes": {
+    "status": "verified",
+    "text": "прямые кавычки на «ёлочки» (рискованно при нечётном числе кавычек)"
+  },
+  "flag_regex": {
+    "status": "verified",
+    "text": "регулярное выражение (в замене работают \\1, \\2)"
+  },
+  "flag_rollback": {
+    "status": "verified",
+    "text": "откатом (быстрее, нужно право откатчика)"
+  },
+  "flag_skip_refs": {
+    "status": "verified",
+    "text": "не трогать сноски <ref>"
+  },
+  "flag_template_list": {
+    "status": "verified",
+    "text": "список страниц, а не только число"
+  },
+  "flag_template_redirects": {
+    "status": "verified",
+    "text": "учитывать и перенаправления на шаблон"
+  },
+  "flag_unlink_bold": {
+    "status": "verified",
+    "text": "выделить полужирным вместо ссылки"
+  },
+  "go_usage": {
+    "status": "verified",
+    "text": "Как это работает: /go <номер задачи> — запустить, /go <номер> dry — предпросмотр без правок."
+  },
+  "graph_shape_dot": {
+    "status": "verified",
+    "text": "файлом .dot для Graphviz"
+  },
+  "graph_shape_tree": {
+    "status": "verified",
+    "text": "списком с отступами"
+  },
   "help": {
     "status": "verified",
-    "text": "TeleRadiopedia-Bot держит на заглавной вики три последних поста новостного канала.\n\n/status — что сейчас в трёх новостях\n/update — обновить новости сразу; со словом «force» ещё и перезалить картинки\n/backfill — прочитать публичное превью канала: добрать посты, вышедшие до добавления бота, и подхватить их правки; со словом «all» обновить вообще все посты\n/help — эта справка"
+    "text": "Confederate Fandom — бот для вики Fandom: новости на заглавных, ночная стандартизация названий и запуск скриптов по вики.\n\nРаботы по вики\n/tasks — что бот умеет, списком с номерами\n/run [номера или коды] — задать работу; бот спросит вики, откуда брать страницы и что делать\n/go <номер> — запустить подготовленную задачу; /go <номер> dry — сначала предпросмотр, без правок\n/jobs — что идёт сейчас и чем кончились последние задачи\n/stop <номер> — остановить задачу\n/schedule — регулярные запуски; /schedule on|off|del <номер>\n\nНовости\n/status — что стоит в трёх слотах и когда был последний проход\n/update — обновить новости сейчас; со словом «force» — и картинки\n/backfill — дочитать канал из веб-превью; со словом «all» — обновить и то, что бот слышал сам\n\nДоступ\n/wikiadmin — кто назначен администратором вики; /wikiadmin <@ник или ID> <ник на Fandom> — назначить\n/remwikiadmin <@ник или ID> — снять\n\nКоманды доступны администраторам бота; работы по вики — ещё и администраторам вики, если у них есть права на той вики."
+  },
+  "jobs_active": {
+    "status": "verified",
+    "text": "\nЗадачи:"
+  },
+  "jobs_finished": {
+    "status": "verified",
+    "text": "{id} — {wiki} [{state}] правок {edited}, ошибок {failed} {error}"
+  },
+  "jobs_header": {
+    "status": "verified",
+    "text": "Сейчас работает: {running}\nВ очереди: {waiting}"
+  },
+  "jobs_task": {
+    "status": "verified",
+    "text": "{id} — {wiki} [{state}] {mechanics}: {checked}/{total}, правок {edited}, ошибок {failed}"
+  },
+  "mech_addtext": {
+    "status": "verified",
+    "text": "Добавление текста"
+  },
+  "mech_addtext_desc": {
+    "status": "verified",
+    "text": "добавить блок текста в начало, в конец или перед категориями"
+  },
+  "mech_category": {
+    "status": "verified",
+    "text": "Категории"
+  },
+  "mech_category_desc": {
+    "status": "verified",
+    "text": "добавить, убрать или заменить категорию на страницах"
+  },
+  "mech_category_graph": {
+    "status": "verified",
+    "text": "Дерево категорий"
+  },
+  "mech_category_graph_desc": {
+    "status": "verified",
+    "text": "дерево подкатегорий от заданной, текстом или файлом .dot"
+  },
+  "mech_cosmetic": {
+    "status": "verified",
+    "text": "Косметика"
+  },
+  "mech_cosmetic_desc": {
+    "status": "verified",
+    "text": "пробелы в заголовках, отступы, пустые строки, тире вместо дефиса"
+  },
+  "mech_delete": {
+    "status": "verified",
+    "text": "Удаление страниц"
+  },
+  "mech_delete_desc": {
+    "status": "verified",
+    "text": "удалить страницы списком; отменить правкой нельзя"
+  },
+  "mech_delinker": {
+    "status": "verified",
+    "text": "Удалённые файлы"
+  },
+  "mech_delinker_desc": {
+    "status": "verified",
+    "text": "убрать из статей файлы, которые уже удалены с вики"
+  },
+  "mech_image": {
+    "status": "verified",
+    "text": "Файлы в статьях"
+  },
+  "mech_image_desc": {
+    "status": "verified",
+    "text": "заменить файл на другой или убрать его отовсюду, где он показан"
+  },
+  "mech_interwiki": {
+    "status": "verified",
+    "text": "Интервики"
+  },
+  "mech_interwiki_desc": {
+    "status": "verified",
+    "text": "достроить ссылки между языковыми версиями, перенести в конец и отсортировать"
+  },
+  "mech_listpages": {
+    "status": "verified",
+    "text": "Список страниц"
+  },
+  "mech_listpages_desc": {
+    "status": "verified",
+    "text": "выгрузить список страниц файлом; ничего не меняет"
+  },
+  "mech_movepages": {
+    "status": "verified",
+    "text": "Переименование"
+  },
+  "mech_movepages_desc": {
+    "status": "verified",
+    "text": "переименовать страницы по правилу: префикс, суффикс или регулярное выражение"
+  },
+  "mech_pravopys_uk": {
+    "status": "verified",
+    "text": "Правопис-2019 (украинский)"
+  },
+  "mech_pravopys_uk_desc": {
+    "status": "verified",
+    "text": "§126, §35 и §36 украинского правописа плюс список опечаток"
+  },
+  "mech_protect": {
+    "status": "verified",
+    "text": "Защита страниц"
+  },
+  "mech_protect_desc": {
+    "status": "verified",
+    "text": "поставить или снять защиту на правку, переименование и перезалив"
+  },
+  "mech_punct_ru": {
+    "status": "verified",
+    "text": "Пунктуация (русский)"
+  },
+  "mech_punct_ru_desc": {
+    "status": "verified",
+    "text": "только пробелы вокруг знаков, типографика и обязательные запятые"
+  },
+  "mech_redirect": {
+    "status": "verified",
+    "text": "Перенаправления"
+  },
+  "mech_redirect_desc": {
+    "status": "verified",
+    "text": "исправить двойные, заменить ссылки на прямые, найти битые"
+  },
+  "mech_replace": {
+    "status": "verified",
+    "text": "Замена текста"
+  },
+  "mech_replace_desc": {
+    "status": "verified",
+    "text": "найти и заменить текст или регулярное выражение на страницах"
+  },
+  "mech_revertbot": {
+    "status": "verified",
+    "text": "Отмена правок"
+  },
+  "mech_revertbot_desc": {
+    "status": "verified",
+    "text": "отменить подряд идущие правки одного участника наверху истории"
+  },
+  "mech_templatecount": {
+    "status": "verified",
+    "text": "Счётчик шаблонов"
+  },
+  "mech_templatecount_desc": {
+    "status": "verified",
+    "text": "сколько страниц пользуется шаблонами; список страниц по желанию"
+  },
+  "mech_typos_ru": {
+    "status": "verified",
+    "text": "Правописание (русский)"
+  },
+  "mech_typos_ru_desc": {
+    "status": "verified",
+    "text": "607 правил опечаток, пунктуация и косметика; в описании — то, что реально исправлено"
+  },
+  "mech_unlink": {
+    "status": "verified",
+    "text": "Снятие ссылок"
+  },
+  "mech_unlink_desc": {
+    "status": "verified",
+    "text": "убрать ссылки на страницу, оставив сам текст"
+  },
+  "move_mode_prefix_add": {
+    "status": "verified",
+    "text": "добавить в начало"
+  },
+  "move_mode_prefix_remove": {
+    "status": "verified",
+    "text": "убрать из начала"
+  },
+  "move_mode_regex": {
+    "status": "verified",
+    "text": "по регулярному выражению"
+  },
+  "move_mode_suffix_add": {
+    "status": "verified",
+    "text": "добавить в конец"
+  },
+  "move_mode_suffix_remove": {
+    "status": "verified",
+    "text": "убрать с конца"
   },
   "not_admin": {
     "status": "verified",
     "text": "Команда только для администраторов бота."
+  },
+  "pageset_all": {
+    "status": "verified",
+    "text": "все страницы вики"
+  },
+  "pageset_backlinks": {
+    "status": "verified",
+    "text": "страницы, которые ссылаются на указанную"
+  },
+  "pageset_category": {
+    "status": "verified",
+    "text": "страницы категории"
+  },
+  "pageset_fileuse": {
+    "status": "verified",
+    "text": "страницы, где используется файл"
+  },
+  "pageset_links": {
+    "status": "verified",
+    "text": "страницы, на которые ссылается указанная"
+  },
+  "pageset_new": {
+    "status": "verified",
+    "text": "недавно созданные страницы"
+  },
+  "pageset_prefix": {
+    "status": "verified",
+    "text": "страницы с началом названия"
+  },
+  "pageset_recent": {
+    "status": "verified",
+    "text": "недавно изменённые страницы"
+  },
+  "pageset_search": {
+    "status": "verified",
+    "text": "результаты поиска"
+  },
+  "pageset_template": {
+    "status": "verified",
+    "text": "страницы с шаблоном"
+  },
+  "pageset_titles": {
+    "status": "verified",
+    "text": "список названий, который я пришлю"
+  },
+  "param_add_flags": {
+    "status": "verified",
+    "text": "Как добавлять?"
+  },
+  "param_add_text": {
+    "status": "verified",
+    "text": "Какой текст добавить? Можно несколько строк."
+  },
+  "param_add_where": {
+    "status": "verified",
+    "text": "Куда добавить?"
+  },
+  "param_category_action": {
+    "status": "verified",
+    "text": "Что сделать с категорией?"
+  },
+  "param_category_name": {
+    "status": "verified",
+    "text": "Какая категория? Без префикса «Категория:»."
+  },
+  "param_category_to": {
+    "status": "verified",
+    "text": "На какую категорию заменить?"
+  },
+  "param_cosmetic_flags": {
+    "status": "verified",
+    "text": "Что защищать от косметики?"
+  },
+  "param_delete_flags": {
+    "status": "verified",
+    "text": "Что ещё удалить?"
+  },
+  "param_delinker_days": {
+    "status": "verified",
+    "text": "За сколько дней смотреть журнал удалений?"
+  },
+  "param_find": {
+    "status": "verified",
+    "text": "Что искать? (Текст или регулярное выражение — выражение включается флагом ниже.)"
+  },
+  "param_graph_depth": {
+    "status": "verified",
+    "text": "На сколько уровней вглубь?"
+  },
+  "param_graph_root": {
+    "status": "verified",
+    "text": "С какой категории начать? Без префикса."
+  },
+  "param_graph_shape": {
+    "status": "verified",
+    "text": "В каком виде?"
+  },
+  "param_image_from": {
+    "status": "verified",
+    "text": "Какой файл заменить или убрать? Без префикса «Файл:»."
+  },
+  "param_image_to": {
+    "status": "verified",
+    "text": "На какой файл заменить? Дефис «-» — убрать совсем."
+  },
+  "param_interwiki_flags": {
+    "status": "verified",
+    "text": "Как работать с интервики?"
+  },
+  "param_list_flags": {
+    "status": "verified",
+    "text": "Что писать про каждую страницу?"
+  },
+  "param_move_argument": {
+    "status": "verified",
+    "text": "Что именно добавить, убрать или найти в названии?"
+  },
+  "param_move_flags": {
+    "status": "verified",
+    "text": "Что ещё сделать при переименовании?"
+  },
+  "param_move_mode": {
+    "status": "verified",
+    "text": "Как менять название?"
+  },
+  "param_move_to": {
+    "status": "verified",
+    "text": "Чем заменить найденное в названии? Работают \\1, \\2."
+  },
+  "param_pravopys_uk_flags": {
+    "status": "verified",
+    "text": "Что ещё делать вместе с правописом?"
+  },
+  "param_protect_expiry": {
+    "status": "verified",
+    "text": "На какой срок? «infinite» — бессрочно."
+  },
+  "param_protect_level": {
+    "status": "verified",
+    "text": "Кому разрешить?"
+  },
+  "param_protect_what": {
+    "status": "verified",
+    "text": "Что защитить?"
+  },
+  "param_punct_ru_flags": {
+    "status": "verified",
+    "text": "Насколько подробно править пунктуацию?"
+  },
+  "param_redirect_mode": {
+    "status": "verified",
+    "text": "Что делать с перенаправлениями?"
+  },
+  "param_replace": {
+    "status": "verified",
+    "text": "Чем заменить? Дефис «-» — удалить найденное."
+  },
+  "param_replace_flags": {
+    "status": "verified",
+    "text": "Как искать?"
+  },
+  "param_revert_flags": {
+    "status": "verified",
+    "text": "Как отменять?"
+  },
+  "param_revert_user": {
+    "status": "verified",
+    "text": "Чьи правки отменять? Ник на вики."
+  },
+  "param_template_flags": {
+    "status": "verified",
+    "text": "Что ещё нужно?"
+  },
+  "param_templates": {
+    "status": "verified",
+    "text": "Какие шаблоны считать? Через запятую, без «Шаблон:»."
+  },
+  "param_typos_ru_flags": {
+    "status": "verified",
+    "text": "Что ещё делать вместе с опечатками?"
+  },
+  "param_unlink_flags": {
+    "status": "verified",
+    "text": "Что сделать с текстом ссылки?"
+  },
+  "param_unlink_title": {
+    "status": "verified",
+    "text": "На какую страницу убрать ссылки?"
+  },
+  "protect_level_all": {
+    "status": "verified",
+    "text": "всем — то есть снять защиту"
+  },
+  "protect_level_autoconfirmed": {
+    "status": "verified",
+    "text": "автоподтверждённым участникам"
+  },
+  "protect_level_sysop": {
+    "status": "verified",
+    "text": "только администраторам (и модераторам контента)"
+  },
+  "protect_what_edit": {
+    "status": "verified",
+    "text": "правку"
+  },
+  "protect_what_move": {
+    "status": "verified",
+    "text": "переименование"
+  },
+  "protect_what_upload": {
+    "status": "verified",
+    "text": "перезалив файла (для файлов — обязательно)"
+  },
+  "redirect_mode_broken": {
+    "status": "verified",
+    "text": "найти битые и записать в отчёт (ничего не править)"
+  },
+  "redirect_mode_double": {
+    "status": "verified",
+    "text": "исправить двойные (перенаправление на перенаправление)"
+  },
+  "redirect_mode_links": {
+    "status": "verified",
+    "text": "заменить ссылки на перенаправления прямыми"
+  },
+  "run_unknown": {
+    "status": "verified",
+    "text": "Не знаю такой механики: {what}. Полный список — /tasks."
+  },
+  "schedule_created": {
+    "status": "verified",
+    "text": "Расписание {id} создано: {wiki}, {mechanics}, {when}."
+  },
+  "schedule_daily": {
+    "status": "verified",
+    "text": "каждый день в {time}"
+  },
+  "schedule_deleted": {
+    "status": "verified",
+    "text": "Расписание {id} удалено."
+  },
+  "schedule_empty": {
+    "status": "verified",
+    "text": "Регулярных запусков нет."
+  },
+  "schedule_header": {
+    "status": "verified",
+    "text": "Регулярные запуски:"
+  },
+  "schedule_hourly": {
+    "status": "verified",
+    "text": "каждый час в минуты {minutes}"
+  },
+  "schedule_line": {
+    "status": "verified",
+    "text": "{id} — {wiki}: {mechanics}, {when} [{state}]"
+  },
+  "schedule_off": {
+    "status": "verified",
+    "text": "Расписание {id} выключено."
+  },
+  "schedule_on": {
+    "status": "verified",
+    "text": "Расписание {id} включено."
+  },
+  "schedule_state_off": {
+    "status": "verified",
+    "text": "выключено"
+  },
+  "schedule_state_on": {
+    "status": "verified",
+    "text": "включено"
+  },
+  "schedule_unknown": {
+    "status": "verified",
+    "text": "Расписания {id} нет."
+  },
+  "schedule_usage": {
+    "status": "verified",
+    "text": "Как это работает: /schedule — список, /schedule on|off|del <номер>."
+  },
+  "schedule_weekly": {
+    "status": "verified",
+    "text": "в {days} в {time}"
+  },
+  "service_channel_failed": {
+    "status": "verified",
+    "text": "Не удалось прочитать канал-источник {channel}: {error}"
+  },
+  "service_publish_done": {
+    "status": "verified",
+    "text": "Новости обновлены: шаблонов — {templates}, файлов — {files}. Самая свежая: {link}"
+  },
+  "service_publish_failed": {
+    "status": "verified",
+    "text": "Проход по новостям не удался: {error}"
+  },
+  "service_species_done": {
+    "status": "verified",
+    "text": "Названия покемонов: просмотрено {checked} страниц, исправлено {edited}, замен {replaced}, ошибок {failed}. Формы для ручной правки: {unknown}"
+  },
+  "service_species_failed": {
+    "status": "verified",
+    "text": "Проход по названиям покемонов не удался: {error}"
+  },
+  "service_species_no_flag": {
+    "status": "verified",
+    "text": "Ночной проход по названиям покемонов пропущен: у аккаунта нет флага бота на {wiki}, а сотни неотмеченных правок затопят свежие правки. Нужны группа bot на вики и грант «Массовое редактирование» у BotPassword."
+  },
+  "service_started": {
+    "status": "verified",
+    "text": "Confederate Fandom запущен."
+  },
+  "service_stopped": {
+    "status": "verified",
+    "text": "Confederate Fandom остановлен."
   },
   "status": {
     "status": "verified",
@@ -19,6 +803,10 @@
     "status": "verified",
     "text": "ещё не было"
   },
+  "status_short": {
+    "status": "verified",
+    "text": "Канал-источник: {channel}\nВики новостей: {wiki}\nНовости обновляются в {schedule} каждого часа.\nСейчас работает: {running}\nВ очереди: {waiting}\nПоследняя ошибка: {error}"
+  },
   "status_slot": {
     "status": "verified",
     "text": "{slot}. {date} — {link}\n    {text}"
@@ -27,68 +815,164 @@
     "status": "verified",
     "text": "{slot}. пусто"
   },
-  "update_started": {
+  "stop_done": {
     "status": "verified",
-    "text": "Обновляю новости…"
+    "text": "Задача {id} остановлена. Что уже записано на вики, остаётся записанным."
   },
-  "update_done": {
+  "stop_usage": {
     "status": "verified",
-    "text": "Готово: правок шаблонов — {templates}, загрузок файлов — {files}."
+    "text": "Как это работает: /stop <номер задачи>."
   },
-  "update_unchanged": {
+  "task_by_schedule": {
     "status": "verified",
-    "text": "Менять нечего: на вики уже то же, что в канале."
+    "text": " (по расписанию {id})"
   },
-  "update_partial": {
+  "task_confirmed": {
     "status": "verified",
-    "text": "Удалось собрать только {have} новостей из {count} — в канале не хватает постов с текстом. Остальные места оставлены как были."
+    "text": "Задача {id} подтверждена, запускаю."
   },
-  "update_no_news": {
+  "task_created": {
     "status": "verified",
-    "text": "В канале ещё нет ни одного поста с текстом, публиковать нечего."
+    "text": "Задача {id} создана: {wiki}, механики — {mechanics}. Считаю страницы…"
   },
-  "update_failed": {
+  "task_destructive": {
     "status": "verified",
-    "text": "Проход не удался: {error}"
+    "text": "⚠ Среди выбранного есть то, что правкой не отменить (удаление, переименование, защита, откат)."
+  },
+  "task_done": {
+    "status": "verified",
+    "text": "✔ Задача {id} — {wiki}\nПройдено страниц: {checked}, правок: {edited}, не удалось: {failed}\n{notes}"
+  },
+  "task_done_dry": {
+    "status": "verified",
+    "text": "✔ Задача {id} — {wiki} (предпросмотр, на вики ничего не записано)\nПройдено страниц: {checked}, изменилось бы: {edited}, не удалось: {failed}\n{notes}"
+  },
+  "task_failed": {
+    "status": "verified",
+    "text": "✖ Задача {id} — {wiki} сорвалась: {error}"
+  },
+  "task_not_waiting": {
+    "status": "verified",
+    "text": "Задача {id} сейчас в состоянии «{state}» — подтверждать нечего."
+  },
+  "task_plan_failed": {
+    "status": "verified",
+    "text": "✖ Задачу {id} не удалось подготовить: {error}"
+  },
+  "task_planned": {
+    "status": "verified",
+    "text": "Задача {id} — {wiki}\nМеханики: {mechanics}\nСтраниц: {pages}\n{sample}\n{warning}\n{notes}\n\nЗапустить: /go {id}\nСначала посмотреть, что получится, ничего не записывая: /go {id} dry"
+  },
+  "task_progress": {
+    "status": "verified",
+    "text": "… задача {id} — {wiki}: пройдено {checked} из {total}, правок {edited}"
+  },
+  "task_refused": {
+    "status": "verified",
+    "text": "✖ Задача {id} — {wiki}: {reason}"
+  },
+  "task_started": {
+    "status": "verified",
+    "text": "▶ Задача {id} — {wiki}\nМеханики: {mechanics}\nСтраниц: {pages}\nЗадал: {who}{how}"
+  },
+  "task_stopped": {
+    "status": "verified",
+    "text": "⏹ Задача {id} — {wiki} остановлена. Пройдено {checked}, правок {edited}."
+  },
+  "task_unknown": {
+    "status": "verified",
+    "text": "Задачи {id} нет."
+  },
+  "tasks_destructive_mark": {
+    "status": "verified",
+    "text": "⚠ правкой не отменить"
+  },
+  "tasks_header": {
+    "status": "verified",
+    "text": "Что бот умеет делать по вики. Ответьте номером или кодовым названием — можно несколько через пробел."
   },
   "update_busy": {
     "status": "verified",
     "text": "Проход уже идёт."
   },
-  "service_started": {
+  "update_done": {
     "status": "verified",
-    "text": "TeleRadiopedia-Bot запущен."
+    "text": "Готово: правок шаблонов — {templates}, загрузок файлов — {files}."
   },
-  "service_stopped": {
+  "update_failed": {
     "status": "verified",
-    "text": "TeleRadiopedia-Bot остановлен."
+    "text": "Проход не удался: {error}"
   },
-  "service_publish_done": {
+  "update_no_news": {
     "status": "verified",
-    "text": "Новости обновлены: шаблонов — {templates}, файлов — {files}. Самая свежая: {link}"
+    "text": "В канале ещё нет ни одного поста с текстом, публиковать нечего."
   },
-  "service_publish_failed": {
+  "update_partial": {
     "status": "verified",
-    "text": "Проход по новостям не удался: {error}"
+    "text": "Удалось собрать только {have} новостей из {count} — в канале не хватает постов с текстом. Остальные места оставлены как были."
   },
-  "service_channel_failed": {
+  "update_started": {
     "status": "verified",
-    "text": "Не удалось прочитать канал-источник {channel}: {error}"
+    "text": "Обновляю новости…"
   },
-  "backfill_started": {
+  "update_unchanged": {
     "status": "verified",
-    "text": "Читаю публичное превью канала…"
+    "text": "Менять нечего: на вики уже то же, что в канале."
   },
-  "backfill_done": {
+  "weekday_names": {
     "status": "verified",
-    "text": "Из превью: добавлено {added}, обновлено {updated} — из {seen}."
+    "text": "понедельник,вторник,среда,четверг,пятница,суббота,воскресенье"
   },
-  "backfill_failed": {
+  "when_daily": {
     "status": "verified",
-    "text": "Не удалось прочитать превью: {error}"
+    "text": "каждый день, в заданное время"
   },
-  "backfill_no_channel": {
+  "when_hourly": {
     "status": "verified",
-    "text": "У канала-источника нет публичного @имени, а значит и превью, которое можно прочитать."
+    "text": "каждый час, в заданные минуты"
+  },
+  "when_once": {
+    "status": "verified",
+    "text": "один раз"
+  },
+  "when_weekly": {
+    "status": "verified",
+    "text": "по дням недели, в заданное время"
+  },
+  "wikiadmin_added": {
+    "status": "verified",
+    "text": "{name} ({user_id}) назначен администратором вики, ник на Fandom — {wiki_user}. Права на каждой вики бот проверит перед запуском."
+  },
+  "wikiadmin_empty": {
+    "status": "verified",
+    "text": "Администраторов вики пока нет."
+  },
+  "wikiadmin_header": {
+    "status": "verified",
+    "text": "Администраторы вики:"
+  },
+  "wikiadmin_line": {
+    "status": "verified",
+    "text": "{platform}: {name} ({user_id}) — на Fandom: {wiki_user}"
+  },
+  "wikiadmin_no_user": {
+    "status": "verified",
+    "text": "Не понял, о ком речь. Ответьте на сообщение участника, или укажите @ник, или числовой ID."
+  },
+  "wikiadmin_no_wiki_user": {
+    "status": "verified",
+    "text": "Нужен ещё ник этого человека на Fandom — именно его бот проверяет на вики."
+  },
+  "wikiadmin_not_found": {
+    "status": "verified",
+    "text": "Участник {user_id} и не был администратором вики."
+  },
+  "wikiadmin_removed": {
+    "status": "verified",
+    "text": "Участник {user_id} больше не администратор вики."
+  },
+  "wikiadmin_updated": {
+    "status": "verified",
+    "text": "У {name} ({user_id}) обновлён ник на Fandom — {wiki_user}."
   }
 }

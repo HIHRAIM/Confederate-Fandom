@@ -13,28 +13,51 @@ from env_loader import load_env
 load_env()
 
 TELEGRAM_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
+DISCORD_TOKEN = os.environ["DISCORD_BOT_TOKEN"]
 
 # The wiki account. WIKI_BOT_PASSWORD_SUFFIX is the name of the BotPassword
 # (Special:BotPasswords), not the account name: the login name the bot sends is
 # "<WIKI_USERNAME>@<WIKI_BOT_PASSWORD_SUFFIX>". The BotPassword needs the
 # "Edit existing pages" and "Upload new files / Upload, replace and move files"
-# grants; nothing else.
+# grants for the news, "High-volume editing" for the bot flag, and — for the
+# mechanics that delete, move or protect — the matching grants beside them.
 WIKI_USERNAME = os.environ["WIKI_USERNAME"]
 WIKI_BOT_PASSWORD_SUFFIX = os.environ["WIKI_BOT_PASSWORD_SUFFIX"]
 WIKI_BOT_PASSWORD = os.environ["WIKI_BOT_PASSWORD"]
 
-# Telegram user IDs allowed to use /status and /update. Everyone else is
-# answered with the "not an admin" reply.
+# How long Pywikibot waits between two edits, in seconds. Zero, and that is a
+# decision rather than an oversight: an account carrying the bot flag on a
+# Fandom wiki is expected to edit at speed, the wiki throttles it on its own if
+# it wants to, and a delay invented here would only make a walk of nine
+# thousand pages take three hours instead of one.
+WIKI_PUT_THROTTLE = 0
+
+# The bot's own administrators, by their numeric id on each messenger. They
+# may use every command. Hard-coded here rather than stored, so that no
+# database mishap can hand out or take away control of the bot.
+#
+# The other kind of person who may set the bot to work is a "wiki
+# administrator", appointed at runtime with /wikiadmin and stored in the
+# database (db/admins.py). That appointment grants nothing on its own: before
+# every run the bot asks the wiki itself whether that person holds rights
+# there.
 ADMINS = {
     "telegram": {ADMINISTRATOR_ID, ADMINISTRATOR_ID},
+    "discord": {ADMINISTRATOR_ID, ADMINISTRATOR_ID},
 }
 
-# Chats the bot reports to: a failed wiki edit, a failed upload, a start and a
-# stop. '<chat_id>:<thread_id>' — thread 0 is the plain group. An empty set
-# leaves the log file as the only record.
+# Where the bot reports: a failed wiki edit, a failed upload, a start and a
+# stop, a nightly walk, and every task — that it began, how far it has got and
+# how it ended, naming who asked for it. Every report goes to both messengers.
+# Telegram keys are '<chat_id>:<thread_id>' — thread 0 is the plain group;
+# Discord keys are numeric channel ids. Empty sets leave the log file as the
+# only record.
 SERVICE_CHATS = {
     "telegram": {
         "CHAT_ID",  # Example: -1000000000000:00000
+    },
+    "discord": {
+        CHANNEL_ID,
     },
 }
 
@@ -105,9 +128,10 @@ PREVIEW_SYNC = True
 PREVIEW_LIMIT = 20
 
 # NEWS_CSS_PREFIX — the stem of the CSS classes a news card is built from:
-# '<prefix>__item', '__img', '__body', '__text', '__date'. The wiki's own
-# stylesheet is what gives them a look, and the bot cannot edit it — a wiki
-# that has no such rules yet shows the cards unstyled until someone adds them.
+# '<prefix>__item', '__img', '__body', '__text' and '__tag', the last of which
+# carries both the date and the repost line. The wiki's own stylesheet is what
+# gives them a look, and the bot cannot edit it — a wiki that has no such rules
+# yet shows the cards unstyled until someone adds them.
 NEWS_CSS_PREFIX = "tp-news"
 
 # How long the text of one news may be, in characters. Longer posts are cut at
@@ -140,3 +164,22 @@ FORWARD_FROM_USER = "Переслано от {name}"
 # came from.
 EDIT_SUMMARY = "Обновление новости с {link}"
 UPLOAD_SUMMARY = "Изображение новости с {link}"
+
+# The second job: walking one wiki's articles and bringing the names of
+# Pokemon species to the standard ones (species/). SPECIES_WIKI names the wiki
+# the way WIKIS does — a Pywikibot family and a language code, with its family
+# file beside the others. SPECIES_AT is the local time it runs at, once a day;
+# a job that comes due while another is running waits its turn rather than
+# starting beside it (scheduler.py). SPECIES_LIMIT stops the walk after that
+# many pages and is meant for trying it out — 0 walks the whole namespace.
+# Set SPECIES_WIKI to None to switch the job off.
+SPECIES_WIKI = {"family": "FAMILY_NAME", "lang": "ru"}
+SPECIES_AT = "20:00"
+SPECIES_SUMMARY = "стандартизация названий видов покемонов"
+SPECIES_LIMIT = 0
+
+# Whether the walk refuses to start when the account has no bot flag on that
+# wiki. It is on by default because the walk is hundreds of edits at once:
+# unflagged, they arrive in Recent changes as a flood. The flag needs both
+# the local bot group and the High-volume editing grant on the BotPassword.
+SPECIES_REQUIRE_BOT_FLAG = True

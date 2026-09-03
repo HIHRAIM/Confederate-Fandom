@@ -1,11 +1,795 @@
 {
+  "add_where_before_categories": {
+    "status": "unverified",
+    "text": "przed kategoriami (po tekście artykułu)"
+  },
+  "add_where_bottom": {
+    "status": "unverified",
+    "text": "na sam dół strony"
+  },
+  "add_where_top": {
+    "status": "unverified",
+    "text": "na samą górę strony"
+  },
+  "backfill_done": {
+    "status": "unverified",
+    "text": "Z podglądu: dodano {added}, odświeżono {updated} — z {seen}."
+  },
+  "backfill_failed": {
+    "status": "unverified",
+    "text": "Nie udało się odczytać podglądu: {error}"
+  },
+  "backfill_no_channel": {
+    "status": "unverified",
+    "text": "Kanał źródłowy nie ma publicznej nazwy @, a więc i podglądu do odczytania."
+  },
+  "backfill_started": {
+    "status": "unverified",
+    "text": "Czytam publiczny podgląd kanału…"
+  },
+  "category_action_add": {
+    "status": "unverified",
+    "text": "dodać"
+  },
+  "category_action_move": {
+    "status": "unverified",
+    "text": "zamienić na inną"
+  },
+  "category_action_remove": {
+    "status": "unverified",
+    "text": "usunąć"
+  },
+  "dialog_bad_choice": {
+    "status": "unverified",
+    "text": "Nie ma takiego numeru na liście. Odpowiedz jednym z nich."
+  },
+  "dialog_bad_flags": {
+    "status": "unverified",
+    "text": "Numery po spacji, albo «0», jeśli nic z tego."
+  },
+  "dialog_bad_time": {
+    "status": "unverified",
+    "text": "Godzinę pisze się «GG:MM», na przykład «20:00»."
+  },
+  "dialog_bad_value": {
+    "status": "unverified",
+    "text": "Nie zrozumiałem odpowiedzi. Spróbuj jeszcze raz."
+  },
+  "dialog_failed": {
+    "status": "unverified",
+    "text": "Dialog się załamał: {error}"
+  },
+  "dialog_flags": {
+    "status": "unverified",
+    "text": "Dodatkowo — zaznacz, co chcesz, numerami po spacji:"
+  },
+  "dialog_flags_hint": {
+    "status": "unverified",
+    "text": "«0» oznacza nic z tego."
+  },
+  "dialog_limit": {
+    "status": "unverified",
+    "text": "Najwyżej ile stron? «0» lub «-» to wszystkie."
+  },
+  "dialog_namespaces": {
+    "status": "unverified",
+    "text": "W jakich przestrzeniach nazw? Numery po przecinku; «0» lub «-» to tylko artykuły."
+  },
+  "dialog_opened": {
+    "status": "unverified",
+    "text": "Dialog otwarty w tym kanale — odpowiadaj zwykłymi wiadomościami."
+  },
+  "dialog_pick_mechanics": {
+    "status": "unverified",
+    "text": "Które? Numery lub kody, po spacji."
+  },
+  "dialog_source": {
+    "status": "unverified",
+    "text": "Skąd brać strony?"
+  },
+  "dialog_source_argument_backlinks": {
+    "status": "unverified",
+    "text": "Do której strony mają linkować?"
+  },
+  "dialog_source_argument_category": {
+    "status": "unverified",
+    "text": "Która kategoria? Bez przedrostka."
+  },
+  "dialog_source_argument_fileuse": {
+    "status": "unverified",
+    "text": "Który plik? Bez przedrostka."
+  },
+  "dialog_source_argument_links": {
+    "status": "unverified",
+    "text": "Z której strony wziąć linki?"
+  },
+  "dialog_source_argument_prefix": {
+    "status": "unverified",
+    "text": "Od czego zaczyna się nazwa?"
+  },
+  "dialog_source_argument_search": {
+    "status": "unverified",
+    "text": "Czego szukać w wyszukiwarce wiki?"
+  },
+  "dialog_source_argument_template": {
+    "status": "unverified",
+    "text": "Który szablon? Bez przedrostka."
+  },
+  "dialog_source_argument_titles": {
+    "status": "unverified",
+    "text": "Wyślij tytuły — po jednym w wierszu albo po «|»."
+  },
+  "dialog_summary": {
+    "status": "unverified",
+    "text": "Opis edycji? Sam myślnik «-» i bot napisze, co naprawdę zrobił."
+  },
+  "dialog_when": {
+    "status": "unverified",
+    "text": "Raz czy regularnie?"
+  },
+  "dialog_when_minutes": {
+    "status": "unverified",
+    "text": "O których minutach godziny? Na przykład «0,30»."
+  },
+  "dialog_when_time": {
+    "status": "unverified",
+    "text": "O której godzinie? Na przykład «20:00»."
+  },
+  "dialog_when_weekdays": {
+    "status": "unverified",
+    "text": "W które dni tygodnia? Numery po przecinku, 0 to poniedziałek. Na przykład «0,3»."
+  },
+  "dialog_wiki": {
+    "status": "unverified",
+    "text": "Na której wiki? Cała domena, na przykład telepedia.fandom.com/ru — link do artykułu też zadziała."
+  },
+  "dialog_wiki_checking": {
+    "status": "unverified",
+    "text": "Sprawdzam wiki…"
+  },
+  "dialog_wiki_failed": {
+    "status": "unverified",
+    "text": "Nie udało się otworzyć tej wiki: {error}"
+  },
+  "flag_add_again": {
+    "status": "unverified",
+    "text": "dodaj, nawet jeśli taki tekst już jest na stronie"
+  },
+  "flag_add_newline": {
+    "status": "unverified",
+    "text": "oddziel pustym wierszem"
+  },
+  "flag_cosmetic": {
+    "status": "unverified",
+    "text": "kosmetyka: spacje, nagłówki, puste wiersze"
+  },
+  "flag_delete_talk": {
+    "status": "unverified",
+    "text": "także stronę dyskusji"
+  },
+  "flag_extra_components": {
+    "status": "unverified",
+    "text": "sporne obce człony (веб-, топ- i pozostałe)"
+  },
+  "flag_fix_labels": {
+    "status": "unverified",
+    "text": "poprawiaj też etykiety linków [[Cel|etykieta]]"
+  },
+  "flag_iw_no_propagate": {
+    "status": "unverified",
+    "text": "nie zbieraj linków z siostrzanych wersji językowych"
+  },
+  "flag_iw_sort_only": {
+    "status": "unverified",
+    "text": "tylko przenieś na koniec i posortuj, niczego nie dodawaj"
+  },
+  "flag_list_categories": {
+    "status": "unverified",
+    "text": "kategorie"
+  },
+  "flag_list_redirects": {
+    "status": "unverified",
+    "text": "dokąd prowadzi przekierowanie"
+  },
+  "flag_list_size": {
+    "status": "unverified",
+    "text": "rozmiar"
+  },
+  "flag_list_timestamp": {
+    "status": "unverified",
+    "text": "datę ostatniej edycji"
+  },
+  "flag_move_subpages": {
+    "status": "unverified",
+    "text": "przenieś też podstrony"
+  },
+  "flag_move_talk": {
+    "status": "unverified",
+    "text": "przenieś też stronę dyskusji"
+  },
+  "flag_no_redirect": {
+    "status": "unverified",
+    "text": "nie zostawiaj przekierowania (wymaga uprawnień administratora)"
+  },
+  "flag_no_typos": {
+    "status": "unverified",
+    "text": "bez listy literówek, tylko ortografia"
+  },
+  "flag_nocase": {
+    "status": "unverified",
+    "text": "ignoruj wielkość liter"
+  },
+  "flag_piv_solid": {
+    "status": "unverified",
+    "text": "rozdzielaj zrośnięte «пів» (півгодини → пів години)"
+  },
+  "flag_protect": {
+    "status": "unverified",
+    "text": "nie ruszaj linków, szablonów, tabel ani nazw plików"
+  },
+  "flag_punct_commas": {
+    "status": "unverified",
+    "text": "przecinki przed «но» i «зато» (oraz typografia)"
+  },
+  "flag_punct_off": {
+    "status": "unverified",
+    "text": "całkiem bez interpunkcji"
+  },
+  "flag_punct_typo": {
+    "status": "unverified",
+    "text": "typografia: wielokropki, podwojone znaki"
+  },
+  "flag_quotes": {
+    "status": "unverified",
+    "text": "proste cudzysłowy na «ostrokątne» (ryzykowne przy nieparzystej liczbie)"
+  },
+  "flag_regex": {
+    "status": "unverified",
+    "text": "wyrażenie regularne (\\1, \\2 działają w zamianie)"
+  },
+  "flag_rollback": {
+    "status": "unverified",
+    "text": "wycofaniem (szybciej, wymaga uprawnienia rollback)"
+  },
+  "flag_skip_refs": {
+    "status": "unverified",
+    "text": "nie ruszaj przypisów <ref>"
+  },
+  "flag_template_list": {
+    "status": "unverified",
+    "text": "listę stron, nie tylko liczbę"
+  },
+  "flag_template_redirects": {
+    "status": "unverified",
+    "text": "licz też przekierowania do szablonu"
+  },
+  "flag_unlink_bold": {
+    "status": "unverified",
+    "text": "pogrub tekst zamiast linku"
+  },
+  "go_usage": {
+    "status": "unverified",
+    "text": "Jak to działa: /go <numer zadania> uruchamia, /go <numer> dry pokazuje podgląd bez edycji."
+  },
+  "graph_shape_dot": {
+    "status": "unverified",
+    "text": "plikiem .dot dla Graphviza"
+  },
+  "graph_shape_tree": {
+    "status": "unverified",
+    "text": "listą z wcięciami"
+  },
   "help": {
     "status": "unverified",
-    "text": "TeleRadiopedia-Bot utrzymuje na stronie głównej wiki trzy najnowsze wpisy kanału informacyjnego.\n\n/status — co znajduje się teraz w trzech wiadomościach\n/update — odśwież wiadomości natychmiast; ze słowem „force” także ponownie wyślij obrazki\n/backfill — odczytaj publiczny podgląd kanału: odzyskaj wpisy sprzed dodania bota i wychwyć ich zmiany; ze słowem „all” odśwież wszystkie wpisy\n/help — ta pomoc"
+    "text": "Confederate Fandom — bot dla wiki Fandomu: wiadomości na stronach głównych, nocna standaryzacja nazw i uruchamianie skryptów na wiki.\n\nPraca na wiki\n/tasks — co bot potrafi, lista z numerami\n/run [numery lub kody] — zleć pracę; bot zapyta o wiki, skąd brać strony i co zrobić\n/go <numer> — uruchom przygotowane zadanie; /go <numer> dry to podgląd bez edycji\n/jobs — co trwa teraz i jak skończyły się ostatnie zadania\n/stop <numer> — zatrzymaj zadanie\n/schedule — regularne uruchomienia; /schedule on|off|del <numer>\n\nWiadomości\n/status — co jest w trzech slotach i kiedy był ostatni przebieg\n/update — odśwież wiadomości teraz; ze słowem «force» także obrazki\n/backfill — doczytaj kanał z podglądu webowego; ze słowem «all» odśwież też to, co bot słyszał sam\n\nDostęp\n/wikiadmin — kto jest administratorem wiki; /wikiadmin <@nazwa lub ID> <konto na Fandomie> mianuje\n/remwikiadmin <@nazwa lub ID> — odwołuje\n\nKomendy są dla administratorów bota; praca na wiki także dla administratorów wiki, którzy mają uprawnienia na tej wiki."
+  },
+  "jobs_active": {
+    "status": "unverified",
+    "text": "\nZadania:"
+  },
+  "jobs_finished": {
+    "status": "unverified",
+    "text": "{id} — {wiki} [{state}] edycji {edited}, błędów {failed} {error}"
+  },
+  "jobs_header": {
+    "status": "unverified",
+    "text": "Teraz działa: {running}\nW kolejce: {waiting}"
+  },
+  "jobs_task": {
+    "status": "unverified",
+    "text": "{id} — {wiki} [{state}] {mechanics}: {checked}/{total}, edycji {edited}, błędów {failed}"
+  },
+  "mech_addtext": {
+    "status": "unverified",
+    "text": "Dodanie tekstu"
+  },
+  "mech_addtext_desc": {
+    "status": "unverified",
+    "text": "dodaj blok tekstu na górze, na dole lub przed kategoriami"
+  },
+  "mech_category": {
+    "status": "unverified",
+    "text": "Kategorie"
+  },
+  "mech_category_desc": {
+    "status": "unverified",
+    "text": "dodaj, usuń lub zamień kategorię na stronach"
+  },
+  "mech_category_graph": {
+    "status": "unverified",
+    "text": "Drzewo kategorii"
+  },
+  "mech_category_graph_desc": {
+    "status": "unverified",
+    "text": "drzewo podkategorii od wskazanej, jako tekst lub plik .dot"
+  },
+  "mech_cosmetic": {
+    "status": "unverified",
+    "text": "Kosmetyka"
+  },
+  "mech_cosmetic_desc": {
+    "status": "unverified",
+    "text": "spacje w nagłówkach, wcięcia, puste wiersze, myślnik zamiast łącznika"
+  },
+  "mech_delete": {
+    "status": "unverified",
+    "text": "Usuwanie stron"
+  },
+  "mech_delete_desc": {
+    "status": "unverified",
+    "text": "usuń listę stron; edycją tego nie cofniesz"
+  },
+  "mech_delinker": {
+    "status": "unverified",
+    "text": "Usunięte pliki"
+  },
+  "mech_delinker_desc": {
+    "status": "unverified",
+    "text": "usuń z artykułów pliki, które już usunięto z wiki"
+  },
+  "mech_image": {
+    "status": "unverified",
+    "text": "Pliki w artykułach"
+  },
+  "mech_image_desc": {
+    "status": "unverified",
+    "text": "zamień plik na inny albo usuń go zewsząd, gdzie jest pokazany"
+  },
+  "mech_interwiki": {
+    "status": "unverified",
+    "text": "Linki międzyjęzykowe"
+  },
+  "mech_interwiki_desc": {
+    "status": "unverified",
+    "text": "uzupełnij linki między wersjami językowymi, przenieś na koniec i posortuj"
+  },
+  "mech_listpages": {
+    "status": "unverified",
+    "text": "Lista stron"
+  },
+  "mech_listpages_desc": {
+    "status": "unverified",
+    "text": "zapisz listę stron do pliku; niczego nie zmienia"
+  },
+  "mech_movepages": {
+    "status": "unverified",
+    "text": "Zmiana nazw"
+  },
+  "mech_movepages_desc": {
+    "status": "unverified",
+    "text": "zmień nazwy stron według reguły: prefiks, sufiks lub wyrażenie regularne"
+  },
+  "mech_pravopys_uk": {
+    "status": "unverified",
+    "text": "Ortografia ukraińska 2019"
+  },
+  "mech_pravopys_uk_desc": {
+    "status": "unverified",
+    "text": "§126, §35 i §36 ukraińskiej ortografii oraz lista literówek"
+  },
+  "mech_protect": {
+    "status": "unverified",
+    "text": "Zabezpieczenie stron"
+  },
+  "mech_protect_desc": {
+    "status": "unverified",
+    "text": "ustaw lub zdejmij zabezpieczenie edycji, przenoszenia i ponownego przesłania"
+  },
+  "mech_punct_ru": {
+    "status": "unverified",
+    "text": "Interpunkcja (rosyjski)"
+  },
+  "mech_punct_ru_desc": {
+    "status": "unverified",
+    "text": "tylko spacje wokół znaków, typografia i obowiązkowe przecinki"
+  },
+  "mech_redirect": {
+    "status": "unverified",
+    "text": "Przekierowania"
+  },
+  "mech_redirect_desc": {
+    "status": "unverified",
+    "text": "napraw podwójne, skieruj linki prosto do celu, znajdź zepsute"
+  },
+  "mech_replace": {
+    "status": "unverified",
+    "text": "Zamiana tekstu"
+  },
+  "mech_replace_desc": {
+    "status": "unverified",
+    "text": "znajdź i zamień tekst lub wyrażenie regularne na stronach"
+  },
+  "mech_revertbot": {
+    "status": "unverified",
+    "text": "Cofanie edycji"
+  },
+  "mech_revertbot_desc": {
+    "status": "unverified",
+    "text": "cofnij ciąg edycji jednego użytkownika na szczycie historii"
+  },
+  "mech_templatecount": {
+    "status": "unverified",
+    "text": "Licznik szablonów"
+  },
+  "mech_templatecount_desc": {
+    "status": "unverified",
+    "text": "ile stron używa szablonów, i lista tych stron na życzenie"
+  },
+  "mech_typos_ru": {
+    "status": "unverified",
+    "text": "Ortografia (rosyjski)"
+  },
+  "mech_typos_ru_desc": {
+    "status": "unverified",
+    "text": "607 reguł literówek, interpunkcja i kosmetyka; opis mówi, co naprawdę poprawiono"
+  },
+  "mech_unlink": {
+    "status": "unverified",
+    "text": "Usunięcie linków"
+  },
+  "mech_unlink_desc": {
+    "status": "unverified",
+    "text": "usuń linki do strony, zostawiając sam tekst"
+  },
+  "move_mode_prefix_add": {
+    "status": "unverified",
+    "text": "dodać na początku"
+  },
+  "move_mode_prefix_remove": {
+    "status": "unverified",
+    "text": "usunąć z początku"
+  },
+  "move_mode_regex": {
+    "status": "unverified",
+    "text": "wyrażeniem regularnym"
+  },
+  "move_mode_suffix_add": {
+    "status": "unverified",
+    "text": "dodać na końcu"
+  },
+  "move_mode_suffix_remove": {
+    "status": "unverified",
+    "text": "usunąć z końca"
   },
   "not_admin": {
     "status": "unverified",
     "text": "Polecenie tylko dla administratorów bota."
+  },
+  "pageset_all": {
+    "status": "unverified",
+    "text": "wszystkie strony wiki"
+  },
+  "pageset_backlinks": {
+    "status": "unverified",
+    "text": "strony, które linkują do wskazanej"
+  },
+  "pageset_category": {
+    "status": "unverified",
+    "text": "strony kategorii"
+  },
+  "pageset_fileuse": {
+    "status": "unverified",
+    "text": "strony, na których użyto pliku"
+  },
+  "pageset_links": {
+    "status": "unverified",
+    "text": "strony, do których linkuje wskazana"
+  },
+  "pageset_new": {
+    "status": "unverified",
+    "text": "ostatnio utworzone strony"
+  },
+  "pageset_prefix": {
+    "status": "unverified",
+    "text": "strony o nazwie zaczynającej się od"
+  },
+  "pageset_recent": {
+    "status": "unverified",
+    "text": "ostatnio zmienione strony"
+  },
+  "pageset_search": {
+    "status": "unverified",
+    "text": "wyniki wyszukiwania"
+  },
+  "pageset_template": {
+    "status": "unverified",
+    "text": "strony z szablonem"
+  },
+  "pageset_titles": {
+    "status": "unverified",
+    "text": "lista tytułów, którą wyślę"
+  },
+  "param_add_flags": {
+    "status": "unverified",
+    "text": "Jak dodawać?"
+  },
+  "param_add_text": {
+    "status": "unverified",
+    "text": "Jaki tekst dodać? Może być kilka wierszy."
+  },
+  "param_add_where": {
+    "status": "unverified",
+    "text": "Gdzie dodać?"
+  },
+  "param_category_action": {
+    "status": "unverified",
+    "text": "Co zrobić z kategorią?"
+  },
+  "param_category_name": {
+    "status": "unverified",
+    "text": "Która kategoria? Bez przedrostka «Kategoria:»."
+  },
+  "param_category_to": {
+    "status": "unverified",
+    "text": "Na którą kategorię zamienić?"
+  },
+  "param_cosmetic_flags": {
+    "status": "unverified",
+    "text": "Co chronić przed kosmetyką?"
+  },
+  "param_delete_flags": {
+    "status": "unverified",
+    "text": "Co jeszcze usunąć?"
+  },
+  "param_delinker_days": {
+    "status": "unverified",
+    "text": "Za ile dni czytać rejestr usunięć?"
+  },
+  "param_find": {
+    "status": "unverified",
+    "text": "Czego szukać? (Tekst albo wyrażenie regularne — włączane flagą poniżej.)"
+  },
+  "param_graph_depth": {
+    "status": "unverified",
+    "text": "Ile poziomów w głąb?"
+  },
+  "param_graph_root": {
+    "status": "unverified",
+    "text": "Od której kategorii zacząć? Bez przedrostka."
+  },
+  "param_graph_shape": {
+    "status": "unverified",
+    "text": "W jakiej postaci?"
+  },
+  "param_image_from": {
+    "status": "unverified",
+    "text": "Który plik zamienić lub usunąć? Bez przedrostka «Plik:»."
+  },
+  "param_image_to": {
+    "status": "unverified",
+    "text": "Na który plik zamienić? Sam myślnik «-» usuwa całkiem."
+  },
+  "param_interwiki_flags": {
+    "status": "unverified",
+    "text": "Jak obchodzić się z linkami międzyjęzykowymi?"
+  },
+  "param_list_flags": {
+    "status": "unverified",
+    "text": "Co pisać o każdej stronie?"
+  },
+  "param_move_argument": {
+    "status": "unverified",
+    "text": "Co dokładnie dodać, usunąć lub znaleźć w nazwie?"
+  },
+  "param_move_flags": {
+    "status": "unverified",
+    "text": "Co jeszcze ma zrobić przenoszenie?"
+  },
+  "param_move_mode": {
+    "status": "unverified",
+    "text": "Jak zmieniać nazwę?"
+  },
+  "param_move_to": {
+    "status": "unverified",
+    "text": "Czym zastąpić znalezione w nazwie? Działają \\1, \\2."
+  },
+  "param_pravopys_uk_flags": {
+    "status": "unverified",
+    "text": "Co jeszcze robić obok ortografii?"
+  },
+  "param_protect_expiry": {
+    "status": "unverified",
+    "text": "Na jak długo? «infinite» znaczy bezterminowo."
+  },
+  "param_protect_level": {
+    "status": "unverified",
+    "text": "Komu zezwolić?"
+  },
+  "param_protect_what": {
+    "status": "unverified",
+    "text": "Co zabezpieczyć?"
+  },
+  "param_punct_ru_flags": {
+    "status": "unverified",
+    "text": "Jak daleko ma iść interpunkcja?"
+  },
+  "param_redirect_mode": {
+    "status": "unverified",
+    "text": "Co zrobić z przekierowaniami?"
+  },
+  "param_replace": {
+    "status": "unverified",
+    "text": "Czym zastąpić? Sam myślnik «-» usuwa znalezione."
+  },
+  "param_replace_flags": {
+    "status": "unverified",
+    "text": "Jak szukać?"
+  },
+  "param_revert_flags": {
+    "status": "unverified",
+    "text": "Jak cofać?"
+  },
+  "param_revert_user": {
+    "status": "unverified",
+    "text": "Czyje edycje cofać? Nazwa konta na wiki."
+  },
+  "param_template_flags": {
+    "status": "unverified",
+    "text": "Co jeszcze potrzebne?"
+  },
+  "param_templates": {
+    "status": "unverified",
+    "text": "Które szablony liczyć? Po przecinku, bez «Szablon:»."
+  },
+  "param_typos_ru_flags": {
+    "status": "unverified",
+    "text": "Co jeszcze robić obok literówek?"
+  },
+  "param_unlink_flags": {
+    "status": "unverified",
+    "text": "Co zrobić z tekstem linku?"
+  },
+  "param_unlink_title": {
+    "status": "unverified",
+    "text": "Do której strony usunąć linki?"
+  },
+  "protect_level_all": {
+    "status": "unverified",
+    "text": "wszystkim — czyli zdjąć zabezpieczenie"
+  },
+  "protect_level_autoconfirmed": {
+    "status": "unverified",
+    "text": "użytkownikom autozatwierdzonym"
+  },
+  "protect_level_sysop": {
+    "status": "unverified",
+    "text": "tylko administratorom (i moderatorom treści)"
+  },
+  "protect_what_edit": {
+    "status": "unverified",
+    "text": "edycję"
+  },
+  "protect_what_move": {
+    "status": "unverified",
+    "text": "przenoszenie"
+  },
+  "protect_what_upload": {
+    "status": "unverified",
+    "text": "ponowne przesłanie pliku (dla plików to właśnie ono się liczy)"
+  },
+  "redirect_mode_broken": {
+    "status": "unverified",
+    "text": "znajdź zepsute i zapisz je do raportu (niczego nie edytuj)"
+  },
+  "redirect_mode_double": {
+    "status": "unverified",
+    "text": "napraw podwójne (przekierowanie do przekierowania)"
+  },
+  "redirect_mode_links": {
+    "status": "unverified",
+    "text": "skieruj linki idące przez przekierowanie prosto do celu"
+  },
+  "run_unknown": {
+    "status": "unverified",
+    "text": "Nie ma takiej mechaniki: {what}. Pełna lista — /tasks."
+  },
+  "schedule_created": {
+    "status": "unverified",
+    "text": "Harmonogram {id} utworzony: {wiki}, {mechanics}, {when}."
+  },
+  "schedule_daily": {
+    "status": "unverified",
+    "text": "codziennie o {time}"
+  },
+  "schedule_deleted": {
+    "status": "unverified",
+    "text": "Harmonogram {id} usunięty."
+  },
+  "schedule_empty": {
+    "status": "unverified",
+    "text": "Nie ma regularnych uruchomień."
+  },
+  "schedule_header": {
+    "status": "unverified",
+    "text": "Regularne uruchomienia:"
+  },
+  "schedule_hourly": {
+    "status": "unverified",
+    "text": "co godzinę o minutach {minutes}"
+  },
+  "schedule_line": {
+    "status": "unverified",
+    "text": "{id} — {wiki}: {mechanics}, {when} [{state}]"
+  },
+  "schedule_off": {
+    "status": "unverified",
+    "text": "Harmonogram {id} wyłączony."
+  },
+  "schedule_on": {
+    "status": "unverified",
+    "text": "Harmonogram {id} włączony."
+  },
+  "schedule_state_off": {
+    "status": "unverified",
+    "text": "wyłączone"
+  },
+  "schedule_state_on": {
+    "status": "unverified",
+    "text": "włączone"
+  },
+  "schedule_unknown": {
+    "status": "unverified",
+    "text": "Nie ma harmonogramu {id}."
+  },
+  "schedule_usage": {
+    "status": "unverified",
+    "text": "Jak to działa: /schedule wypisuje, /schedule on|off|del <numer>."
+  },
+  "schedule_weekly": {
+    "status": "unverified",
+    "text": "w {days} o {time}"
+  },
+  "service_channel_failed": {
+    "status": "unverified",
+    "text": "Nie udało się odczytać kanału źródłowego {channel}: {error}"
+  },
+  "service_publish_done": {
+    "status": "unverified",
+    "text": "Wiadomości odświeżone: szablonów — {templates}, plików — {files}. Najnowsza: {link}"
+  },
+  "service_publish_failed": {
+    "status": "unverified",
+    "text": "Przebieg wiadomości się nie udał: {error}"
+  },
+  "service_species_done": {
+    "status": "unverified",
+    "text": "Nazwy pokemonów: przejrzano {checked} stron, poprawiono {edited}, zamian {replaced}, błędów {failed}. Formy do ręcznej poprawy: {unknown}"
+  },
+  "service_species_failed": {
+    "status": "unverified",
+    "text": "Przebieg po nazwach pokemonów się nie udał: {error}"
+  },
+  "service_species_no_flag": {
+    "status": "unverified",
+    "text": "Nocny przebieg po nazwach pokemonów pominięto: konto nie ma flagi bota na {wiki}, a setki nieoznaczonych edycji zaleją ostatnie zmiany. Potrzebna jest grupa bot na wiki i uprawnienie High-volume editing przy BotPassword."
+  },
+  "service_started": {
+    "status": "unverified",
+    "text": "Confederate Fandom uruchomiony."
+  },
+  "service_stopped": {
+    "status": "unverified",
+    "text": "Confederate Fandom zatrzymany."
   },
   "status": {
     "status": "unverified",
@@ -19,6 +803,10 @@
     "status": "unverified",
     "text": "jeszcze nie było"
   },
+  "status_short": {
+    "status": "unverified",
+    "text": "Kanał źródłowy: {channel}\nWiki wiadomości: {wiki}\nWiadomości odświeżane o {schedule} każdej godziny.\nTeraz działa: {running}\nW kolejce: {waiting}\nOstatni błąd: {error}"
+  },
   "status_slot": {
     "status": "unverified",
     "text": "{slot}. {date} — {link}\n    {text}"
@@ -27,68 +815,164 @@
     "status": "unverified",
     "text": "{slot}. pusto"
   },
-  "update_started": {
+  "stop_done": {
     "status": "unverified",
-    "text": "Odświeżam wiadomości…"
+    "text": "Zadanie {id} zatrzymane. Co już zapisano na wiki, zostaje."
   },
-  "update_done": {
+  "stop_usage": {
     "status": "unverified",
-    "text": "Gotowe: edycji szablonów — {templates}, wysłanych plików — {files}."
+    "text": "Jak to działa: /stop <numer zadania>."
   },
-  "update_unchanged": {
+  "task_by_schedule": {
     "status": "unverified",
-    "text": "Nie ma czego zmieniać: na wiki jest już to samo, co na kanale."
+    "text": " (według harmonogramu {id})"
   },
-  "update_partial": {
+  "task_confirmed": {
     "status": "unverified",
-    "text": "Udało się zbudować tylko {have} z {count} wiadomości — na kanale brakuje wpisów z tekstem. Pozostałe miejsca zostały bez zmian."
+    "text": "Zadanie {id} potwierdzone, uruchamiam."
   },
-  "update_no_news": {
+  "task_created": {
     "status": "unverified",
-    "text": "Na kanale nie ma jeszcze żadnego wpisu z tekstem, nie ma czego publikować."
+    "text": "Zadanie {id} utworzone: {wiki}, mechaniki — {mechanics}. Liczę strony…"
   },
-  "update_failed": {
+  "task_destructive": {
     "status": "unverified",
-    "text": "Przebieg się nie udał: {error}"
+    "text": "⚠ Część tego jest nieodwracalna edycją: usuwanie, przenoszenie, zabezpieczanie, wycofywanie."
+  },
+  "task_done": {
+    "status": "unverified",
+    "text": "✔ Zadanie {id} — {wiki}\nPrzejrzano stron: {checked}, edycji: {edited}, nieudanych: {failed}\n{notes}"
+  },
+  "task_done_dry": {
+    "status": "unverified",
+    "text": "✔ Zadanie {id} — {wiki} (podgląd, nic nie zapisano)\nPrzejrzano stron: {checked}, zmieniłoby się: {edited}, nieudanych: {failed}\n{notes}"
+  },
+  "task_failed": {
+    "status": "unverified",
+    "text": "✖ Zadanie {id} — {wiki} nie powiodło się: {error}"
+  },
+  "task_not_waiting": {
+    "status": "unverified",
+    "text": "Zadanie {id} jest w stanie «{state}» — nie ma czego potwierdzać."
+  },
+  "task_plan_failed": {
+    "status": "unverified",
+    "text": "✖ Nie udało się przygotować zadania {id}: {error}"
+  },
+  "task_planned": {
+    "status": "unverified",
+    "text": "Zadanie {id} — {wiki}\nMechaniki: {mechanics}\nStron: {pages}\n{sample}\n{warning}\n{notes}\n\nUruchom: /go {id}\nNajpierw zobacz, co zrobi, bez zapisu: /go {id} dry"
+  },
+  "task_progress": {
+    "status": "unverified",
+    "text": "… zadanie {id} — {wiki}: {checked} z {total}, edycji {edited}"
+  },
+  "task_refused": {
+    "status": "unverified",
+    "text": "✖ Zadanie {id} — {wiki}: {reason}"
+  },
+  "task_started": {
+    "status": "unverified",
+    "text": "▶ Zadanie {id} — {wiki}\nMechaniki: {mechanics}\nStron: {pages}\nZlecił: {who}{how}"
+  },
+  "task_stopped": {
+    "status": "unverified",
+    "text": "⏹ Zadanie {id} — {wiki} zatrzymane. Przejrzano {checked}, edycji {edited}."
+  },
+  "task_unknown": {
+    "status": "unverified",
+    "text": "Nie ma zadania {id}."
+  },
+  "tasks_destructive_mark": {
+    "status": "unverified",
+    "text": "⚠ edycją tego nie cofniesz"
+  },
+  "tasks_header": {
+    "status": "unverified",
+    "text": "Co bot potrafi zrobić na wiki. Odpowiedz numerem albo kodem — można kilka po spacji."
   },
   "update_busy": {
     "status": "unverified",
     "text": "Przebieg już trwa."
   },
-  "service_started": {
+  "update_done": {
     "status": "unverified",
-    "text": "TeleRadiopedia-Bot uruchomiony."
+    "text": "Gotowe: edycji szablonów — {templates}, wysłanych plików — {files}."
   },
-  "service_stopped": {
+  "update_failed": {
     "status": "unverified",
-    "text": "TeleRadiopedia-Bot zatrzymany."
+    "text": "Przebieg się nie udał: {error}"
   },
-  "service_publish_done": {
+  "update_no_news": {
     "status": "unverified",
-    "text": "Wiadomości odświeżone: szablonów — {templates}, plików — {files}. Najnowsza: {link}"
+    "text": "Na kanale nie ma jeszcze żadnego wpisu z tekstem, nie ma czego publikować."
   },
-  "service_publish_failed": {
+  "update_partial": {
     "status": "unverified",
-    "text": "Przebieg wiadomości się nie udał: {error}"
+    "text": "Udało się zbudować tylko {have} z {count} wiadomości — na kanale brakuje wpisów z tekstem. Pozostałe miejsca zostały bez zmian."
   },
-  "service_channel_failed": {
+  "update_started": {
     "status": "unverified",
-    "text": "Nie udało się odczytać kanału źródłowego {channel}: {error}"
+    "text": "Odświeżam wiadomości…"
   },
-  "backfill_started": {
+  "update_unchanged": {
     "status": "unverified",
-    "text": "Czytam publiczny podgląd kanału…"
+    "text": "Nie ma czego zmieniać: na wiki jest już to samo, co na kanale."
   },
-  "backfill_done": {
+  "weekday_names": {
     "status": "unverified",
-    "text": "Z podglądu: dodano {added}, odświeżono {updated} — z {seen}."
+    "text": "poniedziałek,wtorek,środa,czwartek,piątek,sobota,niedziela"
   },
-  "backfill_failed": {
+  "when_daily": {
     "status": "unverified",
-    "text": "Nie udało się odczytać podglądu: {error}"
+    "text": "codziennie, o podanej godzinie"
   },
-  "backfill_no_channel": {
+  "when_hourly": {
     "status": "unverified",
-    "text": "Kanał źródłowy nie ma publicznej nazwy @, a więc i podglądu do odczytania."
+    "text": "co godzinę, o podanych minutach"
+  },
+  "when_once": {
+    "status": "unverified",
+    "text": "raz"
+  },
+  "when_weekly": {
+    "status": "unverified",
+    "text": "w podane dni tygodnia, o podanej godzinie"
+  },
+  "wikiadmin_added": {
+    "status": "unverified",
+    "text": "{name} ({user_id}) jest teraz administratorem wiki, konto na Fandomie: {wiki_user}. Uprawnienia na każdej wiki bot sprawdzi przed uruchomieniem."
+  },
+  "wikiadmin_empty": {
+    "status": "unverified",
+    "text": "Nie ma jeszcze administratorów wiki."
+  },
+  "wikiadmin_header": {
+    "status": "unverified",
+    "text": "Administratorzy wiki:"
+  },
+  "wikiadmin_line": {
+    "status": "unverified",
+    "text": "{platform}: {name} ({user_id}) — na Fandomie: {wiki_user}"
+  },
+  "wikiadmin_no_user": {
+    "status": "unverified",
+    "text": "Nie wiadomo, o kogo chodzi. Odpowiedz na jego wiadomość albo podaj @nazwę lub numeryczne ID."
+  },
+  "wikiadmin_no_wiki_user": {
+    "status": "unverified",
+    "text": "Potrzebna jest też nazwa konta tej osoby na Fandomie — to ją bot sprawdza na wiki."
+  },
+  "wikiadmin_not_found": {
+    "status": "unverified",
+    "text": "{user_id} i tak nie był administratorem wiki."
+  },
+  "wikiadmin_removed": {
+    "status": "unverified",
+    "text": "{user_id} nie jest już administratorem wiki."
+  },
+  "wikiadmin_updated": {
+    "status": "unverified",
+    "text": "{name} ({user_id}) ma teraz konto na Fandomie {wiki_user}."
   }
 }

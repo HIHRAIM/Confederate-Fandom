@@ -22,7 +22,7 @@ import sqlite3
 import threading
 
 _db_lock = threading.RLock()
-_raw_conn = sqlite3.connect("tprp.db", check_same_thread=False)
+_raw_conn = sqlite3.connect("fd.db", check_same_thread=False)
 _raw_conn.execute("PRAGMA journal_mode=WAL;")
 _raw_conn.execute("PRAGMA synchronous=NORMAL;")
 _raw_conn.row_factory = sqlite3.Row
@@ -80,6 +80,7 @@ from db.posts import (
     get_recent_posts,
     post_entities,
     save_post,
+    set_post_forward,
 )
 from db.slots import (
     get_slot,
@@ -88,3 +89,86 @@ from db.slots import (
     set_slot,
     set_state,
 )
+from db.admins import (
+    add_wiki_admin,
+    get_wiki_admin,
+    list_wiki_admins,
+    remove_wiki_admin,
+    touch_display_name,
+)
+from db.tasks import (
+    active_tasks,
+    bump,
+    cleanup_tasks,
+    count_pages,
+    create_task,
+    failed_pages,
+    get_task,
+    mark_page,
+    next_pages,
+    page_titles,
+    recent_tasks,
+    running_task,
+    set_dry_run,
+    set_pages,
+    set_report,
+    set_task_state,
+    task_mechanics,
+    task_params,
+    task_report,
+)
+from db.schedules import (
+    create_schedule,
+    delete_schedule,
+    due_schedules,
+    get_schedule,
+    list_schedules,
+    mark_fired,
+    next_due,
+    schedule_mechanics,
+    schedule_params,
+    set_enabled,
+)
+
+
+def _check_for_shadowed_names():
+    """Refuse to start when two submodules export the same name.
+
+    The interface here is flat — every helper is re-imported into this module
+    so call sites say `db.save_post(...)` — and that is exactly what makes a
+    duplicate name dangerous. Python does not complain: the later import wins
+    and the earlier function silently becomes unreachable, so every one of its
+    callers starts failing on its own arguments, far from the cause.
+
+    That is not hypothetical. `db/tasks.py` was written with a `set_state`
+    beside the one `db/slots.py` already had; the task version won, and
+    `db.set_state("last_pass_ts", …)` began dying on `int("last_pass_ts")`
+    every fifteen minutes — a news pass that had already done its work
+    reporting itself as a failure. The name is now `set_task_state`, and this
+    check is here so the next such clash is a loud crash at start-up instead
+    of a fortnight of misleading reports.
+    """
+    import importlib
+
+    owners = {}
+    clashes = []
+    for name in ("posts", "slots", "admins", "tasks", "schedules"):
+        module = importlib.import_module("db." + name)
+        for attr in vars(module):
+            if attr.startswith("_"):
+                continue
+            value = getattr(module, attr)
+            if getattr(value, "__module__", None) != module.__name__:
+                continue
+            if attr in owners:
+                clashes.append("{} — в db/{}.py и db/{}.py".format(
+                    attr, owners[attr], name))
+            else:
+                owners[attr] = name
+    if clashes:
+        raise ImportError(
+            "в db/ одно имя объявлено дважды, и плоский реэкспорт делает одно "
+            "из них недостижимым: " + "; ".join(clashes))
+
+
+_check_for_shadowed_names()

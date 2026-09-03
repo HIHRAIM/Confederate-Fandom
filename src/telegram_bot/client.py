@@ -20,7 +20,7 @@ from aiogram import Bot, Dispatcher, Router
 import db
 from config import SOURCE_CHANNEL, TELEGRAM_TOKEN
 
-logger = logging.getLogger("tprp.telegram")
+logger = logging.getLogger("fd.telegram")
 
 bot = Bot(TELEGRAM_TOKEN)
 dp = Dispatcher()

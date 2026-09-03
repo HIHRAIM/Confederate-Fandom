@@ -46,7 +46,7 @@ from config import (
     NEWS_TIMEZONE,
 )
 
-logger = logging.getLogger("tprp.news")
+logger = logging.getLogger("fd.news")
 
 try:
     from zoneinfo import ZoneInfo
@@ -256,15 +256,15 @@ def render_forward(item, prefix=None):
 
     A post that was reposted from somewhere gets a second tag of the same kind
     as the date, right after it: where it came from for a channel, who it came
-    from for a person (config.FORWARD_FROM_CHAT / FORWARD_FROM_USER). The same
-    tag rather than one of its own, so that a wiki's stylesheet needs no new
-    rule to make it look like what it is — a note under the news."""
+    from for a person (config.FORWARD_FROM_CHAT / FORWARD_FROM_USER). Both
+    wear the wikis' `__tag` class — the date is a tag under the news and so is
+    this, and a stylesheet needs no new rule for either."""
     kind = item.get("forward_type")
     name = (item.get("forward_name") or "").strip()
     template = {"chat": FORWARD_FROM_CHAT, "user": FORWARD_FROM_USER}.get(kind)
     if not template or not name:
         return ""
-    return '<span class="{prefix}__date">{text}</span>'.format(
+    return '<span class="{prefix}__tag">{text}</span>'.format(
         prefix=prefix or NEWS_CSS_PREFIX,
         text=template.format(name=richtext.escape(name)))
 
@@ -290,7 +290,7 @@ def render_template(item, file_name, prefix=None):
         "{image}"
         '<div class="{prefix}__body">'
         '<span class="{prefix}__text">{text}</span>'
-        '<span class="{prefix}__date">{date}</span>'
+        '<span class="{prefix}__tag">{date}</span>'
         "{forward}"
         "</div>\n"
         "</div>"

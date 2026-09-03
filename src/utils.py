@@ -20,7 +20,7 @@ import os
 
 from config import ADMINS, PUBLISH_AT_MINUTES, SERVICE_CHATS, SERVICE_LANG
 
-logger = logging.getLogger("tprp.utils")
+logger = logging.getLogger("fd.utils")
 
 SUPPORTED_LANGS = {"ru", "uk", "pl", "en", "es", "pt"}
 DEFAULT_LANG = "en"
@@ -79,13 +79,48 @@ def service_lang():
     or the reference language when that is not one of the six."""
     return SERVICE_LANG if SERVICE_LANG in SUPPORTED_LANGS else DEFAULT_LANG
 
-def is_admin(user_id):
-    """Whether the user may use /status and /update — hard-coded in
-    config.ADMINS rather than stored, so it survives any database mishap."""
+def is_admin(platform, user_id=None):
+    """Whether somebody is an administrator of the bot itself.
+
+    Hard-coded in config.ADMINS rather than stored, so it survives any
+    database mishap: the people who own the bot cannot be locked out of it by
+    a corrupt row. Wiki administrators are the other kind and *are* stored
+    (db/admins.py) — they may run the script mechanics and nothing else.
+
+    Called as `is_admin('discord', 123)`. The one-argument form is the older
+    Telegram-only spelling and still works, because that is what the four
+    original commands were written against.
+    """
+    if user_id is None:
+        platform, user_id = "telegram", platform
     try:
-        return int(user_id) in ADMINS.get("telegram", set())
+        return int(user_id) in ADMINS.get(str(platform), set())
     except (TypeError, ValueError):
         return False
+
+
+def admin_ids(platform):
+    """Every bot administrator on one platform, as a sorted list."""
+    return sorted(ADMINS.get(str(platform), set()))
+
+
+def service_chat_keys():
+    """Every service chat as '<platform>:<chat>[:<thread>]'.
+
+    One spelling of a chat for the whole bot: tasks/notify.py answers a person
+    in the same form the task row stores, and the service chats have to look
+    the same or the reporting would need two code paths.
+    """
+    keys = []
+    for chat_key in SERVICE_CHATS.get("telegram", set()):
+        chat_id, thread = _parse_service_chat_key(chat_key)
+        if chat_id is None:
+            logger.warning("service chat key %r is not '<chat_id>:<thread_id>'", chat_key)
+            continue
+        keys.append("telegram:{}:{}".format(chat_id, thread or 0))
+    for channel_id in SERVICE_CHATS.get("discord", set()):
+        keys.append("discord:{}".format(channel_id))
+    return keys
 
 def publish_marks():
     """The minutes past the hour a publishing pass runs at, sorted and
@@ -125,7 +160,7 @@ def _parse_service_chat_key(chat_key):
         return None, None
 
 async def send_service_event(event_key, **kwargs):
-    """Report an operational event to the service chats.
+    """Report an operational event to the service chats, on both messengers.
 
     Every send is guarded — the service chats are where failures are reported,
     so a failure there must stay a log line and never take down the loop that
@@ -135,6 +170,7 @@ async def send_service_event(event_key, **kwargs):
     without importing the entry module, which under `python main.py` would
     load a second copy of it and rerun everything at its top level."""
     from telegram_bot import bot
+    from discord_bot import send_log
 
     text = localized(event_key, service_lang(), **kwargs)
     logger.info("service event %s: %s", event_key, text)
@@ -147,3 +183,5 @@ async def send_service_event(event_key, **kwargs):
             await bot.send_message(chat_id, text, message_thread_id=thread or None)
         except Exception as e:
             logger.warning("send_service_event failed for %s: %s", chat_key, e)
+    for channel_id in SERVICE_CHATS.get("discord", set()):
+        await send_log(channel_id, text)

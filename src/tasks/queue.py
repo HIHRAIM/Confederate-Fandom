@@ -1,0 +1,285 @@
+"""The job that drives the tasks: one chunk at a time, and never in the way.
+
+This is the coroutine the scheduler knows as `tasks`. It runs at priority
+TASK_PRIORITY, which is behind the modules, and each time it is given the
+worker it does as much as it may:
+
+* a schedule whose moment has come becomes a task;
+* a task waiting to be planned is planned, and the person is shown what it
+  will do;
+* a task that has been confirmed gets its pages walked, chunk after chunk;
+* a task whose pages are done is closed and reported.
+
+It stops the moment something more important is due (`scheduler.waiting_ahead`)
+and the clock hands it the worker again a minute later. That is what makes a
+walk of nine thousand articles live beside a news pass that runs every quarter
+of an hour: the walk goes at full speed and steps aside, rather than either
+finishing first or being cut into minute-sized pieces.
+
+Everything that touches Pywikibot goes through `asyncio.to_thread` — one
+worker thread, always the same one, because the library is synchronous and
+because the cookie jar it shares is not safe to have two threads in.
+
+Not this module's zone: what a task does (tasks/runner.py), who may ask for
+one (tasks/access.py) and how it is asked for (the commands).
+"""
+import asyncio
+import logging
+
+logger = logging.getLogger("fd.tasks.queue")
+
+JOB = "tasks"
+
+
+def _fire_schedules():
+    """Turn every schedule whose moment has come into a task. -> their ids.
+
+    A scheduled run needs no confirmation — it was confirmed once, when the
+    schedule was made — so it is opened straight into the state a confirmed
+    task waits in, and the plan will move it on by itself.
+    """
+    import db
+
+    made = []
+    for row in db.due_schedules():
+        requester = {"platform": row["created_by_platform"],
+                     "id": row["created_by_id"],
+                     "name": row["created_by_name"],
+                     "wiki_user": row["created_by_wiki_user"]}
+        params = db.schedule_params(row)
+        try:
+            task_id = db.create_task(
+                wiki=row["wiki"],
+                mechanics=db.schedule_mechanics(row),
+                params=params,
+                requester=requester,
+                dry_run=bool(params.get("dry_run")),
+                schedule_id=row["id"],
+                reply_chat=row["reply_chat"])
+        except Exception:
+            logger.exception("could not open a task for schedule %s", row["id"])
+            continue
+        db.mark_fired(row)
+        made.append(task_id)
+        logger.info("schedule %s fired as task %s", row["id"], task_id)
+    return made
+
+
+def _next_task():
+    """The task to work on now, or None. Running ones before pending ones.
+
+    A task already under way is finished before a new one is started: half a
+    walk of a wiki is the worst state to leave anything in, and a person
+    watching one run does not want a second one interleaved with it.
+    """
+    import db
+
+    row = db.running_task()
+    if row is not None:
+        return row
+    for row in db.active_tasks():
+        if row["state"] == "pending":
+            return row
+    return None
+
+
+async def _plan(row):
+    """Plan one task and tell the person what it will do."""
+    import db
+    from tasks import access, notify, registry, report, runner
+    from utils import localized, service_lang
+
+    task_id = row["id"]
+    lang = service_lang()
+    try:
+        plan = await asyncio.to_thread(runner.plan, task_id)
+    except access.Refusal as refusal:
+        db.set_task_state(task_id, "failed", error=refusal.text)
+        runner.forget(task_id)
+        await notify.send(row["reply_chat"], refusal.text)
+        await notify.announce(localized("task_refused", lang, id=task_id,
+                                        wiki=row["wiki"], reason=refusal.text))
+        return
+    except Exception as e:
+        logger.exception("task %s could not be planned", task_id)
+        text = report.safe_error(e)
+        db.set_task_state(task_id, "failed", error=text)
+        runner.forget(task_id)
+        await notify.send(row["reply_chat"],
+                          localized("task_plan_failed", lang, id=task_id, error=text))
+        await notify.announce(
+            localized("task_plan_failed", lang, id=task_id, error=text))
+        return
+
+    if row["schedule_id"]:
+        await start(task_id, announce_only=True)
+        return
+
+    mechanics, _unknown = registry.find_all(db.task_mechanics(row))
+    names = ", ".join(localized(m.name_key, lang) for m in mechanics)
+    sample = "\n".join("• " + title for title in plan["sample"])
+    more = plan["pages"] - len(plan["sample"])
+    await notify.send(row["reply_chat"], localized(
+        "task_planned", lang,
+        id=task_id, wiki=plan["wiki"], mechanics=names,
+        pages=plan["pages"],
+        sample=sample + (("\n… и ещё {}".format(more)) if more > 0 else ""),
+        warning=localized("task_destructive", lang) if plan["destructive"] else "",
+        notes="\n".join(plan["notes"]),
+    ))
+
+
+async def _chunk(row):
+    """Walk one chunk of a running task, and close it when it is done."""
+    import db
+    from tasks import notify, report, runner
+    from utils import localized, service_lang
+
+    task_id = row["id"]
+    lang = service_lang()
+    try:
+        more = await asyncio.to_thread(runner.run_chunk, task_id)
+    except Exception as e:
+        logger.exception("task %s failed while running", task_id)
+        text = report.safe_error(e)
+        db.set_task_state(task_id, "failed", error=text)
+        runner.forget(task_id)
+        await notify.both(row["reply_chat"],
+                          localized("task_failed", lang, id=task_id,
+                                    wiki=row["wiki"], error=text))
+        return False
+
+    if more:
+        fresh = db.get_task(task_id)
+        total = db.count_pages(task_id)
+        if total and fresh["checked"] and fresh["checked"] % 500 == 0:
+            await notify.announce(localized(
+                "task_progress", lang, id=task_id, wiki=row["wiki"],
+                checked=fresh["checked"], total=total, edited=fresh["edited"]))
+        return True
+
+    try:
+        result = await asyncio.to_thread(runner.finish, task_id)
+    except Exception as e:
+        logger.exception("task %s failed to finish", task_id)
+        text = report.safe_error(e)
+        db.set_task_state(task_id, "failed", error=text)
+        runner.forget(task_id)
+        await notify.both(row["reply_chat"],
+                          localized("task_failed", lang, id=task_id,
+                                    wiki=row["wiki"], error=text))
+        return False
+
+    key = "task_done_dry" if result.get("dry_run") else "task_done"
+    text = localized(key, lang, id=task_id, wiki=result.get("wiki"),
+                     checked=result.get("checked", 0),
+                     edited=result.get("edited", 0),
+                     failed=result.get("failed", 0),
+                     notes="\n".join(result.get("notes") or []))
+    await notify.send(row["reply_chat"], text)
+    await notify.send_files(row["reply_chat"], result.get("files"))
+    await notify.announce(text)
+    return False
+
+
+async def start(task_id, announce_only=False):
+    """Move a confirmed task into the running state and get it going.
+
+    `announce_only` is for a scheduled run, which nobody confirmed by hand:
+    it is announced and started in one step.
+    """
+    import db
+    import scheduler
+    from tasks import access, notify
+    from utils import localized, service_lang
+
+    row = db.get_task(task_id)
+    if row is None:
+        return False
+    db.set_task_state(task_id, "running")
+    lang = service_lang()
+    requester = {"platform": row["requested_by_platform"],
+                 "id": row["requested_by_id"],
+                 "name": row["requested_by_name"],
+                 "wiki_user": row["requested_by_wiki_user"]}
+    text = localized(
+        "task_started", lang, id=task_id, wiki=row["wiki"],
+        mechanics=", ".join(db.task_mechanics(row)),
+        pages=db.count_pages(task_id),
+        who=access.describe(requester),
+        how=localized("task_by_schedule", lang, id=row["schedule_id"])
+        if row["schedule_id"] else "")
+    await notify.announce(text)
+    if not announce_only:
+        await notify.send(row["reply_chat"], text)
+    scheduler.enqueue(JOB, reason="task {} started".format(task_id))
+    return True
+
+
+async def stop(task_id):
+    """Stop a task where it stands. -> whether there was one to stop.
+
+    The pages already done stay done — an edit cannot be taken back by
+    stopping — and the row keeps its counters, so a stopped task is a record
+    of what it managed rather than a hole.
+    """
+    import db
+    from tasks import notify, runner
+    from utils import localized, service_lang
+
+    row = db.get_task(task_id)
+    if row is None or row["state"] not in ("pending", "confirm", "running"):
+        return False
+    db.set_task_state(task_id, "stopped")
+    runner.forget(task_id)
+    await notify.announce(localized(
+        "task_stopped", service_lang(), id=task_id, wiki=row["wiki"],
+        checked=row["checked"], edited=row["edited"]))
+    return True
+
+
+async def tick():
+    """One turn of the task queue. Registered with the scheduler as `tasks`.
+
+    Fires what is due, then works through the tasks chunk by chunk until there
+    is nothing left or something more important is waiting for the worker.
+
+    The loop is inside the job rather than around it, and that is not an
+    optimisation. `scheduler.enqueue` refuses a job that is already running,
+    which this one is for as long as it lasts — so a job that tried to put
+    itself back in the queue would be refused and the whole task queue would
+    advance one chunk a minute, which for nine thousand pages is three hours
+    of doing almost nothing. Looping here, a run goes at full speed and stops
+    only when it is asked to: `scheduler.waiting_ahead` says a module job is
+    due, the loop returns, the news pass goes through, and the clock queues
+    this job again at the next minute.
+    """
+    import scheduler
+
+    made = await asyncio.to_thread(_fire_schedules)
+    for task_id in made:
+        logger.info("task %s opened by a schedule", task_id)
+
+    while True:
+        row = await asyncio.to_thread(_next_task)
+        if row is None:
+            return
+
+        if row["state"] == "pending":
+            await _plan(row)
+        elif row["state"] == "running":
+            await _chunk(row)
+        else:
+            return
+
+        if scheduler.waiting_ahead(scheduler.TASK_PRIORITY):
+            logger.info("the task queue steps aside: something is due")
+            return
+
+
+def register():
+    """Put the task queue on the schedule: every minute, behind the modules."""
+    import scheduler
+
+    scheduler.register(JOB, tick, minutes=tuple(range(60)),
+                       priority=scheduler.TASK_PRIORITY)

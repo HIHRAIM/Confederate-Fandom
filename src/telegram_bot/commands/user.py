@@ -16,12 +16,12 @@ from aiogram.filters import Command
 from aiogram.types import Message
 
 import db
-import news
+from modules.telepedia import news
 from config import NEWS_TEMPLATES, SOURCE_CHANNEL, WIKIS
 from telegram_bot.client import router, source_chat_id, source_username
 from utils import is_admin, localized, publish_schedule, user_lang, wiki_key
 
-logger = logging.getLogger("tprp.commands")
+logger = logging.getLogger("fd.commands")
 
 STATUS_PREVIEW_LIMIT = 80
 
@@ -85,7 +85,7 @@ def _slot_lines(lang):
 async def help_cmd(message: Message):
     """What the bot does and which three commands it takes."""
     lang = user_lang(message.from_user)
-    if not is_admin(message.from_user.id if message.from_user else 0):
+    if not is_admin("telegram", message.from_user.id if message.from_user else 0):
         await _deny(message, lang)
         return
     await message.answer(localized("help", lang))
@@ -95,7 +95,7 @@ async def status_cmd(message: Message):
     """What the three slots hold, where they come from and when they were
     last rebuilt."""
     lang = user_lang(message.from_user)
-    if not is_admin(message.from_user.id if message.from_user else 0):
+    if not is_admin("telegram", message.from_user.id if message.from_user else 0):
         await _deny(message, lang)
         return
 
@@ -120,11 +120,11 @@ async def update_cmd(message: Message):
     all three files are uploaded again — the answer to a file that was changed
     or deleted on the wiki behind the bot's back."""
     lang = user_lang(message.from_user)
-    if not is_admin(message.from_user.id if message.from_user else 0):
+    if not is_admin("telegram", message.from_user.id if message.from_user else 0):
         await _deny(message, lang)
         return
 
-    import publisher
+    from modules.telepedia import publisher
 
     if publisher.is_running():
         await message.answer(localized("update_busy", lang))
@@ -164,7 +164,7 @@ async def backfill_cmd(message: Message):
 
     The channel needs a public @name: the preview is addressed by name."""
     lang = user_lang(message.from_user)
-    if not is_admin(message.from_user.id if message.from_user else 0):
+    if not is_admin("telegram", message.from_user.id if message.from_user else 0):
         await _deny(message, lang)
         return
 
@@ -174,7 +174,7 @@ async def backfill_cmd(message: Message):
         await message.answer(localized("backfill_no_channel", lang))
         return
 
-    from backfill import sync
+    from modules.telepedia.backfill import sync
 
     refresh_all = "all" in (message.text or "").lower().split()
     await message.answer(localized("backfill_started", lang))

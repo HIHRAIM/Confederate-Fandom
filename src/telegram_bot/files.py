@@ -9,7 +9,7 @@ from io import BytesIO
 
 from telegram_bot.client import bot
 
-logger = logging.getLogger("tprp.files")
+logger = logging.getLogger("fd.files")
 
 async def download_photo(file_id):
     """The bytes of one photo, or None when Telegram will not give them.
