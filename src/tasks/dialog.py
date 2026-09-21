@@ -75,17 +75,45 @@ class Conversation:
         raise NotImplementedError
 
 
-def mechanics_list(lang):
-    """The catalogue as a person reads it: a number, a code and a line."""
-    lines = [localized("tasks_header", lang)]
+def mechanics_entries(lang):
+    """The catalogue as data, one dict per mechanic, in the numbered order.
+
+    -> [{"number", "name", "code", "description", "destructive"}, ...]
+
+    What a mechanic is called and what it does belongs here, next to the
+    registry that knows the order; how it *looks* does not. The two messengers
+    show this list very differently — a paginated embed on Discord, an HTML
+    message with buttons of its own on Telegram — and neither spelling of
+    bold or of monospace has any business in tasks/.
+    """
+    entries = []
     for number, mechanic in registry.numbered():
-        lines.append("{}. {} — {}\n    `{}`{}".format(
-            number,
-            localized(mechanic.name_key, lang),
-            localized(mechanic.desc_key, lang),
-            mechanic.code,
-            "  " + localized("tasks_destructive_mark", lang)
-            if mechanic.destructive else ""))
+        entries.append({
+            "number": number,
+            "name": localized(mechanic.name_key, lang),
+            "code": mechanic.code,
+            "description": localized(mechanic.desc_key, lang),
+            "destructive": bool(mechanic.destructive),
+        })
+    return entries
+
+
+def mechanics_list(lang):
+    """The catalogue as one plain block of text, for the dialog's question.
+
+    The dialog asks which mechanics to run as an ordinary message that a
+    person answers by typing a number, so it can carry no markup: a backtick
+    sent to Telegram with no parse mode is a backtick on the screen. That is
+    what `/tasks` used to print too, and why it looked the way it did; the
+    command now renders `tasks/lists.py: catalogue` with the formatting and
+    the pages of whichever messenger asked.
+    """
+    lines = [localized("tasks_header", lang)]
+    for entry in mechanics_entries(lang):
+        lines.append("{}. {} [{}] — {}{}".format(
+            entry["number"], entry["name"], entry["code"], entry["description"],
+            " " + localized("tasks_destructive_mark", lang)
+            if entry["destructive"] else ""))
     return "\n".join(lines)
 
 
@@ -368,6 +396,9 @@ async def build(conv, tokens=()):
                              requester=requester, reply_chat=conv.chat_key)
     await conv.say(localized("task_created", conv.lang, id=task_id,
                              wiki=wiki_key, mechanics=", ".join(codes)))
+    notice = task_queue.queue_notice(task_id, conv.lang)
+    if notice:
+        await conv.say(notice)
     scheduler.enqueue(task_queue.JOB, reason="task {} created".format(task_id))
     return task_id
 

@@ -1,11 +1,12 @@
-"""Appointing wiki administrators on Telegram.
+"""Appointing wiki administrators on Telegram, and the database backup.
 
-Two commands, and only a bot administrator may use them: control of the bot
+Three commands, and only a bot administrator may use them: control of the bot
 lives in config.ADMINS and nothing stored can hand it out.
 
     /wikiadmin                       — who is appointed
     /wikiadmin <@ник или ID> <ник на Fandom>
     /remwikiadmin <@ник или ID>
+    /backup                          — the database, encrypted
 
 The Fandom name is not optional and not guessed. It is what the bot checks on
 the wiki before every run that person asks for (wiki/rights.py:
@@ -114,3 +115,47 @@ async def remwikiadmin_cmd(message: Message):
         await message.answer(localized("wikiadmin_removed", lang, user_id=user_id))
     else:
         await message.answer(localized("wikiadmin_not_found", lang, user_id=user_id))
+
+
+@router.message(Command("backup"))
+async def backup_cmd(message: Message):
+    """Send an encrypted snapshot of the database to whoever asked.
+
+    The same file, and the same format, the twice-daily job sends to
+    config.BACKUP_CHATS; this is the on-demand half of it, for the moment
+    before somebody edits something they are not sure about.
+
+    **Private chats only.** The file is the whole database, and a group keeps
+    it for as long as the group exists — an administrators' group included.
+    Encryption is what makes the file safe to store, not safe to hand round,
+    so the one place it is sent is the chat between the bot and the person who
+    asked. Without BACKUP_KEY the bot says so and sends nothing: a plaintext
+    database is never the fallback.
+    """
+    lang = user_lang(message.from_user)
+    if not is_admin("telegram", message.from_user.id if message.from_user else 0):
+        await message.answer(localized("not_admin", lang))
+        return
+    if message.chat.type != "private":
+        await message.answer(localized("backup_private_only", lang))
+        return
+
+    import asyncio
+
+    from aiogram.types import BufferedInputFile
+
+    import backup_crypto
+    from tasks import report
+
+    if not backup_crypto.available():
+        await message.answer(localized("backup_no_key", lang))
+        return
+    try:
+        data = await asyncio.to_thread(backup_crypto.build_backup)
+    except Exception as e:
+        logger.exception("the backup could not be built")
+        await message.answer(localized("backup_failed", lang,
+                                       error=report.safe_error(e)))
+        return
+    await message.answer_document(
+        BufferedInputFile(data, filename=backup_crypto.backup_filename()))

@@ -1,8 +1,7 @@
 """The modules: the standing work the bot was built for.
 
 A module is one wiki's worth of ongoing work, with its own files and its own
-jobs — the shape dem_bot uses for its quizzes and its economy, and the shape
-this bot's two long-standing jobs now have too:
+jobs, and it is the shape this bot's two long-standing jobs now have:
 
 | Module | Wikis | What it does |
 |---|---|---|

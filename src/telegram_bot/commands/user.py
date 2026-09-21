@@ -83,12 +83,18 @@ def _slot_lines(lang):
 
 @router.message(Command("help"))
 async def help_cmd(message: Message):
-    """What the bot does and which three commands it takes."""
+    """What the bot does and which commands it takes.
+
+    Paged like the other long answers. The text is escaped whole before it is
+    sent as HTML: it is the one place the project's own strings carry angle
+    brackets, and Telegram would swallow them."""
     lang = user_lang(message.from_user)
     if not is_admin("telegram", message.from_user.id if message.from_user else 0):
         await _deny(message, lang)
         return
-    await message.answer(localized("help", lang))
+    from telegram_bot import pages
+
+    await pages.send(message, "help", lang)
 
 @router.message(Command("status"))
 async def status_cmd(message: Message):

@@ -61,6 +61,19 @@ SERVICE_CHATS = {
     },
 }
 
+# Where the encrypted database backup goes: twice a day on its own, and on
+# /backup when an administrator asks. Same shape as SERVICE_CHATS, and
+# deliberately a separate setting rather than a default to it — the file is the
+# whole database (who is appointed on which wiki, every task ever asked for),
+# and the chat that reads status lines is rarely the chat that should keep one.
+# It is encrypted before it leaves the process, with BACKUP_KEY from .env;
+# without that key nothing is sent and nothing is written in clear. Leave the
+# sets empty to make no automatic backups at all.
+BACKUP_CHATS = {
+    "telegram": set(),
+    "discord": set(),
+}
+
 # The language service messages are written in — one of the six the i18n files
 # cover: en, es, pl, pt, ru, uk. Replies to a command follow the language of
 # the person who sent it instead.

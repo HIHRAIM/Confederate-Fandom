@@ -29,9 +29,25 @@ the folder to Pywikibot's own, so no wiki has to be added to the library.
 The library also talks, and it is made to talk through this bot's logging
 rather than past it (`_route_library_logging`), so that one journal reads as
 one journal.
+
+**A login that fails must not be permanent, and once it was.** Three things
+made it so, and all three are answered below. `pywikibot.Site()` is a caching
+factory rather than a constructor, so dropping this module's own `_session`
+entry and building the site again handed back the very same object, stale
+login status and all (`_drop_cached_site`). Emptying the cookie jar before
+`action=login` did not survive to the request, because the library reloads the
+jar from disk inside `login()` and this module's `load()` ignored the name it
+was given (`_WikiCookieJar.suppress_load`). And nothing ever gave up on a wiki:
+a bot that cannot log in tried again every quarter of an hour for three days,
+earning `429`s that made the next attempt worse (`_blocked_until`).
+
+Module state, one copy each: `_session` (the live Site per wiki), `_jars` (the
+cookie jar per wiki) and `_blocked_until` (the wikis being left alone, and
+until when).
 """
 import logging
 import os
+import time
 from http import cookiejar
 
 CONFIG_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "botconfig")
@@ -100,6 +116,38 @@ def _route_library_logging():
 
 _route_library_logging()
 
+LOGIN_COOLDOWN = 900
+"""How long a wiki that has just refused the bot is left alone, in seconds.
+
+Fifteen minutes, which is one publishing pass: a wiki that refused once is
+skipped for a turn and tried again on the next, so a passing failure costs one
+pass and nothing more."""
+
+LOGIN_COOLDOWN_MAX = 3600
+"""The longest a wiki is left alone, however many times it has refused.
+
+The wait doubles with each round that fails and stops here, at the hour Fandom
+itself asks for in `Retry-After`. The doubling is the point: a wiki that is
+briefly unhappy is back within a pass, and one that will not have the bot at
+all is asked once an hour instead of ninety-six times a day — which is what
+earned the `429`s that made every following login worse."""
+
+RETRY_MAX = 120
+"""The longest Pywikibot may wait between two attempts at one request.
+
+Fandom answers an over-eager bot with `429` and a `Retry-After` of a whole
+hour, and the library obeys it *inside* the request — on a bot with one
+worker thread that stops every other job for an hour, including the ones for
+other wikis. Capped here so that a rate limit costs a failed pass instead of
+an idle bot. Best effort: it is the library's own setting, and a version that
+renames it simply leaves the old behaviour."""
+
+try:
+    pywikibot.config.retry_max = RETRY_MAX
+    pywikibot.config.max_retries = min(pywikibot.config.max_retries, 5)
+except Exception as e:
+    logger.warning("could not cap Pywikibot's retries: %s", e)
+
 pywikibot.config.put_throttle = WIKI_PUT_THROTTLE
 """How long Pywikibot waits between two edits, in seconds.
 
@@ -112,6 +160,14 @@ one. The value is in config.py for the wiki that asks for something else."""
 _session = {}
 
 _jars = {}
+
+_blocked_until = {}
+"""The wikis that would not let the bot in, and the monotonic time until which
+they are left alone. Emptied for a wiki the moment it lets the bot in."""
+
+_failures = {}
+"""How many rounds of logging in have failed in a row, per wiki. What the
+cooldown doubles on, and cleared by the first login that works."""
 
 class _WikiCookieJar(http.PywikibotCookieJar):
     """A cookie jar that belongs to one wiki and stays on its own file.
@@ -134,12 +190,48 @@ class _WikiCookieJar(http.PywikibotCookieJar):
         """Bind the jar to one file, for good."""
         super().__init__()
         self.filename = filename
+        self._suppressed = False
+
+    def suppress_load(self, suppressed=True):
+        """Stop `load()` reading the file, or let it read again.
+
+        The one thing that made emptying the jar useless. `site.login()` calls
+        `http.cookie_jar.load(self.username())` before it sends anything, and
+        the override below reads the file whatever name it is handed — so the
+        stale session cookie that had just been cleared was back in the jar,
+        and travelled out with the very login meant to replace it. MediaWiki
+        refuses `action=login` while a bot-password session is attached, and
+        the login failed on a coin toss.
+
+        Held for as long as the caller says rather than for one call: the
+        library retries a login on its own, and a one-shot flag would be spent
+        on the first attempt and let the second carry the cookie again.
+        """
+        self._suppressed = bool(suppressed)
 
     def load(self, user="", *args, **kwargs):
         """Read this wiki's cookies, ignoring the name Pywikibot suggests."""
+        if self._suppressed:
+            return
         try:
             cookiejar.LWPCookieJar.load(self, self.filename, ignore_discard=True)
         except (cookiejar.LoadError, OSError):
+            pass
+
+    def forget(self):
+        """Empty the jar and take its file with it.
+
+        The hard reset. A session cookie the wiki has forgotten is worse than
+        no cookie at all, and a file holding one would be read back at the
+        next start; the file is working data and is written again by the next
+        successful login."""
+        try:
+            self.clear()
+        except Exception:
+            pass
+        try:
+            os.remove(self.filename)
+        except OSError:
             pass
 
     def save(self, *args, **kwargs):
@@ -216,6 +308,140 @@ def _write_password_file():
         logger.warning("could not restrict the credentials file to this user: %s", e)
     return path
 
+def _drop_cached_site(family, lang):
+    """Take one wiki out of Pywikibot's own Site cache. -> how many went.
+
+    `pywikibot.Site()` is a caching factory and not a constructor: it keeps
+    every Site it has built in `pywikibot._sites`, keyed by code, family, user
+    and interface, and hands the same object back for the life of the process.
+
+    That is what made a failed login permanent. This module would drop its own
+    `_session` entry, take what it thought was the cold path, and be given
+    back the very same object — with its stale `_loginstatus`, its cached
+    login token and its cached userinfo — so `site.login()` failed exactly as
+    it had failed the time before, four times an hour for three days.
+    Clearing our own dictionary was clearing the wrong one.
+
+    Matched on the site's own attributes rather than by rebuilding the cache
+    key: the key's shape is the library's business and has changed between
+    versions, while a Site has always known its code and its family.
+    """
+    cache = getattr(pywikibot, "_sites", None)
+    if not isinstance(cache, dict):
+        return 0
+    gone = 0
+    for cache_key, cached in list(cache.items()):
+        family_name = getattr(getattr(cached, "family", None), "name", None)
+        if getattr(cached, "code", None) == lang and family_name == family:
+            cache.pop(cache_key, None)
+            gone += 1
+    return gone
+
+
+def _forget_login(site):
+    """Make one Site object forget that it ever logged in.
+
+    The belt to `_drop_cached_site`'s braces, for whatever still holds a
+    reference to the old object. Each of the three is wrapped on its own: they
+    are the library's private furniture, and a version that renames one should
+    cost the reset that piece and not the whole of it.
+    """
+    try:
+        del site.userinfo
+    except Exception:
+        pass
+    try:
+        site.tokens.clear()
+    except Exception:
+        pass
+    try:
+        site._loginstatus = pywikibot.login.LoginStatus.NOT_LOGGED_IN
+    except Exception:
+        pass
+
+
+def _hard_reset(family, lang, key):
+    """Throw away everything this process remembers about one wiki.
+
+    The session, Pywikibot's cached Site, the cookie jar and the cookie file.
+    What is left afterwards is what a freshly started process has, which is
+    the state that was known to recover — restarting the unit was the only
+    cure for three days, and this is that restart for one wiki.
+    """
+    _session.pop(key, None)
+    gone = _drop_cached_site(family, lang)
+    jar = _jars.pop(key, None)
+    if jar is not None:
+        jar.forget()
+    logger.warning("the wiki layer for %s was reset (%s cached site(s) dropped)",
+                   key, gone)
+    _use_cookies(key)
+
+
+class WikiUnknown(ValueError):
+    """Pywikibot has no way to address this wiki: no such family, or no such
+    language in it.
+
+    Kept apart from a failed login on purpose. A login can fail for a while
+    and come back, which is what the reset and the parking are for; a family
+    file without the language fails the same way every time, and treating it
+    as a login wasted two resets per wiki and then reported «could not log in»
+    about wikis the bot had never tried to log in to. That is how a run over
+    tadc:ru found every sister wiki «unreachable»: the family had been
+    generated for ``ru`` alone, and nothing had taught it the others.
+    """
+
+
+def _unknown_site(error):
+    """Whether an exception from `pywikibot.Site()` means "no such wiki"."""
+    name = type(error).__name__
+    return (name in ("UnknownSiteError", "UnknownFamilyError")
+            or "does not exist in family" in str(error))
+
+
+def _login_from_scratch(family, lang, key):
+    """Build the Site and sign in. -> the Site, or None when it would not.
+
+    Returns None for anything a reset might cure, so the caller can decide
+    between trying again and giving up. Raises `WikiUnknown` for the one
+    thing no reset cures: a family that cannot name this wiki at all.
+    """
+    _write_password_file()
+    pywikibot.config.register_families_folder(FAMILIES_DIR)
+    pywikibot.config.usernames[family][lang] = WIKI_USERNAME
+    pywikibot.config.password_file = PASSWORD_FILE
+
+    try:
+        site = pywikibot.Site(lang, family)
+    except Exception as e:
+        if _unknown_site(e):
+            raise WikiUnknown(
+                "Pywikibot cannot address {}: {}".format(key, e)) from e
+        logger.warning("could not open %s: %s", key, e)
+        return None
+    try:
+        site.login()
+    except Exception as e:
+        logger.warning("could not log in to %s: %s", key, e)
+        return None
+    _jars[key].save()
+    logger.info("logged in to %s as %s (bot flag: %s)", site, site.username(),
+                "yes" if has_bot_right(site) else "no — edits will not be marked")
+    return site
+
+
+def _cooldown_for(key):
+    """How long to leave one wiki alone after a round of failed logins.
+
+    Doubles with each round and stops at LOGIN_COOLDOWN_MAX. Counted per wiki,
+    because one wiki of the farm refusing the bot says nothing about the
+    others, and reset by the first login that works — a bot that recovers
+    must not carry yesterday's failures into today's waiting.
+    """
+    _failures[key] = _failures.get(key, 0) + 1
+    return min(LOGIN_COOLDOWN * (2 ** (_failures[key] - 1)), LOGIN_COOLDOWN_MAX)
+
+
 def get_site(family, lang):
     """The logged-in Site of one wiki, built once and kept.
 
@@ -223,11 +449,29 @@ def get_site(family, lang):
     costs a request and a cookie, and a pass that writes to three wikis should
     pay for it once each and not once per page.
 
+    Four ways in, in the order they are tried. The session that is already
+    there and still works. The session the wiki has forgotten, renewed in
+    place (`_sign_in_again`). A wiki whose renewal failed, reset to the state
+    a restarted process would have and logged into from nothing. And, when
+    even that fails twice, no way in at all for `LOGIN_COOLDOWN`: the wiki is
+    parked, this raises at once, and the pass fails for that wiki alone
+    instead of the bot spending the next three days proving it cannot log in.
+
     Blocking: every Pywikibot call is, which is why the publishing pass runs
     in a worker thread (publisher.py). Only one pass runs at a time, so this
     is reached from one thread at a time as well."""
     key = "{}:{}".format(family, lang)
     _use_cookies(key)
+
+    until = _blocked_until.get(key)
+    if until is not None:
+        left = until - time.monotonic()
+        if left > 0:
+            raise RuntimeError(
+                "{} would not let the bot in; leaving it alone for another "
+                "{} s".format(key, int(left)))
+        _blocked_until.pop(key, None)
+
     site = _session.get(key)
     if site is not None:
         if is_signed_in(site):
@@ -238,18 +482,23 @@ def get_site(family, lang):
             _session[key] = site
             logger.info("the session on %s was restored", key)
             return site
-        raise RuntimeError("the session on {} expired and could not be renewed".format(key))
+        logger.warning("%s: the session could not be renewed — starting the "
+                       "wiki layer over", key)
+        _hard_reset(family, lang, key)
 
-    _write_password_file()
-    pywikibot.config.register_families_folder(FAMILIES_DIR)
-    pywikibot.config.usernames[family][lang] = WIKI_USERNAME
-    pywikibot.config.password_file = PASSWORD_FILE
+    site = _login_from_scratch(family, lang, key)
+    if site is None:
+        logger.warning("%s: the login failed — resetting and trying once more", key)
+        _hard_reset(family, lang, key)
+        site = _login_from_scratch(family, lang, key)
+    if site is None:
+        wait = _cooldown_for(key)
+        _blocked_until[key] = time.monotonic() + wait
+        raise RuntimeError(
+            "could not log in to {}; leaving it alone for {} s".format(key, wait))
 
-    site = pywikibot.Site(lang, family)
-    site.login()
-    _jars[key].save()
-    logger.info("logged in to %s as %s (bot flag: %s)", site, site.username(),
-                "yes" if has_bot_right(site) else "no — edits will not be marked")
+    _blocked_until.pop(key, None)
+    _failures.pop(key, None)
     _session[key] = site
     return site
 
@@ -287,34 +536,47 @@ def _sign_in_again(site):
     with no username at all. Anonymous, the request is accepted and the login
     goes through, which is why a restarted process recovers and a running one
     did not."""
+    jar = http.cookie_jar
     try:
-        http.cookie_jar.clear()
+        jar.suppress_load()
+        jar.clear()
     except Exception as e:
         logger.warning("could not clear the login cookies: %s", e)
-    try:
-        del site.userinfo
-    except Exception:
-        pass
-    try:
-        site._loginstatus = pywikibot.login.LoginStatus.NOT_LOGGED_IN
-    except Exception:
-        pass
+    _forget_login(site)
     try:
         _write_password_file()
         site.login()
-        http.cookie_jar.save()
+        jar.save()
         return True
     except Exception as e:
         logger.warning("logging in to %s again failed: %s", site, e)
         return False
+    finally:
+        try:
+            jar.suppress_load(False)
+        except Exception:
+            pass
 
 def forget_sessions():
-    """Drop every stored session, so the next pass logs in from scratch.
+    """Start the wiki layer over, for every wiki. -> how many were reset.
 
-    The cookies are kept: they are per wiki and still good. Nothing calls this
-    on the ordinary path; it is here for the case where a wiki has to be given
-    up on entirely and started again."""
-    _session.clear()
+    Everything this process remembers goes: the sessions, Pywikibot's own
+    cached Sites, the cookie jars and their files. It used to clear only
+    `_session`, which is precisely the dictionary that does *not* matter —
+    the library handed the same Site straight back, and the function was
+    useless in the one situation it exists for.
+
+    Nothing calls it on the ordinary path. It is the manual form of what
+    `get_site` now does by itself.
+    """
+    keys = sorted(set(_session) | set(_jars) | set(_blocked_until))
+    for key in keys:
+        family, _, lang = key.partition(":")
+        if family and lang:
+            _hard_reset(family, lang, key)
+    _blocked_until.clear()
+    _failures.clear()
+    return len(keys)
 
 def has_bot_right(site):
     """Whether this account may mark its edits as bot edits on this wiki.

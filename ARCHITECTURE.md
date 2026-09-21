@@ -79,7 +79,7 @@ Every kind may have `prepare(ctx)` (compile the rules, read the deletion log, wo
 
 ## Jobs, the clock and the queue
 
-`scheduler.py` holds the registry, the clock and the worker. `register(name, run, minutes=…|daily_at=…, priority=…)` puts a job on the schedule; the clock sleeps until the nearest due moment across all jobs — one timer, not one loop per job — and calls `enqueue`. The worker takes them one at a time.
+`scheduler.py` holds the registry, the clock and the worker. `register(name, run, minutes=…|daily_at=…, priority=…)` puts a job on the schedule; the clock sleeps until the nearest due moment across all jobs — one timer, not one loop per job — and calls `enqueue`. The worker takes them one at a time. `daily_at` takes one `"HH:MM"` or several: `minutes` repeats every hour and one `daily_at` once a day, so a job wanting anything between them — the backup, every twelve hours — names its times.
 
 **Priority is what makes the three kinds of work live together.** Module jobs are 0 and are inserted ahead of everything; the task queue is 10. `enqueue` refuses a job that is already running or already waiting, which is the whole protection against a slow night: without it the queue would grow a news pass per quarter of an hour for as long as a walk lasted.
 
@@ -110,10 +110,16 @@ Every kind may have `prepare(ctx)` (compile the rules, read the deletion log, wo
 | The nineteen mechanics | `scripts/<name>.py`, one per script |
 | Turning a domain into a Pywikibot family | `wiki/families.py` |
 | Logging in, keeping sessions apart, noticing a forgotten one | `wiki/site.py` (`get_site`, `_use_cookies`, `use_cookies`, `is_signed_in`, `_sign_in_again`) |
+| Getting back in after a login that failed | `wiki/site.py` (`_drop_cached_site`, `_hard_reset`, `_login_from_scratch`, `_cooldown_for`, `forget_sessions`) |
 | Keeping the credentials file unreadable to others | `wiki/site.py` (`_write_password_file`) |
 | Making Pywikibot's own lines go through this bot's log | `wiki/site.py` (`_route_library_logging`) |
 | Editing a template; uploading a file | `wiki/pages.py` |
 | The schedule, the queue and the priorities | `scheduler.py` |
+| Where a task stands in the queue, and when it will be reached | `tasks/queue.py` (`queue_place`, `queue_notice`), `utils.py` (`format_duration`) |
+| What the long list answers say | `tasks/lists.py` (`catalogue`, `jobs`, `schedules`, `help_text`) |
+| What the Discord presence says | `discord_bot/status.py` (`text`, `loop`), `scheduler.py` (`job_names`), `db/schedules.py` (`next_schedule`) |
+| How they look, and their page arrows | `discord_bot/pages.py`, `telegram_bot/pages.py`, `utils.py` (`paginate`) |
+| An encrypted, consistent copy of the database | `backup_crypto.py`, `restore_backup.py`, `main.py` (`backup_job`) |
 | The standing jobs and what each reports | `modules/telepedia/__init__.py`, `modules/pokemon/__init__.py` |
 | The slash commands and the log channels | `discord_bot/` |
 | Localization runtime; the admin check; service chats | `utils.py` |

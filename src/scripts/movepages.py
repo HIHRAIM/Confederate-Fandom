@@ -6,6 +6,21 @@
     rewrite the title with a regular expression, and choose what happens to
     the redirect, the talk page and the subpages.
 
+One mode is this bot's own: **a list of pairs**. A rule is the right shape for
+a hundred pages named alike and the wrong shape for nine pages named nothing
+alike, and the second is what people actually ask for. So `list` takes a
+pasted block of ``старое_название новое_название``, one rename per line, and
+the pages of the run are the left-hand column — which is why the mode goes
+with the `pairs` page source and refuses to run with any other: both halves
+are read out of the same block, and taking pages from somewhere else would
+mean moving pages the list never named.
+
+Spaces in a title are written as underscores there, the way MediaWiki writes
+them in a URL. That is not a whim either: Discord's own markdown turns text
+between underscores into italics and eats them, so a person pasting a list
+into Discord wraps it in a code fence — which `tasks/params.py: parse_pairs`
+strips.
+
 A move is not an edit and cannot be undone by editing, so this mechanic is
 marked destructive and the confirmation says so. Two things are refused
 outright rather than attempted:
@@ -31,18 +46,39 @@ PREFIX_REMOVE = "prefix_remove"
 SUFFIX_ADD = "suffix_add"
 SUFFIX_REMOVE = "suffix_remove"
 REGEX = "regex"
+LIST = "list"
+
+RULE_MODES = (PREFIX_ADD, PREFIX_REMOVE, SUFFIX_ADD, SUFFIX_REMOVE, REGEX)
+"""The modes that work by a rule, and so have something to be told.
+
+`list` is the one that does not: it is handed the whole answer at once, in the
+page source, and asking it for a prefix as well would be asking a question
+with no answer."""
 
 FLAG_NO_REDIRECT = "no_redirect"
 FLAG_MOVE_TALK = "move_talk"
 FLAG_MOVE_SUBPAGES = "move_subpages"
 
 
+def _pair_map(pairs):
+    """The renames by title, under every spelling the wiki might answer with.
+
+    A wiki capitalises the first letter of a title, so «список серий» and
+    «Список серий» are one page to it and two strings here. The pages come
+    back from Pywikibot in the wiki's spelling, so the capitalised form is
+    kept as a key too and a line written in lower case still finds its page.
+    """
+    table = {}
+    for old, new in pairs:
+        table[old] = new
+        if old[:1].islower():
+            table[old[:1].upper() + old[1:]] = new
+    return table
+
+
 def prepare(ctx):
     """Check the rule and the rights before the first page is moved."""
     mode = ctx.params.get("move_mode") or PREFIX_ADD
-    argument = (ctx.params.get("move_argument") or "").strip()
-    if not argument:
-        raise ValueError("не указано, что добавлять, убирать или искать в названии")
 
     flags = set(ctx.params.get("move_flags") or [])
     if FLAG_NO_REDIRECT in flags:
@@ -53,6 +89,27 @@ def prepare(ctx):
                 "чтобы переименовывать без перенаправления, нужно право "
                 "suppressredirect — его даёт статус администратора")
 
+    if mode == LIST:
+        from tasks import pagesets
+        from tasks.params import parse_pairs
+
+        if (ctx.params.get("source") or "") != pagesets.PAIRS:
+            raise ValueError(
+                "переименование списком берёт из одного списка и страницы, и "
+                "новые названия — выберите источник страниц «список "
+                "переименований»")
+        pairs = parse_pairs(ctx.params.get("argument"))
+        if not pairs:
+            raise ValueError(
+                "в списке не нашлось ни одной пары «старое новое»: по паре в "
+                "строке, пробел в названии пишется подчёркиванием")
+        return {"mode": mode, "pairs": _pair_map(pairs), "argument": "",
+                "pattern": None, "to": ""}
+
+    argument = (ctx.params.get("move_argument") or "").strip()
+    if not argument:
+        raise ValueError("не указано, что добавлять, убирать или искать в названии")
+
     pattern = None
     if mode == REGEX:
         try:
@@ -61,7 +118,7 @@ def prepare(ctx):
             raise ValueError("не удалось разобрать выражение «{}»: {}".format(
                 argument, e))
     return {"mode": mode, "argument": argument, "pattern": pattern,
-            "to": ctx.params.get("move_to") or ""}
+            "pairs": {}, "to": ctx.params.get("move_to") or ""}
 
 
 def _new_title(state, title):
@@ -78,6 +135,8 @@ def _new_title(state, title):
     if mode == REGEX:
         new = state["pattern"].sub(state["to"], title)
         return new if new != title else None
+    if mode == LIST:
+        return state["pairs"].get(title)
     return None
 
 
@@ -124,8 +183,10 @@ SPEC = mech.Mechanic(
             (SUFFIX_ADD, "move_mode_suffix_add"),
             (SUFFIX_REMOVE, "move_mode_suffix_remove"),
             (REGEX, "move_mode_regex"),
+            (LIST, "move_mode_list"),
         )),
-        Param("move_argument", TEXT, "param_move_argument"),
+        Param("move_argument", TEXT, "param_move_argument",
+              depends=("move_mode", RULE_MODES)),
         Param("move_to", TEXT, "param_move_to",
               depends=("move_mode", REGEX)),
         Param("move_flags", FLAGS, "param_move_flags", options=(

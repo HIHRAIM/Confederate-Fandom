@@ -27,9 +27,10 @@ still going when the next quarter of an hour arrives does not collect four
 news passes behind it, only one.
 
 Registering a job is `register(name, run, minutes=…)` for the ones that happen
-at given minutes past the hour, or `daily_at="20:00"` for once a day. `run` is
-a coroutine and gets no arguments; whatever it wants to report, it reports
-itself.
+at given minutes past the hour, or `daily_at="20:00"` for once a day — or
+`daily_at=("04:30", "16:30")` for a job that wants a period the other shape
+cannot say, such as every twelve hours. `run` is a coroutine and gets no
+arguments; whatever it wants to report, it reports itself.
 """
 import asyncio
 import logging
@@ -50,15 +51,31 @@ _state = {"running": None, "started_at": None}
 _wakeup = asyncio.Event()
 
 
+def _daily_times(daily_at):
+    """`daily_at` as a tuple of "HH:MM" strings: one time, or several.
+
+    A bare string is one time and stays one — that is what every caller
+    written before this passed, and what most of them still pass. A list or a
+    tuple is several times a day, which is the only way to say a period the
+    other shape cannot: `minutes` repeats every hour, `daily_at` once a day,
+    and a backup that wants to happen every twelve hours falls between them.
+    """
+    if not daily_at:
+        return ()
+    if isinstance(daily_at, str):
+        return (daily_at,)
+    return tuple(str(item) for item in daily_at if item)
+
+
 def register(name, run, minutes=None, daily_at=None, priority=MODULE_PRIORITY):
     """Add one job to the schedule.
 
     `minutes` is a list of minutes past the hour; `daily_at` is "HH:MM" local
-    time. A job with neither runs only when something asks for it by name.
-    `priority` decides who waits for whom: lower goes first.
+    time, or several of them. A job with neither runs only when something asks
+    for it by name. `priority` decides who waits for whom: lower goes first.
     """
     _jobs[name] = {"run": run, "minutes": tuple(minutes or ()),
-                   "daily_at": daily_at, "priority": int(priority)}
+                   "daily_at": _daily_times(daily_at), "priority": int(priority)}
 
 
 def enqueue(name, reason="asked for"):
@@ -103,6 +120,15 @@ def running():
     return _state["running"]
 
 
+def job_names():
+    """Every registered job, by name.
+
+    What the Discord presence walks to find the next thing due. The registry
+    itself stays private: a caller that could reach into `_jobs` would be a
+    caller that could change one."""
+    return list(_jobs)
+
+
 def waiting():
     """The jobs waiting their turn, in order."""
     return list(_queue)
@@ -115,10 +141,19 @@ def next_due(name, now=None):
         return None
     now = now or datetime.now()
     if job["daily_at"]:
-        hour, _, minute = job["daily_at"].partition(":")
-        target = now.replace(hour=int(hour), minute=int(minute or 0),
-                             second=0, microsecond=0)
-        return target if target > now else target + timedelta(days=1)
+        candidates = []
+        for moment in job["daily_at"]:
+            hour, _, minute = str(moment).partition(":")
+            try:
+                target = now.replace(hour=int(hour), minute=int(minute or 0),
+                                     second=0, microsecond=0)
+            except ValueError:
+                logger.warning("job %s has an unreadable time %r — ignoring it",
+                               name, moment)
+                continue
+            candidates.append(target if target > now
+                              else target + timedelta(days=1))
+        return min(candidates) if candidates else None
     marks = sorted({int(m) % 60 for m in job["minutes"]})
     if not marks:
         return None

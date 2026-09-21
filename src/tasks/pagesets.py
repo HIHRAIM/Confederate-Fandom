@@ -37,6 +37,7 @@ PREFIX = "prefix"
 TITLES = "titles"
 NEWPAGES = "new"
 RECENT = "recent"
+PAIRS = "pairs"
 
 SOURCES = (
     (ALL, "pageset_all", False),
@@ -50,6 +51,7 @@ SOURCES = (
     (TITLES, "pageset_titles", True),
     (NEWPAGES, "pageset_new", False),
     (RECENT, "pageset_recent", False),
+    (PAIRS, "pageset_pairs", True),
 )
 """(code, the i18n key of its line, whether it needs an argument). The order
 is the order the numbered list is printed in, so it may not be shuffled
@@ -186,6 +188,11 @@ def collect(site, params):
         wanted = [line.strip() for line in
                   str(argument).replace("|", "\n").split("\n")]
         return [title for title in wanted if title][:limit or None]
+
+    if source == PAIRS:
+        from tasks.params import parse_pairs
+
+        return [old for old, _new in parse_pairs(argument)][:limit or None]
 
     if source == NEWPAGES:
         total = limit or 200

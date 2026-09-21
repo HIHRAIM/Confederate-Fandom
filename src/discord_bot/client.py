@@ -147,5 +147,17 @@ async def send_files(channel_id, paths, caption=None):
 
 
 async def main():
-    """Start the client. Runs as one of the tasks main.py waits on."""
-    await client.start(DISCORD_TOKEN)
+    """Start the client and the presence loop. One of the tasks main.py waits on.
+
+    The loop is a child of this task rather than another entry in main.py:
+    it has nothing to do without a connection, and cancelling it here is what
+    makes it end when the connection does instead of outliving it by up to
+    its own interval.
+    """
+    from discord_bot import status
+
+    presence = asyncio.create_task(status.loop(), name="discord-status")
+    try:
+        await client.start(DISCORD_TOKEN)
+    finally:
+        presence.cancel()

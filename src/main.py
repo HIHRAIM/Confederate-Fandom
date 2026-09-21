@@ -20,6 +20,8 @@ whole design:
   and a news pass slips in between two of them.
 * the **nightly sweep**, which throws away the page lists and report files of
   runs that are long over.
+* the **backup**, twice a day: an encrypted snapshot of the database into the
+  chats config.BACKUP_CHATS names.
 
 Import order at the top matters: `db.init()` runs before the Telegram package
 is imported further, so the schema exists before anything queries it.
@@ -45,6 +47,15 @@ db.init()
 
 SWEEP_AT = "04:00"
 
+BACKUP_AT = ("04:30", "16:30")
+"""When the encrypted database backup goes out: twice a day, twelve hours apart.
+
+Half an hour behind the sweep rather than beside it, so that what leaves the
+machine is the swept database — the same rows, without the page lists of runs
+that ended a month ago. Fixed times rather than the "every twelve hours since
+start-up" the other bots use: a bot that is restarted often would otherwise
+back itself up on every restart."""
+
 
 async def sweep_job():
     """Throw away what a finished run no longer needs.
@@ -64,6 +75,54 @@ async def sweep_job():
         logger.exception("the nightly sweep failed")
 
 
+async def backup_job():
+    """Send an encrypted snapshot of the database to the backup chats.
+
+    Encrypted before it leaves the process, because of where it goes: a
+    Telegram topic or a Discord channel keeps it for as long as the chat does
+    and shows it to everybody who can read there, and `fd.db` holds who is
+    appointed on which wiki and every task anybody has ever asked for.
+
+    Two ways of having nothing to do, and they are not the same. No backup
+    chats configured is the ordinary state of a deployment that does not want
+    backups, and says nothing. BACKUP_KEY unset while chats *are* configured is
+    somebody expecting backups and not getting them, and says so — once per
+    run, in the log, and never by falling back to sending the database in
+    clear.
+
+    The file is written to a temporary directory under its real name because
+    both messengers take the name from the path, and the directory goes with
+    everything in it however this ends. What is on disk for that moment is the
+    ciphertext; the plaintext snapshot lives and dies inside backup_crypto.
+    """
+    import os
+    import tempfile
+
+    import backup_crypto
+    from tasks import notify
+    from utils import backup_chat_keys
+
+    keys = backup_chat_keys()
+    if not keys:
+        return
+    if not backup_crypto.available():
+        logger.warning("BACKUP_KEY is not set — no database backup was made")
+        return
+    try:
+        data = await asyncio.to_thread(backup_crypto.build_backup)
+    except Exception as e:
+        logger.error("the database backup could not be built: %s", e)
+        return
+    with tempfile.TemporaryDirectory() as folder:
+        path = os.path.join(folder, backup_crypto.backup_filename())
+        with open(path, "wb") as f:
+            f.write(data)
+        for key in keys:
+            await notify.send_files(key, [path])
+    logger.info("the database backup (%s bytes) went to %s chat(s)",
+                len(data), len(keys))
+
+
 def register_jobs():
     """Put the modules, the task queue and the sweep on the schedule.
 
@@ -74,6 +133,8 @@ def register_jobs():
     at_start = modules.register(scheduler)
     task_queue.register()
     scheduler.register("sweep", sweep_job, daily_at=SWEEP_AT,
+                       priority=scheduler.TASK_PRIORITY)
+    scheduler.register("backup", backup_job, daily_at=BACKUP_AT,
                        priority=scheduler.TASK_PRIORITY)
     for name in at_start:
         scheduler.enqueue(name, reason="start-up")

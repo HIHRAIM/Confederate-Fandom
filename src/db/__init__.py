@@ -125,6 +125,7 @@ from db.schedules import (
     list_schedules,
     mark_fired,
     next_due,
+    next_schedule,
     schedule_mechanics,
     schedule_params,
     set_enabled,

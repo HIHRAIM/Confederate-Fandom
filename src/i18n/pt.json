@@ -27,6 +27,18 @@
     "status": "unverified",
     "text": "A ler a pré-visualização pública do canal…"
   },
+  "backup_failed": {
+    "status": "unverified",
+    "text": "Não foi possível fazer a cópia de segurança: {error}"
+  },
+  "backup_no_key": {
+    "status": "unverified",
+    "text": "BACKUP_KEY não está definida: não há com que cifrar a cópia, e o bot não envia a base de dados sem cifrar."
+  },
+  "backup_private_only": {
+    "status": "unverified",
+    "text": "Peça a cópia numa conversa privada: é toda a base de dados e não deve ir parar a um grupo, nem sequer de administradores."
+  },
   "category_action_add": {
     "status": "unverified",
     "text": "adicionar"
@@ -38,6 +50,82 @@
   "category_action_remove": {
     "status": "unverified",
     "text": "remover"
+  },
+  "cmd_backfill": {
+    "status": "unverified",
+    "text": "/backfill — ler a pré-visualização web do canal; com «all», atualizar também o que o bot ouviu por si"
+  },
+  "cmd_backup_dc": {
+    "status": "unverified",
+    "text": "/backup — uma cópia cifrada da base de dados; a resposta é só sua"
+  },
+  "cmd_backup_tg": {
+    "status": "unverified",
+    "text": "/backup — uma cópia cifrada da base de dados; apenas em conversas privadas"
+  },
+  "cmd_go_dc": {
+    "status": "unverified",
+    "text": "/go task_id: <número> — iniciar uma tarefa preparada; com dry: true — ver primeiro, sem escrever nada"
+  },
+  "cmd_go_tg": {
+    "status": "unverified",
+    "text": "/go <número> — iniciar uma tarefa preparada; /go <número> dry — ver primeiro, sem escrever nada"
+  },
+  "cmd_jobs": {
+    "status": "unverified",
+    "text": "/jobs — o que está a correr e como acabaram as últimas tarefas"
+  },
+  "cmd_remwikiadmin_dc": {
+    "status": "unverified",
+    "text": "/remwikiadmin user: <quem> — retirar a nomeação"
+  },
+  "cmd_remwikiadmin_tg": {
+    "status": "unverified",
+    "text": "/remwikiadmin <@nome ou ID> — retirar a nomeação"
+  },
+  "cmd_run_dc": {
+    "status": "unverified",
+    "text": "/run what: [números ou códigos] — preparar uma execução; o bot pergunta qual wiki, de onde vêm as páginas e o que fazer"
+  },
+  "cmd_run_tg": {
+    "status": "unverified",
+    "text": "/run [números ou códigos] — preparar uma execução; o bot pergunta qual wiki, de onde vêm as páginas e o que fazer"
+  },
+  "cmd_schedule_dc": {
+    "status": "unverified",
+    "text": "/schedule — as execuções repetidas; action: on|off|del com schedule_id: <número> altera uma"
+  },
+  "cmd_schedule_tg": {
+    "status": "unverified",
+    "text": "/schedule — as execuções repetidas; /schedule on|off|del <número> altera uma"
+  },
+  "cmd_status": {
+    "status": "unverified",
+    "text": "/status — o que está nos espaços e quando foi a última passagem"
+  },
+  "cmd_stop_dc": {
+    "status": "unverified",
+    "text": "/stop task_id: <número> — parar uma tarefa"
+  },
+  "cmd_stop_tg": {
+    "status": "unverified",
+    "text": "/stop <número> — parar uma tarefa"
+  },
+  "cmd_tasks": {
+    "status": "unverified",
+    "text": "/tasks — a lista numerada de tarefas que se podem dar ao bot"
+  },
+  "cmd_update": {
+    "status": "unverified",
+    "text": "/update — refazer as notícias agora; com «force», também as imagens"
+  },
+  "cmd_wikiadmin_dc": {
+    "status": "unverified",
+    "text": "/wikiadmin — quem é administrador de wiki; user: <quem> wiki_user: <conta Fandom> nomeia um"
+  },
+  "cmd_wikiadmin_tg": {
+    "status": "unverified",
+    "text": "/wikiadmin — quem é administrador de wiki; /wikiadmin <@nome ou ID> <conta Fandom> nomeia um"
   },
   "dialog_bad_choice": {
     "status": "unverified",
@@ -102,6 +190,10 @@
   "dialog_source_argument_links": {
     "status": "unverified",
     "text": "De que página tirar as ligações?"
+  },
+  "dialog_source_argument_pairs": {
+    "status": "unverified",
+    "text": "Envie as renomeações, uma por linha: título_antigo título_novo. Um espaço no título escreve-se com um sublinhado; no Discord envolva a lista toda em ``` para não ficar em itálico."
   },
   "dialog_source_argument_prefix": {
     "status": "unverified",
@@ -175,13 +267,9 @@
     "status": "unverified",
     "text": "corrigir também os rótulos das ligações [[Alvo|rótulo]]"
   },
-  "flag_iw_no_propagate": {
-    "status": "unverified",
-    "text": "não recolher ligações das versões linguísticas irmãs"
-  },
   "flag_iw_sort_only": {
     "status": "unverified",
-    "text": "apenas movê-las para o fim e ordená-las, sem adicionar nada"
+    "text": "não acrescentar nada: apenas mover o bloco para o fim da página e ordená-lo"
   },
   "flag_list_categories": {
     "status": "unverified",
@@ -213,7 +301,7 @@
   },
   "flag_no_typos": {
     "status": "unverified",
-    "text": "sem a lista de erros, só a ortografia"
+    "text": "sem a lista de gralhas, só as regras ortográficas"
   },
   "flag_nocase": {
     "status": "unverified",
@@ -279,9 +367,45 @@
     "status": "unverified",
     "text": "uma lista indentada"
   },
-  "help": {
+  "help_access": {
     "status": "unverified",
-    "text": "Confederate Fandom — um bot para wikis do Fandom: notícias nas páginas principais, uma padronização noturna de nomes e os scripts executados a pedido.\n\nTrabalho na wiki\n/tasks — o que o bot sabe fazer, em lista numerada\n/run [números ou códigos] — preparar um trabalho; o bot pergunta qual wiki, de onde vêm as páginas e o que fazer\n/go <número> — iniciar uma tarefa preparada; /go <número> dry pré-visualiza sem editar\n/jobs — o que está a correr e como acabaram as últimas tarefas\n/stop <número> — parar uma tarefa\n/schedule — as execuções regulares; /schedule on|off|del <número>\n\nNotícias\n/status — o que está nos três espaços e quando foi a última passagem\n/update — refazer as notícias agora; com «force», também as imagens\n/backfill — ler a pré-visualização web do canal; com «all», atualizar também o que o bot ouviu\n\nAcesso\n/wikiadmin — quem é administrador de wiki; /wikiadmin <@nome ou ID> <conta no Fandom> nomeia\n/remwikiadmin <@nome ou ID> — retira\n\nOs comandos são para os administradores do bot; o trabalho na wiki também para administradores de wiki com direitos nessa wiki."
+    "text": "Acesso"
+  },
+  "help_footer": {
+    "status": "unverified",
+    "text": "Os comandos são para os administradores do bot; o trabalho na wiki também para os administradores de wiki com permissões nessa wiki."
+  },
+  "help_intro": {
+    "status": "unverified",
+    "text": "Confederate Fandom — um bot para wikis Fandom: notícias nas páginas principais, uma normalização noturna de nomes e as tarefas pedidas."
+  },
+  "help_news": {
+    "status": "unverified",
+    "text": "Notícias"
+  },
+  "help_wiki": {
+    "status": "unverified",
+    "text": "Trabalho na wiki"
+  },
+  "job_backup": {
+    "status": "unverified",
+    "text": "a cópia de segurança"
+  },
+  "job_news": {
+    "status": "unverified",
+    "text": "as notícias"
+  },
+  "job_species": {
+    "status": "unverified",
+    "text": "os nomes das espécies"
+  },
+  "job_sweep": {
+    "status": "unverified",
+    "text": "a limpeza noturna"
+  },
+  "job_tasks": {
+    "status": "unverified",
+    "text": "a fila de tarefas"
   },
   "jobs_active": {
     "status": "unverified",
@@ -298,6 +422,10 @@
   "jobs_task": {
     "status": "unverified",
     "text": "{id} — {wiki} [{state}] {mechanics}: {checked}/{total}, {edited} edições, {failed} falhas"
+  },
+  "jobs_title": {
+    "status": "unverified",
+    "text": "A fila e as tarefas"
   },
   "mech_addtext": {
     "status": "unverified",
@@ -321,7 +449,7 @@
   },
   "mech_category_graph_desc": {
     "status": "unverified",
-    "text": "a árvore de subcategorias a partir de uma, como texto ou ficheiro .dot"
+    "text": "a árvore de subcategorias a partir de uma: em texto ou num ficheiro .dot"
   },
   "mech_cosmetic": {
     "status": "unverified",
@@ -329,7 +457,7 @@
   },
   "mech_cosmetic_desc": {
     "status": "unverified",
-    "text": "espaços nos títulos, indentação, linhas em branco, travessão em vez de hífen"
+    "text": "só a marcação, sem mexer nas palavras: espaços nos títulos, indentação, linhas em branco a mais, travessão em vez de hífen"
   },
   "mech_delete": {
     "status": "unverified",
@@ -337,7 +465,7 @@
   },
   "mech_delete_desc": {
     "status": "unverified",
-    "text": "eliminar uma lista de páginas; não se desfaz editando"
+    "text": "elimina as páginas de uma lista"
   },
   "mech_delinker": {
     "status": "unverified",
@@ -345,7 +473,7 @@
   },
   "mech_delinker_desc": {
     "status": "unverified",
-    "text": "retirar dos artigos os ficheiros que já foram eliminados"
+    "text": "retira das páginas os ficheiros já eliminados da wiki; não mexe nas ligações para páginas"
   },
   "mech_image": {
     "status": "unverified",
@@ -353,7 +481,7 @@
   },
   "mech_image_desc": {
     "status": "unverified",
-    "text": "trocar um ficheiro por outro, ou retirá-lo de onde é mostrado"
+    "text": "substitui um ficheiro por outro ou retira-o das páginas"
   },
   "mech_interwiki": {
     "status": "unverified",
@@ -361,7 +489,7 @@
   },
   "mech_interwiki_desc": {
     "status": "unverified",
-    "text": "completar as ligações entre as versões linguísticas, movê-las para o fim e ordená-las"
+    "text": "acrescenta as ligações em falta para outras versões linguísticas, junta-as no fim e ordena-as"
   },
   "mech_listpages": {
     "status": "unverified",
@@ -377,15 +505,15 @@
   },
   "mech_movepages_desc": {
     "status": "unverified",
-    "text": "renomear páginas por uma regra: prefixo, sufixo ou expressão regular"
+    "text": "renomeia páginas: a partir de uma lista «antiga nova» ou por uma regra — prefixo, sufixo, expressão regular"
   },
   "mech_pravopys_uk": {
     "status": "unverified",
-    "text": "Ortografia ucraniana de 2019"
+    "text": "Ortografia-2019 (ucraniano)"
   },
   "mech_pravopys_uk_desc": {
     "status": "unverified",
-    "text": "§126, §35 e §36 da ortografia ucraniana, mais a lista de erros"
+    "text": "§35, §36 e §126 da ortografia ucraniana de 2019, e gralhas de uma lista de 172 regras"
   },
   "mech_protect": {
     "status": "unverified",
@@ -393,7 +521,7 @@
   },
   "mech_protect_desc": {
     "status": "unverified",
-    "text": "definir ou levantar a proteção de edição, movimentação e reenvio"
+    "text": "protege as páginas de edição, de renomeação e do envio de uma nova versão de um ficheiro, ou retira a proteção"
   },
   "mech_punct_ru": {
     "status": "unverified",
@@ -401,7 +529,7 @@
   },
   "mech_punct_ru_desc": {
     "status": "unverified",
-    "text": "apenas espaços à volta dos sinais, tipografia e as vírgulas obrigatórias"
+    "text": "só pontuação, sem mexer nas palavras: espaços junto aos sinais; reticências e vírgulas a pedido"
   },
   "mech_redirect": {
     "status": "unverified",
@@ -409,7 +537,7 @@
   },
   "mech_redirect_desc": {
     "status": "unverified",
-    "text": "corrigir os duplos, apontar as ligações ao destino, encontrar os quebrados"
+    "text": "corrige os redirecionamentos duplos, aponta as ligações diretamente ao destino, encontra os que não levam a lado nenhum"
   },
   "mech_replace": {
     "status": "unverified",
@@ -417,7 +545,7 @@
   },
   "mech_replace_desc": {
     "status": "unverified",
-    "text": "localizar e substituir texto ou expressão regular nas páginas"
+    "text": "procurar e substituir texto: por correspondência exata ou por expressão regular"
   },
   "mech_revertbot": {
     "status": "unverified",
@@ -425,7 +553,7 @@
   },
   "mech_revertbot_desc": {
     "status": "unverified",
-    "text": "desfazer a série de edições de uma conta no topo do histórico"
+    "text": "desfaz as últimas edições consecutivas de uma mesma conta"
   },
   "mech_templatecount": {
     "status": "unverified",
@@ -433,7 +561,7 @@
   },
   "mech_templatecount_desc": {
     "status": "unverified",
-    "text": "quantas páginas usam as predefinições, e a lista delas se pedida"
+    "text": "quantas páginas usam um modelo, vários de uma vez; a lista em si a pedido"
   },
   "mech_typos_ru": {
     "status": "unverified",
@@ -441,7 +569,7 @@
   },
   "mech_typos_ru_desc": {
     "status": "unverified",
-    "text": "607 regras de erros de escrita, pontuação e cosmética; o resumo diz o que foi realmente corrigido"
+    "text": "corrige gralhas com uma lista de 607 regras; os espaços junto aos sinais vêm incluídos, as vírgulas e a cosmética a pedido"
   },
   "mech_unlink": {
     "status": "unverified",
@@ -450,6 +578,10 @@
   "mech_unlink_desc": {
     "status": "unverified",
     "text": "remover as ligações para uma página e deixar o texto"
+  },
+  "move_mode_list": {
+    "status": "unverified",
+    "text": "a partir de uma lista de pares «antiga nova»"
   },
   "move_mode_prefix_add": {
     "status": "unverified",
@@ -475,6 +607,22 @@
     "status": "unverified",
     "text": "Este comando é apenas para os administradores do bot."
   },
+  "page_next": {
+    "status": "unverified",
+    "text": "Seguinte ▶"
+  },
+  "page_not_yours": {
+    "status": "unverified",
+    "text": "Estas páginas pertencem a quem executou o comando — execute-o você mesmo para as poder navegar."
+  },
+  "page_of": {
+    "status": "unverified",
+    "text": "Página {page} de {total}"
+  },
+  "page_prev": {
+    "status": "unverified",
+    "text": "◀ Anterior"
+  },
   "pageset_all": {
     "status": "unverified",
     "text": "todas as páginas da wiki"
@@ -498,6 +646,10 @@
   "pageset_new": {
     "status": "unverified",
     "text": "páginas criadas recentemente"
+  },
+  "pageset_pairs": {
+    "status": "unverified",
+    "text": "uma lista de renomeações que vou enviar"
   },
   "pageset_prefix": {
     "status": "unverified",
@@ -605,7 +757,7 @@
   },
   "param_pravopys_uk_flags": {
     "status": "unverified",
-    "text": "Que mais fazer além da ortografia?"
+    "text": "O que mais fazer junto com a ortografia?"
   },
   "param_protect_expiry": {
     "status": "unverified",
@@ -663,6 +815,30 @@
     "status": "unverified",
     "text": "A que página remover as ligações?"
   },
+  "presence_busy": {
+    "status": "unverified",
+    "text": "A trabalhar: {job}"
+  },
+  "presence_editing": {
+    "status": "unverified",
+    "text": "A editar {wiki}"
+  },
+  "presence_idle": {
+    "status": "unverified",
+    "text": "À espera de trabalho"
+  },
+  "presence_news": {
+    "status": "unverified",
+    "text": "A atualizar as notícias da TeleRadiopedia"
+  },
+  "presence_next": {
+    "status": "unverified",
+    "text": "A seguir: {job}, daqui a {when}."
+  },
+  "presence_next_run": {
+    "status": "unverified",
+    "text": "A seguir: uma execução em {wiki}, daqui a {when}."
+  },
   "protect_level_all": {
     "status": "unverified",
     "text": "a todos — ou seja, levantar a proteção"
@@ -685,7 +861,15 @@
   },
   "protect_what_upload": {
     "status": "unverified",
-    "text": "o reenvio do ficheiro (para ficheiros, é o que conta)"
+    "text": "enviar uma nova versão do ficheiro (para ficheiros, o essencial)"
+  },
+  "queue_place": {
+    "status": "unverified",
+    "text": "A tarefa {id} está na fila: lugar {position}."
+  },
+  "queue_place_eta": {
+    "status": "unverified",
+    "text": "A tarefa {id} está na fila: lugar {position}. Deve começar em cerca de {eta}."
   },
   "redirect_mode_broken": {
     "status": "unverified",
@@ -751,7 +935,11 @@
     "status": "unverified",
     "text": "Não existe o agendamento {id}."
   },
-  "schedule_usage": {
+  "schedule_usage_discord": {
+    "status": "unverified",
+    "text": "Como funciona: /schedule lista; /schedule action: on|off|del schedule_id: <número> altera um."
+  },
+  "schedule_usage_telegram": {
     "status": "unverified",
     "text": "Como funciona: /schedule lista, /schedule on|off|del <número>."
   },
@@ -851,6 +1039,14 @@
     "status": "unverified",
     "text": "✖ Tarefa {id} — {wiki} falhou: {error}"
   },
+  "task_go_discord": {
+    "status": "unverified",
+    "text": "Executar: /go task_id: {id}\nVer primeiro o que faria, sem escrever nada: /go task_id: {id} dry: true"
+  },
+  "task_go_telegram": {
+    "status": "unverified",
+    "text": "Executar: /go {id}\nVer primeiro o que faria, sem escrever nada: /go {id} dry"
+  },
   "task_not_waiting": {
     "status": "unverified",
     "text": "A tarefa {id} está em «{state}» — não há nada a confirmar."
@@ -861,7 +1057,7 @@
   },
   "task_planned": {
     "status": "unverified",
-    "text": "Tarefa {id} — {wiki}\nMecânicas: {mechanics}\nPáginas: {pages}\n{sample}\n{warning}\n{notes}\n\nExecutar: /go {id}\nVer primeiro o que faria, sem escrever nada: /go {id} dry"
+    "text": "Tarefa {id} — {wiki}\nMecânicas: {mechanics}\nPáginas: {pages}\n{sample}\n{warning}\n{notes}\n\n{how}"
   },
   "task_progress": {
     "status": "unverified",
@@ -885,11 +1081,27 @@
   },
   "tasks_destructive_mark": {
     "status": "unverified",
-    "text": "⚠ não se desfaz editando"
+    "text": "(⚠ só se desfaz com a ação contrária)"
   },
   "tasks_header": {
     "status": "unverified",
     "text": "O que o bot pode fazer na wiki. Responda com um número ou um código — vários, separados por espaços."
+  },
+  "tasks_title": {
+    "status": "unverified",
+    "text": "Tarefas"
+  },
+  "unit_hours": {
+    "status": "unverified",
+    "text": "h"
+  },
+  "unit_minutes": {
+    "status": "unverified",
+    "text": "min"
+  },
+  "unit_seconds": {
+    "status": "unverified",
+    "text": "s"
   },
   "update_busy": {
     "status": "unverified",

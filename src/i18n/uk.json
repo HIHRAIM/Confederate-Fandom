@@ -27,6 +27,18 @@
     "status": "unverified",
     "text": "Читаю публічне превʼю каналу…"
   },
+  "backup_failed": {
+    "status": "unverified",
+    "text": "Не вдалося зробити резервну копію: {error}"
+  },
+  "backup_no_key": {
+    "status": "unverified",
+    "text": "BACKUP_KEY не задано — шифрувати копію нічим, а незашифровану базу бот не надсилає."
+  },
+  "backup_private_only": {
+    "status": "unverified",
+    "text": "Запитайте копію в особистому чаті: це вся база, і вона не має потрапляти в групу — навіть в адміністративну."
+  },
   "category_action_add": {
     "status": "unverified",
     "text": "додати"
@@ -38,6 +50,82 @@
   "category_action_remove": {
     "status": "unverified",
     "text": "прибрати"
+  },
+  "cmd_backfill": {
+    "status": "unverified",
+    "text": "/backfill — дочитати канал із вебпрев'ю; зі словом «all» — оновити й те, що бот чув сам"
+  },
+  "cmd_backup_dc": {
+    "status": "unverified",
+    "text": "/backup — зашифрована копія бази; відповідь побачите тільки ви"
+  },
+  "cmd_backup_tg": {
+    "status": "unverified",
+    "text": "/backup — зашифрована копія бази; лише в особистому чаті"
+  },
+  "cmd_go_dc": {
+    "status": "unverified",
+    "text": "/go task_id: <номер> — запустити підготовлене завдання; з dry: true — спершу перегляд, без правок"
+  },
+  "cmd_go_tg": {
+    "status": "unverified",
+    "text": "/go <номер> — запустити підготовлене завдання; /go <номер> dry — спершу перегляд, без правок"
+  },
+  "cmd_jobs": {
+    "status": "unverified",
+    "text": "/jobs — що йде зараз і чим скінчилися останні завдання"
+  },
+  "cmd_remwikiadmin_dc": {
+    "status": "unverified",
+    "text": "/remwikiadmin user: <хто> — зняти призначення"
+  },
+  "cmd_remwikiadmin_tg": {
+    "status": "unverified",
+    "text": "/remwikiadmin <@нік або ID> — зняти призначення"
+  },
+  "cmd_run_dc": {
+    "status": "unverified",
+    "text": "/run what: [номери або коди] — задати роботу; бот запитає вікі, звідки брати сторінки і що робити"
+  },
+  "cmd_run_tg": {
+    "status": "unverified",
+    "text": "/run [номери або коди] — задати роботу; бот запитає вікі, звідки брати сторінки і що робити"
+  },
+  "cmd_schedule_dc": {
+    "status": "unverified",
+    "text": "/schedule — регулярні запуски; action: on|off|del і schedule_id: <номер> — змінити"
+  },
+  "cmd_schedule_tg": {
+    "status": "unverified",
+    "text": "/schedule — регулярні запуски; /schedule on|off|del <номер> — змінити"
+  },
+  "cmd_status": {
+    "status": "unverified",
+    "text": "/status — що стоїть у слотах і коли був останній прохід"
+  },
+  "cmd_stop_dc": {
+    "status": "unverified",
+    "text": "/stop task_id: <номер> — зупинити завдання"
+  },
+  "cmd_stop_tg": {
+    "status": "unverified",
+    "text": "/stop <номер> — зупинити завдання"
+  },
+  "cmd_tasks": {
+    "status": "unverified",
+    "text": "/tasks — список завдань, які можна доручити боту, з номерами"
+  },
+  "cmd_update": {
+    "status": "unverified",
+    "text": "/update — оновити новини зараз; зі словом «force» — і картинки"
+  },
+  "cmd_wikiadmin_dc": {
+    "status": "unverified",
+    "text": "/wikiadmin — кого призначено адміністратором вікі; user: <хто> wiki_user: <нік на Fandom> — призначити"
+  },
+  "cmd_wikiadmin_tg": {
+    "status": "unverified",
+    "text": "/wikiadmin — кого призначено адміністратором вікі; /wikiadmin <@нік або ID> <нік на Fandom> — призначити"
   },
   "dialog_bad_choice": {
     "status": "unverified",
@@ -102,6 +190,10 @@
   "dialog_source_argument_links": {
     "status": "unverified",
     "text": "З якої сторінки брати посилання?"
+  },
+  "dialog_source_argument_pairs": {
+    "status": "unverified",
+    "text": "Надішліть перейменування, по одному в рядку: стара_назва нова_назва. Пробіл у назві пишеться підкресленням; у Discord загорніть увесь список у ```, інакше він стане курсивом."
   },
   "dialog_source_argument_prefix": {
     "status": "unverified",
@@ -175,13 +267,9 @@
     "status": "unverified",
     "text": "правити й підписи посилань [[Ціль|підпис]]"
   },
-  "flag_iw_no_propagate": {
-    "status": "unverified",
-    "text": "не збирати посилання із сусідніх мовних версій"
-  },
   "flag_iw_sort_only": {
     "status": "unverified",
-    "text": "лише перенести в кінець і відсортувати, нічого не додавати"
+    "text": "нічого не дописувати: лише перенести блок у кінець сторінки й упорядкувати"
   },
   "flag_list_categories": {
     "status": "unverified",
@@ -213,7 +301,7 @@
   },
   "flag_no_typos": {
     "status": "unverified",
-    "text": "без списку друкарських помилок, лише правопис"
+    "text": "без списку одруківок, лише правила правопису"
   },
   "flag_nocase": {
     "status": "unverified",
@@ -279,9 +367,45 @@
     "status": "unverified",
     "text": "списком з відступами"
   },
-  "help": {
+  "help_access": {
     "status": "unverified",
-    "text": "Confederate Fandom — бот для вікі Fandom: новини на заголовних, нічна стандартизація назв і запуск скриптів по вікі.\n\nРоботи по вікі\n/tasks — що бот уміє, списком з номерами\n/run [номери або коди] — задати роботу; бот запитає вікі, звідки брати сторінки і що робити\n/go <номер> — запустити підготовлену задачу; /go <номер> dry — спершу передперегляд, без редагувань\n/jobs — що йде зараз і чим скінчилися останні задачі\n/stop <номер> — зупинити задачу\n/schedule — регулярні запуски; /schedule on|off|del <номер>\n\nНовини\n/status — що стоїть у трьох слотах і коли був останній прохід\n/update — оновити новини зараз; зі словом «force» — і картинки\n/backfill — дочитати канал із вебпередперегляду; зі словом «all» — оновити й те, що бот чув сам\n\nДоступ\n/wikiadmin — хто призначений адміністратором вікі; /wikiadmin <@нік або ID> <нік на Fandom> — призначити\n/remwikiadmin <@нік або ID> — зняти\n\nКоманди доступні адміністраторам бота; роботи по вікі — ще й адміністраторам вікі, якщо в них є права на тій вікі."
+    "text": "Доступ"
+  },
+  "help_footer": {
+    "status": "unverified",
+    "text": "Команди доступні адміністраторам бота; роботи по вікі — ще й адміністраторам вікі, якщо вони мають права на тій вікі."
+  },
+  "help_intro": {
+    "status": "unverified",
+    "text": "Confederate Fandom — бот для вікі Fandom: новини на заголовних, нічна стандартизація назв і запуск завдань по вікі."
+  },
+  "help_news": {
+    "status": "unverified",
+    "text": "Новини"
+  },
+  "help_wiki": {
+    "status": "unverified",
+    "text": "Роботи по вікі"
+  },
+  "job_backup": {
+    "status": "unverified",
+    "text": "резервна копія"
+  },
+  "job_news": {
+    "status": "unverified",
+    "text": "новини"
+  },
+  "job_species": {
+    "status": "unverified",
+    "text": "назви видів"
+  },
+  "job_sweep": {
+    "status": "unverified",
+    "text": "нічне прибирання"
+  },
+  "job_tasks": {
+    "status": "unverified",
+    "text": "черга завдань"
   },
   "jobs_active": {
     "status": "unverified",
@@ -298,6 +422,10 @@
   "jobs_task": {
     "status": "unverified",
     "text": "{id} — {wiki} [{state}] {mechanics}: {checked}/{total}, редагувань {edited}, помилок {failed}"
+  },
+  "jobs_title": {
+    "status": "unverified",
+    "text": "Черга і завдання"
   },
   "mech_addtext": {
     "status": "unverified",
@@ -321,7 +449,7 @@
   },
   "mech_category_graph_desc": {
     "status": "unverified",
-    "text": "дерево підкатегорій від заданої, текстом або файлом .dot"
+    "text": "дерево підкатегорій від заданої: текстом або файлом .dot"
   },
   "mech_cosmetic": {
     "status": "unverified",
@@ -329,7 +457,7 @@
   },
   "mech_cosmetic_desc": {
     "status": "unverified",
-    "text": "пробіли в заголовках, відступи, порожні рядки, тире замість дефіса"
+    "text": "сама розмітка, слів не чіпає: пробіли в заголовках, відступи, зайві порожні рядки, тире замість дефіса"
   },
   "mech_delete": {
     "status": "unverified",
@@ -337,7 +465,7 @@
   },
   "mech_delete_desc": {
     "status": "unverified",
-    "text": "видалити сторінки списком; скасувати редагуванням не можна"
+    "text": "вилучити сторінки списком"
   },
   "mech_delinker": {
     "status": "unverified",
@@ -345,7 +473,7 @@
   },
   "mech_delinker_desc": {
     "status": "unverified",
-    "text": "прибрати зі статей файли, які вже видалено з вікі"
+    "text": "прибрати зі сторінок файли, вже вилучені з вікі; посилань на сторінки не чіпає"
   },
   "mech_image": {
     "status": "unverified",
@@ -353,7 +481,7 @@
   },
   "mech_image_desc": {
     "status": "unverified",
-    "text": "замінити файл на інший або прибрати його звідусіль, де він показаний"
+    "text": "замінити один файл іншим або прибрати його зі сторінок"
   },
   "mech_interwiki": {
     "status": "unverified",
@@ -361,7 +489,7 @@
   },
   "mech_interwiki_desc": {
     "status": "unverified",
-    "text": "добудувати посилання між мовними версіями, перенести в кінець і відсортувати"
+    "text": "дописати відсутні посилання на інші мовні версії, зібрати їх у кінці й упорядкувати"
   },
   "mech_listpages": {
     "status": "unverified",
@@ -377,7 +505,7 @@
   },
   "mech_movepages_desc": {
     "status": "unverified",
-    "text": "перейменувати сторінки за правилом: префікс, суфікс або регулярний вираз"
+    "text": "перейменувати сторінки: списком «старе нове» або за правилом — префікс, суфікс, регулярний вираз"
   },
   "mech_pravopys_uk": {
     "status": "unverified",
@@ -385,7 +513,7 @@
   },
   "mech_pravopys_uk_desc": {
     "status": "unverified",
-    "text": "§126, §35 і §36 українського правопису плюс список друкарських помилок"
+    "text": "§35, §36 і §126 українського правопису 2019 року та одруківки за списком зі 172 правил"
   },
   "mech_protect": {
     "status": "unverified",
@@ -393,7 +521,7 @@
   },
   "mech_protect_desc": {
     "status": "unverified",
-    "text": "поставити або зняти захист на редагування, перейменування й перезавантаження"
+    "text": "поставити або зняти захист від редагувань, перейменування та завантаження нової версії файлу"
   },
   "mech_punct_ru": {
     "status": "unverified",
@@ -401,7 +529,7 @@
   },
   "mech_punct_ru_desc": {
     "status": "unverified",
-    "text": "лише пробіли навколо знаків, типографіка й обов'язкові коми"
+    "text": "сама пунктуація, слів не чіпає: пробіли навколо знаків; трикрапки й коми — за вибором"
   },
   "mech_redirect": {
     "status": "unverified",
@@ -409,7 +537,7 @@
   },
   "mech_redirect_desc": {
     "status": "unverified",
-    "text": "виправити подвійні, замінити посилання на прямі, знайти биті"
+    "text": "виправити подвійні перенаправлення, замінити посилання на них прямими, знайти ті, що ведуть у нікуди"
   },
   "mech_replace": {
     "status": "unverified",
@@ -417,7 +545,7 @@
   },
   "mech_replace_desc": {
     "status": "unverified",
-    "text": "знайти й замінити текст або регулярний вираз на сторінках"
+    "text": "знайти й замінити текст: за точним збігом або за регулярним виразом"
   },
   "mech_revertbot": {
     "status": "unverified",
@@ -425,7 +553,7 @@
   },
   "mech_revertbot_desc": {
     "status": "unverified",
-    "text": "скасувати послідовні редагування одного учасника вгорі історії"
+    "text": "скасувати останні поспіль зроблені редагування одного учасника"
   },
   "mech_templatecount": {
     "status": "unverified",
@@ -433,7 +561,7 @@
   },
   "mech_templatecount_desc": {
     "status": "unverified",
-    "text": "скільки сторінок користується шаблонами; список сторінок за бажанням"
+    "text": "скільки сторінок використовує шаблон, можна кілька відразу; на запит і сам список"
   },
   "mech_typos_ru": {
     "status": "unverified",
@@ -441,7 +569,7 @@
   },
   "mech_typos_ru_desc": {
     "status": "unverified",
-    "text": "607 правил друкарських помилок, пунктуація й косметика; в описі — те, що справді виправлено"
+    "text": "виправити одруківки за списком із 607 правил; пробіли навколо знаків — принагідно, коми й косметику — за вибором"
   },
   "mech_unlink": {
     "status": "unverified",
@@ -450,6 +578,10 @@
   "mech_unlink_desc": {
     "status": "unverified",
     "text": "прибрати посилання на сторінку, залишивши сам текст"
+  },
+  "move_mode_list": {
+    "status": "unverified",
+    "text": "списком пар «старе нове»"
   },
   "move_mode_prefix_add": {
     "status": "unverified",
@@ -475,6 +607,22 @@
     "status": "unverified",
     "text": "Команда лише для адміністраторів бота."
   },
+  "page_next": {
+    "status": "unverified",
+    "text": "Уперед ▶"
+  },
+  "page_not_yours": {
+    "status": "unverified",
+    "text": "Ці сторінки належать тому, хто викликав команду — викличте її самі, щоб гортати."
+  },
+  "page_of": {
+    "status": "unverified",
+    "text": "Сторінка {page} з {total}"
+  },
+  "page_prev": {
+    "status": "unverified",
+    "text": "◀ Назад"
+  },
   "pageset_all": {
     "status": "unverified",
     "text": "усі сторінки вікі"
@@ -498,6 +646,10 @@
   "pageset_new": {
     "status": "unverified",
     "text": "нещодавно створені сторінки"
+  },
+  "pageset_pairs": {
+    "status": "unverified",
+    "text": "список перейменувань, який я надішлю"
   },
   "pageset_prefix": {
     "status": "unverified",
@@ -663,6 +815,30 @@
     "status": "unverified",
     "text": "На яку сторінку прибрати посилання?"
   },
+  "presence_busy": {
+    "status": "unverified",
+    "text": "Працює: {job}"
+  },
+  "presence_editing": {
+    "status": "unverified",
+    "text": "Редагує {wiki}"
+  },
+  "presence_idle": {
+    "status": "unverified",
+    "text": "Чекає на роботу"
+  },
+  "presence_news": {
+    "status": "unverified",
+    "text": "Оновлює новини ТелеРадіопедії"
+  },
+  "presence_next": {
+    "status": "unverified",
+    "text": "Далі: {job}, через {when}."
+  },
+  "presence_next_run": {
+    "status": "unverified",
+    "text": "Далі: запуск на {wiki}, через {when}."
+  },
   "protect_level_all": {
     "status": "unverified",
     "text": "усім — тобто зняти захист"
@@ -685,7 +861,15 @@
   },
   "protect_what_upload": {
     "status": "unverified",
-    "text": "перезавантаження файлу (для файлів — обов'язково)"
+    "text": "завантаження нової версії файлу (для файлів це головне)"
+  },
+  "queue_place": {
+    "status": "unverified",
+    "text": "Завдання {id} стало в чергу: місце {position}."
+  },
+  "queue_place_eta": {
+    "status": "unverified",
+    "text": "Завдання {id} стало в чергу: місце {position}. Початок приблизно через {eta}."
   },
   "redirect_mode_broken": {
     "status": "unverified",
@@ -751,7 +935,11 @@
     "status": "unverified",
     "text": "Розкладу {id} немає."
   },
-  "schedule_usage": {
+  "schedule_usage_discord": {
+    "status": "unverified",
+    "text": "Як це працює: /schedule — список; /schedule action: on|off|del schedule_id: <номер> — змінити."
+  },
+  "schedule_usage_telegram": {
     "status": "unverified",
     "text": "Як це працює: /schedule — список, /schedule on|off|del <номер>."
   },
@@ -851,6 +1039,14 @@
     "status": "unverified",
     "text": "✖ Задача {id} — {wiki} зірвалася: {error}"
   },
+  "task_go_discord": {
+    "status": "unverified",
+    "text": "Запустити: /go task_id: {id}\nСпершу подивитися, що вийде, нічого не записуючи: /go task_id: {id} dry: true"
+  },
+  "task_go_telegram": {
+    "status": "unverified",
+    "text": "Запустити: /go {id}\nСпершу подивитися, що вийде, нічого не записуючи: /go {id} dry"
+  },
   "task_not_waiting": {
     "status": "unverified",
     "text": "Задача {id} зараз у стані «{state}» — підтверджувати нічого."
@@ -861,7 +1057,7 @@
   },
   "task_planned": {
     "status": "unverified",
-    "text": "Задача {id} — {wiki}\nМеханіки: {mechanics}\nСторінок: {pages}\n{sample}\n{warning}\n{notes}\n\nЗапустити: /go {id}\nСпершу подивитися, що вийде, нічого не записуючи: /go {id} dry"
+    "text": "Задача {id} — {wiki}\nМеханіки: {mechanics}\nСторінок: {pages}\n{sample}\n{warning}\n{notes}\n\n{how}"
   },
   "task_progress": {
     "status": "unverified",
@@ -885,11 +1081,27 @@
   },
   "tasks_destructive_mark": {
     "status": "unverified",
-    "text": "⚠ редагуванням не скасувати"
+    "text": "(⚠ скасовується лише зворотною дією)"
   },
   "tasks_header": {
     "status": "unverified",
     "text": "Що бот уміє робити по вікі. Відповідайте номером або кодовою назвою — можна кілька через пробіл."
+  },
+  "tasks_title": {
+    "status": "unverified",
+    "text": "Завдання"
+  },
+  "unit_hours": {
+    "status": "unverified",
+    "text": "год"
+  },
+  "unit_minutes": {
+    "status": "unverified",
+    "text": "хв"
+  },
+  "unit_seconds": {
+    "status": "unverified",
+    "text": "с"
   },
   "update_busy": {
     "status": "unverified",

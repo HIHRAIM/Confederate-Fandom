@@ -23,15 +23,13 @@ import discord
 from discord import app_commands
 
 import db
-import scheduler
+from discord_bot import pages
 from discord_bot.client import tree
 from discord_bot.dialogs import DiscordConversation
-from tasks import access, dialog, queue as task_queue
+from tasks import access, dialog, lists, queue as task_queue
 from utils import localized, service_lang
 
 logger = logging.getLogger("fd.discord.tasks")
-
-RECENT_TASKS = 5
 
 MESSAGE_LIMIT = 1900
 
@@ -60,14 +58,18 @@ async def _reply(interaction, text, ephemeral=False):
         body = body[MESSAGE_LIMIT:]
 
 
-@tree.command(name="tasks", description="что бот умеет делать по вики")
+@tree.command(name="tasks", description="выбрать задачу для бота")
 async def tasks_cmd(interaction: discord.Interaction):
-    """The catalogue: what the bot can be told to do, numbered."""
+    """The catalogue: what the bot can be told to do, numbered.
+
+    A paginated embed rather than a wall of text: one line per mechanic, the
+    name in bold, the code in monospace after it (discord_bot/pages.py)."""
     lang = service_lang()
     if _caller(interaction) is None:
         await _deny(interaction, lang)
         return
-    await _reply(interaction, dialog.mechanics_list(lang))
+    title, lines = lists.catalogue(lang, pages.MARKUP)
+    await pages.send(interaction, title, lines, lang)
 
 
 @tree.command(name="run", description="запустить работу по вики")
@@ -119,27 +121,8 @@ async def jobs_cmd(interaction: discord.Interaction):
         await _deny(interaction, lang)
         return
 
-    lines = [localized("jobs_header", lang,
-                       running=scheduler.running() or "—",
-                       waiting=", ".join(scheduler.waiting()) or "—")]
-    active = db.active_tasks()
-    if active:
-        lines.append(localized("jobs_active", lang))
-        for row in active:
-            lines.append(localized(
-                "jobs_task", lang, id=row["id"], wiki=row["wiki"],
-                state=row["state"],
-                mechanics=", ".join(db.task_mechanics(row)),
-                checked=row["checked"], total=db.count_pages(row["id"]),
-                edited=row["edited"], failed=row["failed"]))
-    for row in db.recent_tasks(RECENT_TASKS):
-        if row["state"] in ("pending", "confirm", "running"):
-            continue
-        lines.append(localized(
-            "jobs_finished", lang, id=row["id"], wiki=row["wiki"],
-            state=row["state"], edited=row["edited"], failed=row["failed"],
-            error=row["error"] or ""))
-    await _reply(interaction, "\n".join(lines))
+    title, lines = lists.jobs(lang, pages.MARKUP)
+    await pages.send(interaction, title, lines, lang)
 
 
 @tree.command(name="stop", description="остановить задачу")
@@ -169,7 +152,7 @@ async def schedule_cmd(interaction: discord.Interaction, action: str = "list",
     action = (action or "list").lower()
     if action in ("on", "off", "del", "delete"):
         if not schedule_id:
-            await _reply(interaction, localized("schedule_usage", lang))
+            await _reply(interaction, localized("schedule_usage_discord", lang))
             return
         if action in ("del", "delete"):
             ok = db.delete_schedule(schedule_id)
@@ -181,16 +164,8 @@ async def schedule_cmd(interaction: discord.Interaction, action: str = "list",
         await _reply(interaction, localized(key, lang, id=schedule_id))
         return
 
-    rows = db.list_schedules()
-    if not rows:
+    title, lines = lists.schedules(lang, pages.MARKUP)
+    if not lines:
         await _reply(interaction, localized("schedule_empty", lang))
         return
-    lines = [localized("schedule_header", lang)]
-    for row in rows:
-        lines.append(localized(
-            "schedule_line", lang, id=row["id"], wiki=row["wiki"],
-            mechanics=", ".join(db.schedule_mechanics(row)),
-            when=dialog.describe_schedule(row, lang),
-            state=localized("schedule_state_on" if row["enabled"]
-                            else "schedule_state_off", lang)))
-    await _reply(interaction, "\n".join(lines))
+    await pages.send(interaction, title, lines, lang)

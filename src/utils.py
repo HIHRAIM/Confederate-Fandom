@@ -20,6 +20,18 @@ import os
 
 from config import ADMINS, PUBLISH_AT_MINUTES, SERVICE_CHATS, SERVICE_LANG
 
+try:
+    from config import BACKUP_CHATS
+except ImportError:
+    BACKUP_CHATS = {}
+"""Where the encrypted database backups go, in the shape SERVICE_CHATS uses.
+
+Optional, and read the way wiki/site.py reads WIKI_PUT_THROTTLE: a deployment
+whose config.py predates backups keeps starting, it simply makes none. Kept
+apart from SERVICE_CHATS deliberately rather than defaulting to it — a
+backup is the whole database, and the chat that reads status lines is rarely
+the chat that should hold one."""
+
 logger = logging.getLogger("fd.utils")
 
 SUPPORTED_LANGS = {"ru", "uk", "pl", "en", "es", "pt"}
@@ -68,6 +80,102 @@ def localized(key, lang, **kwargs):
     except Exception:
         return template
 
+PAGE_CHARS = 1800
+"""How much text one page of a long answer carries, in characters.
+
+Well under what either messenger accepts — Discord takes 4096 in an embed
+description, Telegram 4096 in a message — because the limit that matters is
+not what the API allows but how much a person reads before the buttons
+scroll off the screen. One number for both halves, so the same list pages
+the same way wherever it is read."""
+
+def paginate(lines, budget=PAGE_CHARS):
+    """Group lines into pages of roughly equal size. -> list of strings.
+
+    Two rules, and the second is the reason this is not four lines of greedy
+    filling. A page never exceeds `budget`, and no line is ever split: an
+    entry cut in half across a button press is worse than a short page.
+
+    Greedy filling obeys both and still looks wrong — nineteen mechanics come
+    out as one page of 1790 characters and one of 211, which reads as a bug
+    rather than as a second page. So the number of pages is worked out first,
+    from the total length, and the lines are then dealt out evenly between
+    that many. When an even deal happens to overflow a page — lines differ in
+    length, and the long ones can land together — one more page is added and
+    the deal is made again. It terminates: by the time there is a page per
+    line, every page is one line, and every line was cut to fit the budget on
+    the way in.
+
+    Shared by both messengers on purpose. The same list should page the same
+    way wherever it is read, and a person who is told "page 2 of 3" on Discord
+    should not find four pages of it on Telegram.
+    """
+    lines = [line if len(line) <= budget else line[:budget - 1] + "…"
+             for line in lines]
+    if not lines:
+        return [""]
+    total = sum(len(line) + 1 for line in lines) - 1
+    count = max(1, -(-total // budget))
+    while True:
+        per = -(-len(lines) // count)
+        groups = [lines[index:index + per]
+                  for index in range(0, len(lines), per)]
+        if all(sum(len(line) + 1 for line in group) - 1 <= budget
+               for group in groups):
+            return ["\n".join(group) for group in groups]
+        count += 1
+
+
+def has_translation(key):
+    """Whether the six files carry this key at all, asked without complaining.
+
+    `localized` warns when a key is missing, and rightly: a reply falling back
+    to its own key is a bug somebody must see. But a caller that *offers* a
+    key and means to fall back — a command spelled differently on one
+    messenger, a job with no friendly name — is not that bug, and it would
+    otherwise write a warning per line per call. This is the question to ask
+    first."""
+    return key in _LOCALE
+
+
+def job_label(name, lang):
+    """A scheduler job's name as a person reads it: 'news' -> 'the news'.
+
+    The names in the schedule are identifiers — `news`, `species`, `tasks`,
+    `sweep`, `backup` — and they are the right thing for a log line and the
+    wrong thing for the Discord presence or for /jobs. A job with no key of
+    its own falls back to its identifier, so a job added without touching the
+    six files still shows something true rather than a missing-key line.
+    """
+    if not name:
+        return "—"
+    key = "job_" + str(name)
+    return localized(key, lang) if has_translation(key) else str(name)
+
+
+def format_duration(seconds, lang):
+    """A rough length of time as a person reads it: "2 ч 15 мин", "8 с".
+
+    Hours, minutes and seconds, and only the ones that are not zero — a wait
+    of two hours and three seconds reads "2 ч 3 с", never "2 ч 0 мин 3 с".
+    Anything under a second is rounded up to one rather than shown as nothing,
+    because the number is an estimate and "in 0" reads as a broken message.
+
+    The three units are i18n keys and short forms on purpose ("ч", "min"). A
+    long form would need the plural rules of six languages — one hour, two
+    hours, five hours, and the different answer Polish and Ukrainian give —
+    for a number nobody is going to hold the bot to anyway.
+    """
+    total = max(1, int(round(float(seconds or 0))))
+    hours, rest = divmod(total, 3600)
+    minutes, secs = divmod(rest, 60)
+    parts = []
+    for value, key in ((hours, "unit_hours"), (minutes, "unit_minutes"),
+                       (secs, "unit_seconds")):
+        if value:
+            parts.append("{} {}".format(value, localized(key, lang)))
+    return " ".join(parts)
+
 def user_lang(user):
     """The language to answer one Telegram user in: the language of their
     client when the bot speaks it, the reference language otherwise."""
@@ -104,6 +212,24 @@ def admin_ids(platform):
     return sorted(ADMINS.get(str(platform), set()))
 
 
+def _chat_keys(mapping, what):
+    """One configured mapping of chats as '<platform>:<chat>[:<thread>]'.
+
+    The shared half of `service_chat_keys` and `backup_chat_keys`: both settings
+    have the same shape, and a second copy of this loop would be a second place
+    for a Telegram thread id to be spelled differently."""
+    keys = []
+    for chat_key in (mapping or {}).get("telegram", set()):
+        chat_id, thread = _parse_service_chat_key(chat_key)
+        if chat_id is None:
+            logger.warning("%s chat key %r is not '<chat_id>:<thread_id>'",
+                           what, chat_key)
+            continue
+        keys.append("telegram:{}:{}".format(chat_id, thread or 0))
+    for channel_id in (mapping or {}).get("discord", set()):
+        keys.append("discord:{}".format(channel_id))
+    return keys
+
 def service_chat_keys():
     """Every service chat as '<platform>:<chat>[:<thread>]'.
 
@@ -111,16 +237,15 @@ def service_chat_keys():
     in the same form the task row stores, and the service chats have to look
     the same or the reporting would need two code paths.
     """
-    keys = []
-    for chat_key in SERVICE_CHATS.get("telegram", set()):
-        chat_id, thread = _parse_service_chat_key(chat_key)
-        if chat_id is None:
-            logger.warning("service chat key %r is not '<chat_id>:<thread_id>'", chat_key)
-            continue
-        keys.append("telegram:{}:{}".format(chat_id, thread or 0))
-    for channel_id in SERVICE_CHATS.get("discord", set()):
-        keys.append("discord:{}".format(channel_id))
-    return keys
+    return _chat_keys(SERVICE_CHATS, "service")
+
+def backup_chat_keys():
+    """Every backup chat, in the same spelling — so the same sender can be used.
+
+    Empty is the ordinary state of a deployment that has not set BACKUP_CHATS,
+    and the periodic job reads it as "make no backups" rather than as a
+    failure to report twice a day."""
+    return _chat_keys(BACKUP_CHATS, "backup")
 
 def publish_marks():
     """The minutes past the hour a publishing pass runs at, sorted and

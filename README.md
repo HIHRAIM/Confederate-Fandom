@@ -55,12 +55,14 @@ Two things are worth checking before anything else, because the bot is quiet rat
    - `WIKI_USERNAME` — the wiki account, without any suffix (`Example Bot`).
    - `WIKI_BOT_PASSWORD_SUFFIX` — the *name* of the BotPassword from `Special:BotPasswords` (`ExampleBot`), not the account name. The bot logs in as `<WIKI_USERNAME>@<WIKI_BOT_PASSWORD_SUFFIX>`.
    - `WIKI_BOT_PASSWORD` — the password that page generated.
+   - `BACKUP_KEY` — any long random string, this project's own and not another bot's, used to encrypt the database backups. Optional: without it the bot runs exactly as before and simply makes none. Keep a copy somewhere other than this server — lose the key and every backup already made is unreadable for good.
 
    Environment variables that are already set take precedence over the file. `src/.env` must never be committed; neither must `src/botconfig/user-password.cfg`, which the bot writes from these values for Pywikibot to read (see [The wiki login](#the-wiki-login)).
 
 5. **Fill in the configuration.** Copy `src/config.example.py` to `src/config.py` and edit:
    - `ADMINS["telegram"]` and `ADMINS["discord"]` — the numeric user IDs of the bot's own administrators, on each messenger. They are not stored in the database on purpose: no mishap there can hand out or take away control of the bot. Everybody else who is to run wiki work is appointed at runtime with `/wikiadmin`.
    - `SERVICE_CHATS["telegram"]` and `SERVICE_CHATS["discord"]` — where the bot reports what it did and what failed: Telegram chats as `"<chat_id>:<thread_id>"` (thread `0` is the plain group), Discord channels as numeric ids. Every report goes to both. Empty sets leave the log file as the only record.
+   - `BACKUP_CHATS["telegram"]` and `BACKUP_CHATS["discord"]` — where the encrypted database copies go, in the same shape as `SERVICE_CHATS`. Deliberately a separate setting rather than a default to it: the file is the whole database, and the chat that reads status lines is rarely the chat that should keep one. Empty sets (the default) mean no automatic backups.
    - `SERVICE_LANG` — the language those reports are written in.
    - `SOURCE_CHANNEL` — the channel to follow, as `@name` or as the numeric id.
    - `WIKIS` — every wiki the news go to, each as a Pywikibot family and language code; a wiki that keeps its news under other titles may carry its own `templates` and `files` tuples, and one whose stylesheet names the card's classes differently its own `css_prefix`.
@@ -124,38 +126,54 @@ The code lives in `src/`. [ARCHITECTURE.md](ARCHITECTURE.md) describes how the p
 
 ## Commands
 
-The same commands on both messengers — slash commands on Discord, ordinary commands on Telegram. Replies come in the language of the person who asked, when it is one of the six the project speaks.
+Permission roles used below:
 
-**Wiki work.** For the administrators in `config.ADMINS`, and for the wiki administrators they appoint.
+- **Everyone** — any user who can see the bot.
+- **Wiki Admins** — users appointed with `/wikiadmin`, by their account on the messenger and their account on Fandom. The appointment is global and deliberately cheap to give: it is not what grants anything by itself.
+- **Bot Admins** — global admins defined in `config.py` (`ADMINS`); they hold Wiki Admin rights everywhere plus the bot-wide commands.
 
-| Command | What it does |
-|---|---|
-| `/tasks` | The catalogue of mechanics, numbered |
-| `/run [numbers or codes]` | Sets up a run, in a dialog. `/run 1 4` and `/run replace typos-ru` skip the first question |
-| `/go <id>` | Confirms a prepared task and starts it |
-| `/go <id> dry` | The same, but writes nothing: the diffs are computed and sent as a file, the wiki is untouched |
-| `/jobs` | What is running, what is queued, and how the last few tasks ended |
-| `/stop <id>` | Stops a task. What it has already written stays written |
-| `/schedule` | The repeating runs; `/schedule on|off|del <id>` changes one |
+> Notes:
+> - Being a Wiki Admin is not what lets a run happen. Before a task starts the bot asks *that wiki* whether the person holds rollback, content moderator, discussions moderator, administrator, bureaucrat or bot there, and refuses if they do not — see [Who may ask, and what the bot checks](#who-may-ask-and-what-the-bot-checks).
+> - The bot checks itself the same way: it must hold bot, content moderator or administrator on that wiki, and a missing right is reported as the *group* that would grant it, never as the bare right.
+> - `/update` and `/backfill` exist on Telegram only: the news half is administered from the messenger the followed channel lives on.
+> - `/backup` answers privately — ephemeral on Discord, where it is also allowed in a DM, and in private chats only on Telegram.
+> - `/help` and `/status` are open to more people on Discord than on Telegram; the tables below say which.
+> - Anything long — the task list, the queue, the repeating runs, `/help` — comes back as a page with arrows under it when it does not fit on one: an embed with buttons on Discord, a message with an inline keyboard on Telegram.
+> - Replies come in the language of the person who asked, when it is one of the six the project speaks.
 
-**The news.** For the administrators in `config.ADMINS` only.
+### Discord commands
 
-| Command | What it does |
-|---|---|
-| `/help` | What the bot does and which commands it takes |
-| `/status` | The channel, the wikis, how many posts are stored, when the last pass ran and what it left behind, and what each of the three slots holds |
-| `/update` | Runs a pass now instead of waiting for the next one |
-| `/update force` | The same, but ignores which picture each slot already holds, so all three files are uploaded again to every wiki — the answer to a file that was changed or deleted on a wiki behind the bot's back |
-| `/backfill` | Reads the channel's public web preview now: recovers the posts published before the bot was added and picks up their edits |
-| `/backfill all` | The same, but also refreshes the posts the bot heard from Telegram itself — for a post edited while the bot was down |
+| Command | Purpose | Everyone | Wiki Admins | Bot Admins |
+|---|---|:---:|:---:|:---:|
+| `/tasks` | The numbered list of tasks the bot can be set to: the name, the code, and what each one does | ❌ | ✅ | ✅ |
+| `/run [what]` | Set up a run, in a dialog in this channel. `/run 1 4` and `/run replace typos-ru` skip the first question | ❌ | ✅ | ✅ |
+| `/go <task_id> [dry]` | Confirm a prepared task and start it. With `dry` it writes nothing: every diff is computed and sent back as a file, the wiki untouched | ❌ | ✅ | ✅ |
+| `/jobs` | What is running, what is queued, and how the last few tasks ended | ❌ | ✅ | ✅ |
+| `/stop <task_id>` | Stop a task. What it has already written stays written | ❌ | ✅ | ✅ |
+| `/schedule [action] [schedule_id]` | The repeating runs; `action` is `list`, `on`, `off` or `del` | ❌ | ✅ | ✅ |
+| `/status` | The channel, the wikis, how many posts are stored, when the last pass ran and what it left behind, and what each slot holds | ❌ | ✅ | ✅ |
+| `/help` | What the bot does and which commands it takes | ✅ | ✅ | ✅ |
+| `/wikiadmin [user] [wiki_user]` | Appoint a Wiki Admin by Discord user and Fandom account; with no arguments, list who is appointed | ❌ | ❌ | ✅ |
+| `/remwikiadmin <user>` | Take the appointment away | ❌ | ❌ | ✅ |
+| `/backup` | Send an encrypted copy of the database, right now, to the person who asked and nobody else | ❌ | ❌ | ✅ |
 
-**Access.** For the administrators in `config.ADMINS` only.
+### Telegram commands
 
-| Command | What it does |
-|---|---|
-| `/wikiadmin` | Who is appointed a wiki administrator |
-| `/wikiadmin <who> <Fandom account>` | Appoints one. On Telegram *who* is a reply, an `@name` or a numeric id; on Discord it is a user |
-| `/remwikiadmin <who>` | Takes the appointment away |
+| Command | Purpose | Everyone | Wiki Admins | Bot Admins |
+|---|---|:---:|:---:|:---:|
+| `/tasks` | The numbered list of tasks the bot can be set to: the name, the code, and what each one does | ❌ | ✅ | ✅ |
+| `/run [numbers or codes]` | Set up a run, in a dialog in this chat. `/run 1 4` and `/run replace typos-ru` skip the first question | ❌ | ✅ | ✅ |
+| `/go <id> [dry]` | Confirm a prepared task and start it. With `dry` it writes nothing: every diff is computed and sent back as a file, the wiki untouched | ❌ | ✅ | ✅ |
+| `/jobs` | What is running, what is queued, and how the last few tasks ended | ❌ | ✅ | ✅ |
+| `/stop <id>` | Stop a task. What it has already written stays written | ❌ | ✅ | ✅ |
+| `/schedule [on\|off\|del <id>]` | The repeating runs; with no arguments, list them | ❌ | ✅ | ✅ |
+| `/status` | The channel, the wikis, how many posts are stored, when the last pass ran and what it left behind, and what each slot holds | ❌ | ❌ | ✅ |
+| `/update [force]` | Run a publishing pass now instead of waiting for the next one. With `force`, ignore which picture each slot already holds and upload every file again — the answer to a file changed or deleted on a wiki behind the bot's back | ❌ | ❌ | ✅ |
+| `/backfill [all]` | Read the channel's public web preview now: recover the posts published before the bot was added and pick up their edits. With `all`, also refresh the posts the bot heard from Telegram itself, for one edited while the bot was down | ❌ | ❌ | ✅ |
+| `/help` | What the bot does and which commands it takes | ❌ | ❌ | ✅ |
+| `/wikiadmin [<who> <Fandom account>]` | Appoint a Wiki Admin; *who* is a reply, an `@name` or a numeric id. With no arguments, list who is appointed | ❌ | ❌ | ✅ |
+| `/remwikiadmin <who>` | Take the appointment away | ❌ | ❌ | ✅ |
+| `/backup` | Send an encrypted copy of the database, right now. Private chats only | ❌ | ❌ | ✅ |
 
 ## Jobs and the queue
 
@@ -167,12 +185,21 @@ The same commands on both messengers — slash commands on Discord, ordinary com
 | `species` | module | Once a day at `SPECIES_AT` | Walks the articles of `SPECIES_WIKI` and standardises the names of Pokémon species |
 | `tasks` | task | Every minute, and whenever there is more to do | Fires the schedules that are due and walks one chunk of one task |
 | `sweep` | task | Once a day at 04:00 | Throws away the page lists and report files of runs that are long over |
+| `backup` | task | Twice a day, at 04:30 and 16:30 | Sends an encrypted copy of the database to `BACKUP_CHATS` |
 
 **One at a time, always.** Not because the logins would clash — each wiki has a session and a cookie file of its own, and the bot is signed in to all of them at once — but because Pywikibot is synchronous: every job goes through the same worker thread. A job that comes due while another is running waits its turn, and a job already waiting is not queued twice, so a long night cannot leave four news passes stacked behind it — only one.
 
 **The modules go first.** The news and the species walk are what somebody's readers actually see, so they are registered at module priority and jump the queue. Everything a person asks for through a command runs behind them.
 
 **And a long run gives the worker back.** A walk of nine thousand articles could not be allowed to hold the quarter-hourly news pass for an hour, so it is not one job: the task queue walks a *chunk* — fifty pages, or a minute, or until something more important arrives — and then puts itself back in the queue. A walk of a whole wiki is a hundred short jobs with the news slipping in between them, and it survives a restart, because the position is a row in the database and not a variable.
+
+**A task that has to wait is told so, and only then.** A run that the bot picks up at once says nothing about queues — being told you are first of one is noise. A run that lands behind something gets one line: which place it is in, and roughly how long until the bot reaches it, in whichever of hours, minutes and seconds are not zero (`2 ч 15 мин`, `8 с`). Both moments a task can be queued are covered: when `/run` creates it and when `/go` starts it while another run is still going.
+
+The estimate is exactly as good as it claims to be. It is the pages still to do in front of you divided by the rate the running task is *actually* going at — its own elapsed time over its own pages checked, which already includes every quarter of an hour it stood aside for a news pass. A task merely waiting ahead of you counts as the few seconds its planning takes, because planning is all it will do before it stops and waits for somebody to type `/go`.
+
+**And the bot says so on Discord.** The line under its name is the one place a person sees what it is doing without asking. Something running names the wiki where there is one to name — `Правит telepedia:ru` for a task, the same for the nightly species walk. The news pass has a line of its own, `Обновляет новости ТелеРадиопедии`: it writes to every wiki of `WIKIS` at once, so there is no one wiki to point at, and the name of the group they form lives in the `presence_news` string of the six i18n files — which is what to change when the bot publishes somewhere else. The sweep, the backup and the queue between two tasks name themselves (`Работает: ночная уборка`).
+
+Nothing running, and the line says what is next and how long until it: `Дальше: новости, через 10 мин.`, or `Дальше: запуск по pokemon:ru, через 2 ч 15 мин.` when a repeating run of somebody's comes sooner than any of the bot's own jobs. The task queue is never what it names as next — it is due every minute and would be the answer for ever — and the countdown is rounded to whole minutes, so that Discord is not sent a new line every thirty seconds. The language is `SERVICE_LANG`.
 
 What each job reports differs on purpose. The news pass speaks only when it changed something or failed; four silent successes an hour are four messages nobody reads. The species walk reports however it ends, because a job that runs once a night and says nothing cannot be told from one that never ran. A task reports when it starts, every five hundred pages, and when it finishes.
 
@@ -223,6 +250,15 @@ Nineteen mechanics, each a Pywikibot script (or one of the operator's own) with 
 ### The dialog
 
 Short on purpose. Which mechanics, which wiki, where the pages come from, what each mechanic must be told — and then **every optional switch of every chosen mechanic in one numbered message**, answered with the numbers you want separated by spaces, or `0` for none. Four mechanics with five switches each is one question, not twenty.
+
+**Renaming can be a list rather than a rule.** A rule — add this prefix, strip that suffix, rewrite by a regular expression — is the right shape for a hundred pages named alike and the wrong shape for nine pages named nothing alike. So `movepages` also takes the renames themselves: page source «список переименований», then one rename per line,
+
+```
+Список_серий Список_эпизодов
+Первый_сезон Сезон_1
+```
+
+and the pages of the run are the left-hand column. A space in a title is written as an underscore, the way MediaWiki writes it in a URL — and on Discord that is not optional: its markdown turns text between underscores into italics and eats them, so the whole block goes inside a ``` fence, which the bot strips. A line written in lower case still finds its page: the wiki capitalises the first letter, and both spellings are looked for.
 
 Then the task is created and the queue takes over: it plans, says how many pages it found and shows the first twenty, and waits. `/go <id>` runs it; `/go <id> dry` computes every diff and writes nothing, which is how a page list should be read before it is acted on. There is no cap on how many diffs come back — they arrive as a file.
 
@@ -397,6 +433,8 @@ Pywikibot keeps its own directory, and the bot points it at `src/botconfig/`: th
 
 **A session does not last forever, and the bot checks.** Before each pass every wiki is asked who it thinks the bot is, which costs one request and answers the question that matters: a login session expires eventually, and when it does the library goes on believing it is signed in while the wiki treats every edit as a stranger's. Left alone that state outlives the process — it once cost a full day of passes, each failing the same way — so a session the wiki no longer recognises is thrown away and made again, cookies first (a stale one makes MediaWiki refuse the login outright). The log says `the session on telepedia:ru is no longer recognised — logging in again`, and then that it was restored.
 
+**And when even that fails, the bot digs itself out.** It once did not: three days of dead news, two hundred and fifteen identical failures per wiki, and nothing but `systemctl restart fd_bot` would help. Emptying the cookie jar before the login did not survive to the request, because the library reloads the jar from disk inside `login()`; and `pywikibot.Site()` is a caching factory, so building the site "again" handed back the same object with the same stale login status, for the life of the process. Both are closed now: the clear is held until the login has gone out, and a wiki whose login fails has its cached Site, its jar and its cookie file thrown away before the second attempt — which is the state a freshly started process has, and that state was always known to work. A wiki that still refuses is then left alone for fifteen minutes, then thirty, then an hour, and tried again on its own. No pass of another wiki is affected, and no restart is needed.
+
 **The bot flag is the wiki's to give.** Every edit and every upload asks to be marked as a bot action, but MediaWiki honours that only for an account holding the `bot` right *on that wiki*, and the right takes two things at once: the account has to be in the local **bot group** (a bureaucrat adds it at `Special:UserRights`) and the BotPassword has to carry the **High-volume editing** grant. Miss either and the bot still publishes — its edits simply appear in Recent changes like anybody else's. The log line written at each login says which it is: `logged in to telepedia:ru as Example Bot (bot flag: yes)`.
 
 The credentials go through Pywikibot's own password file, which the bot writes from `.env` at every start. The reason is the lifetime of the process: a login session expires eventually, and Pywikibot answers that by logging in again on its own — but only if it can find credentials. Handed nothing, it asks for a password on the console, and a bot that has been running unattended for a month would simply hang there. So `.env` stays the one place the secret is written by hand, and the generated `src/botconfig/user-password.cfg` is a runtime file, kept out of git like the cookie beside it.
@@ -404,6 +442,18 @@ The credentials go through Pywikibot's own password file, which the bot writes f
 That file is set to mode `600` on **every** start, and not only on the start that writes it. It is the wiki password in clear, it outlives the process, and a checkout, a deployment or a copy can each hand it back readable by every local user of the machine — which is exactly what once happened, a `664` from a checkout that stood until Pywikibot noticed it and said so in a warning.
 
 **Pywikibot's own lines come through the bot's log.** The library keeps a logger of its own and, left alone, writes to the console through it — bare lines with no time and no level (`Logging in to telepedia:ru as ...`, `Page [[...]] saved`) in among the bot's own `2026-09-02 12:00:00,000 fd.publisher INFO ...`. In a journal that reads badly and cannot be filtered at all: a line with no level is invisible to `journalctl -p err` whatever it says. So `wiki/site.py` takes that logger over at import and lets its records travel up to the bot's own, where they arrive as `pywiki INFO Page [[...]] saved` like everything else. Anything the library says below `INFO` — its own verbose and debug chatter — is dropped rather than printed.
+
+## Backups
+
+The bot sends an encrypted copy of `src/fd.db` to the chats of `config.BACKUP_CHATS` twice a day, at 04:30 and 16:30 — half an hour behind the nightly sweep, so what leaves the machine is the swept database rather than one still carrying the page lists of runs that ended a month ago. `/backup` asks for the same file at any moment, and only the administrators in `config.ADMINS` may — the people appointed with `/wikiadmin` run wiki work and nothing else.
+
+**The answer goes to the person who asked and to nobody else.** On Discord the reply is ephemeral and the command is allowed in a DM; on Telegram it works in a private chat only and says so in a group. Encryption is what makes the file safe to *store*, not safe to hand round: a channel or a group keeps it for as long as it exists, and a key can leak later than the file did.
+
+**Encrypted because of where it goes.** A Telegram topic or a Discord channel keeps a file for as long as the chat exists and shows it to everybody who can read there, and `fd.db` holds who is appointed on which wiki and every task anybody has ever asked the bot to run. The snapshot is taken through SQLite's own online-backup API, so it is internally consistent even though the bot is writing while it is made, and it is encrypted before it leaves the process — an authenticated stream cipher built on BLAKE2, standard library only, no third-party crypto package. Whoever stores the file sees ciphertext they can neither read nor alter undetected. `BACKUP_KEY` is **this project's own** and belongs nowhere else; keep a copy off the server as well as on it, because a lost key makes every backup already taken unreadable for good.
+
+**Without `BACKUP_KEY` there are no backups, not plaintext ones.** Building one raises rather than falling back, `/backup` says so to the person who asked, and the twice-daily job writes one line in the log and sends nothing. A deployment that has set `BACKUP_CHATS` but no key is the only case that complains; one that has set neither is simply a deployment that does not want backups, and says nothing at all.
+
+**Restoring.** `python restore_backup.py fd.db.enc fd.db` from `src/`, with `BACKUP_KEY` in the environment or in `src/.env` — the same key the file was made with. A wrong key or an altered file fails loudly rather than producing a broken database. Stop the service before putting the result in place, for the reason the next section gives.
 
 ## Deploying an update
 
@@ -424,3 +474,11 @@ The bot stores what it needs to publish and nothing else. In `src/fd.db`:
 - **The tasks and the schedules** — what was asked for, on which wiki, by whom (the same platform, id, display name and Fandom account), when it ran and what it did. The page list of a finished run is deleted after thirty days; the row itself is kept, because it is the record of who asked the bot to do what.
 
 No reader of the channel is recorded at all, and no user of a wiki except the administrators the owner appoints. Note that the point of the bot is publication: the text and the picture of a post reach a public wiki, under a link back to the post. [PRIVACY.md](PRIVACY.md) is the longer version of this section.
+
+## Acknowledgements
+
+Fifteen of the nineteen mechanics are ports of scripts that ship with **[Pywikibot](https://github.com/wikimedia/pywikibot)** by the Pywikibot team and its contributors, licensed **MIT**. What was kept is each script's model — the options it offers, the order it does things in, and the decisions it refuses to make on a person's behalf — with its command line replaced by a dialog and its page list by this bot's own. Each module names the script it came from, its authors and its licence in its own docstring; the list is `replace`, `add_text`, `unlink`, `category`, `category_graph`, `interwiki`, `redirect` (which also folds in `fixing_redirects`), `image`, `delinker`, `movepages`, `protect`, `delete`, `revertbot`, `listpages` and `templatecount`.
+
+The other four are not ports of anything third-party. `typos_ru`, `punct_ru` and `pravopys_uk`, and the masking layer under all three, come from the operator's own earlier wiki scripts; the typo lists they read are in the **AWB** format, which is a file format rather than code, and no AutoWikiBrowser source is used here. `cosmetic` is this bot's own as well, and deliberately so: Pywikibot has a `cosmetic_changes.py`, but it renames templates and rewrites links by rules that differ per project, which on somebody else's wiki is an opinion about their markup. This one touches whitespace and punctuation, which is the part nobody argues about.
+
+Confederate Fandom is licensed under **Apache-2.0**.

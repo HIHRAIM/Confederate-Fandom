@@ -10,6 +10,12 @@ order and telegram_bot/catchall.py is a ``@router.message()`` with no filter
 at all — the handler that feeds the dialogs. Registered any earlier it
 silently swallows every command below it and the bot answers nothing.
 
+`pages` comes before the commands because the commands reach for it, and
+because it registers the one ``@router.callback_query`` in this half — the
+arrows under a paged answer. Callback queries are dispatched on a chain of
+their own, so it is in no danger from the catchall below; it is placed here to
+be found where every other registration is.
+
 The re-exports are the package's public API: `bot` is the aiogram Bot every
 other module reaches for as ``telegram_bot.bot``, and `main` is the polling
 task main.py gathers.
@@ -26,5 +32,6 @@ from telegram_bot.client import (
 )
 from telegram_bot.files import download_photo
 from telegram_bot import channel
+from telegram_bot import pages
 from telegram_bot import commands
 from telegram_bot import catchall

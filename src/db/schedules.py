@@ -118,6 +118,19 @@ def due_schedules(now=None):
         "AND next_run <= ? ORDER BY next_run", (moment,)).fetchall()
 
 
+def next_schedule(now=None):
+    """The enabled repeating run that comes due soonest, or None.
+
+    `next_run` is stored on the row rather than worked out here, so this is
+    one indexless but tiny query over a handful of rows — which is what makes
+    it cheap enough for the Discord presence to ask twice a minute.
+    """
+    moment = int(now or time.time())
+    return cur.execute(
+        "SELECT * FROM schedules WHERE enabled=1 AND next_run IS NOT NULL "
+        "AND next_run > ? ORDER BY next_run LIMIT 1", (moment,)).fetchone()
+
+
 def mark_fired(row):
     """Record that a schedule has just fired and move it to its next moment."""
     cur.execute(

@@ -30,6 +30,22 @@ logger = logging.getLogger("fd.tasks.queue")
 
 JOB = "tasks"
 
+DEFAULT_PAGE_SECONDS = 1.0
+"""How long one page is taken to cost before any real rate has been seen.
+
+Used only for a task that is running but has not finished a chunk yet, so it
+has no measured rate of its own. A read and usually a write against a Fandom
+wiki with no throttle of ours in the way — near enough for a number the
+message itself calls approximate."""
+
+PLAN_SECONDS = 20.0
+"""How long a task waiting *ahead* in the queue is taken to cost.
+
+Such a task has not been planned yet, so nothing knows how many pages it will
+touch — but it does not need to be known, because planning is all it will do
+before it stops at 'confirm' and waits for a person to type /go. What it costs
+the queue is one page count, not a walk."""
+
 
 def _fire_schedules():
     """Turn every schedule whose moment has come into a task. -> their ids.
@@ -83,6 +99,113 @@ def _next_task():
     return None
 
 
+def _seconds_ahead(ahead):
+    """How long the tasks in front of one task will take. -> seconds.
+
+    Each running task is asked its own rate rather than a shared one: elapsed
+    time divided by pages checked. That measurement is better than it looks,
+    because the elapsed time already contains every quarter-hour the task
+    stood aside for a news pass — so what comes out is the rate the queue
+    really moves at, not the rate the wiki answers at.
+
+    A task that has not checked a page yet has no rate and falls back to
+    DEFAULT_PAGE_SECONDS; one that is merely waiting costs PLAN_SECONDS.
+    """
+    import time
+
+    import db
+
+    now = int(time.time())
+    seconds = 0.0
+    for row in ahead:
+        if row["state"] != "running":
+            seconds += PLAN_SECONDS
+            continue
+        remaining = max(0, db.count_pages(row["id"]) - int(row["checked"] or 0))
+        done = int(row["checked"] or 0)
+        started = row["started_at"]
+        if done > 0 and started:
+            per_page = max(0.05, (now - int(started)) / float(done))
+        else:
+            per_page = DEFAULT_PAGE_SECONDS
+        seconds += remaining * per_page
+    return int(seconds)
+
+
+def queue_place(task_id):
+    """Where a task stands in the queue. -> {"position", "eta"} or None.
+
+    None is the answer that matters most: it means the bot is about to work on
+    this task and nobody needs to be told anything. A queue notice is worth
+    sending only when there is a wait, and "you are first of one" is noise.
+
+    Who counts as being ahead follows `_next_task` exactly, because a queue
+    position that disagreed with the thing doing the queueing would be worse
+    than none. A running task is finished before any other is begun, so it is
+    ahead of everything; among running tasks the lower id goes first. A task
+    in 'confirm' is ahead of nobody — it is waiting for a person, not for the
+    worker, and it may never be confirmed at all.
+    """
+    import db
+
+    row = db.get_task(task_id)
+    if row is None:
+        return None
+    active = db.active_tasks()
+    running = [other for other in active if other["state"] == "running"]
+    if row["state"] == "running":
+        ahead = [other for other in running if other["id"] < row["id"]]
+    elif row["state"] == "pending":
+        ahead = running + [other for other in active
+                           if other["state"] == "pending" and other["id"] < row["id"]]
+    else:
+        return None
+    if not ahead:
+        return None
+    return {"position": len(ahead) + 1, "eta": _seconds_ahead(ahead)}
+
+
+def queue_notice(task_id, lang):
+    """The line to send a person whose task has to wait, or None.
+
+    Called at the two moments a task enters the queue — when /run creates it
+    and when /go starts it — and silent at both when there is nothing in front
+    of it, which is the ordinary case.
+    """
+    from utils import format_duration, localized
+
+    place = queue_place(task_id)
+    if place is None:
+        return None
+    if place["eta"] > 0:
+        return localized("queue_place_eta", lang, id=task_id,
+                         position=place["position"],
+                         eta=format_duration(place["eta"], lang))
+    return localized("queue_place", lang, id=task_id, position=place["position"])
+
+
+def go_hint(chat_key, task_id, lang):
+    """How to start this task, spelled the way its messenger spells it.
+
+    Discord and Telegram take the same command with different syntax: `/go 2
+    dry` there, `/go task_id: 2 dry: true` here. The plan message is built
+    once and sent to whichever chat asked for it, so it cannot carry either
+    spelling as a constant — and when it carried Telegram's, a person on
+    Discord followed it, left the `dry` option untouched because the message
+    never mentioned it, and got a real run where they had asked for a preview.
+
+    The chat key already knows the platform (`'<platform>:<chat>[:<thread>]'`),
+    which is why nothing has to be passed down from the command.
+    """
+    from tasks import notify
+    from utils import localized
+
+    target = notify.parse_chat(chat_key)
+    platform = target[0] if target else ""
+    key = "task_go_discord" if platform == "discord" else "task_go_telegram"
+    return localized(key, lang, id=task_id)
+
+
 async def _plan(row):
     """Plan one task and tell the person what it will do."""
     import db
@@ -126,6 +249,7 @@ async def _plan(row):
         sample=sample + (("\n… и ещё {}".format(more)) if more > 0 else ""),
         warning=localized("task_destructive", lang) if plan["destructive"] else "",
         notes="\n".join(plan["notes"]),
+        how=go_hint(row["reply_chat"], task_id, lang),
     ))
 
 
@@ -212,6 +336,9 @@ async def start(task_id, announce_only=False):
     await notify.announce(text)
     if not announce_only:
         await notify.send(row["reply_chat"], text)
+        notice = queue_notice(task_id, lang)
+        if notice:
+            await notify.send(row["reply_chat"], notice)
     scheduler.enqueue(JOB, reason="task {} started".format(task_id))
     return True
 

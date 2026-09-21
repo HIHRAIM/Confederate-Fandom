@@ -25,15 +25,13 @@ from aiogram.filters import Command
 from aiogram.types import Message
 
 import db
-import scheduler
 from tasks import access, dialog, queue as task_queue
+from telegram_bot import pages
 from telegram_bot.client import router
 from telegram_bot.dialogs import TelegramConversation
 from utils import localized, user_lang
 
 logger = logging.getLogger("fd.telegram.tasks")
-
-RECENT_TASKS = 5
 
 
 def _caller(message):
@@ -52,12 +50,16 @@ async def _deny(message, lang):
 
 @router.message(Command("tasks"))
 async def tasks_cmd(message: Message):
-    """The catalogue: what the bot can be told to do, numbered."""
+    """The catalogue: what the bot can be told to do, numbered.
+
+    A paged HTML message rather than a wall of text: one line per mechanic,
+    the name in bold, the code in monospace after it
+    (telegram_bot/pages.py)."""
     lang = user_lang(message.from_user)
     if _caller(message) is None:
         await _deny(message, lang)
         return
-    await message.answer(dialog.mechanics_list(lang))
+    await pages.send(message, "tasks", lang)
 
 
 @router.message(Command("run"))
@@ -111,27 +113,7 @@ async def jobs_cmd(message: Message):
         await _deny(message, lang)
         return
 
-    lines = [localized("jobs_header", lang,
-                       running=scheduler.running() or "—",
-                       waiting=", ".join(scheduler.waiting()) or "—")]
-    active = db.active_tasks()
-    if active:
-        lines.append(localized("jobs_active", lang))
-        for row in active:
-            lines.append(localized(
-                "jobs_task", lang, id=row["id"], wiki=row["wiki"],
-                state=row["state"],
-                mechanics=", ".join(db.task_mechanics(row)),
-                checked=row["checked"], total=db.count_pages(row["id"]),
-                edited=row["edited"], failed=row["failed"]))
-    for row in db.recent_tasks(RECENT_TASKS):
-        if row["state"] in ("pending", "confirm", "running"):
-            continue
-        lines.append(localized(
-            "jobs_finished", lang, id=row["id"], wiki=row["wiki"],
-            state=row["state"], edited=row["edited"], failed=row["failed"],
-            error=row["error"] or ""))
-    await message.answer("\n".join(lines))
+    await pages.send(message, "jobs", lang)
 
 
 @router.message(Command("stop"))
@@ -162,7 +144,7 @@ async def schedule_cmd(message: Message):
     parts = (message.text or "").split()[1:]
     if parts and parts[0].lower() in ("off", "on", "del", "delete"):
         if len(parts) < 2 or not parts[1].isdigit():
-            await message.answer(localized("schedule_usage", lang))
+            await message.answer(localized("schedule_usage_telegram", lang))
             return
         schedule_id = int(parts[1])
         action = parts[0].lower()
@@ -176,16 +158,7 @@ async def schedule_cmd(message: Message):
         await message.answer(localized(key, lang, id=schedule_id))
         return
 
-    rows = db.list_schedules()
-    if not rows:
+    if not db.list_schedules():
         await message.answer(localized("schedule_empty", lang))
         return
-    lines = [localized("schedule_header", lang)]
-    for row in rows:
-        lines.append(localized(
-            "schedule_line", lang, id=row["id"], wiki=row["wiki"],
-            mechanics=", ".join(db.schedule_mechanics(row)),
-            when=dialog.describe_schedule(row, lang),
-            state=localized("schedule_state_on" if row["enabled"]
-                            else "schedule_state_off", lang)))
-    await message.answer("\n".join(lines))
+    await pages.send(message, "sched", lang)

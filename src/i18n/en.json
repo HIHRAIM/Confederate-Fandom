@@ -27,6 +27,18 @@
     "status": "verified",
     "text": "Reading the channel's public preview…"
   },
+  "backup_failed": {
+    "status": "verified",
+    "text": "The backup could not be made: {error}"
+  },
+  "backup_no_key": {
+    "status": "verified",
+    "text": "BACKUP_KEY is not set, so there is nothing to encrypt the copy with — and an unencrypted database is not sent instead."
+  },
+  "backup_private_only": {
+    "status": "verified",
+    "text": "Ask for a backup in a direct message: the file is the whole database and must not land in a group, not even an administrators' one."
+  },
   "category_action_add": {
     "status": "verified",
     "text": "add it"
@@ -38,6 +50,82 @@
   "category_action_remove": {
     "status": "verified",
     "text": "remove it"
+  },
+  "cmd_backfill": {
+    "status": "verified",
+    "text": "/backfill — read the channel's web preview; with «all», refresh what the bot heard itself as well"
+  },
+  "cmd_backup_dc": {
+    "status": "verified",
+    "text": "/backup — an encrypted copy of the database; the answer is yours alone"
+  },
+  "cmd_backup_tg": {
+    "status": "verified",
+    "text": "/backup — an encrypted copy of the database; private chats only"
+  },
+  "cmd_go_dc": {
+    "status": "verified",
+    "text": "/go task_id: <id> — start a prepared task; with dry: true — preview it first, writing nothing"
+  },
+  "cmd_go_tg": {
+    "status": "verified",
+    "text": "/go <id> — start a prepared task; /go <id> dry — preview it first, writing nothing"
+  },
+  "cmd_jobs": {
+    "status": "verified",
+    "text": "/jobs — what is running and how the last tasks ended"
+  },
+  "cmd_remwikiadmin_dc": {
+    "status": "verified",
+    "text": "/remwikiadmin user: <who> — take the appointment away"
+  },
+  "cmd_remwikiadmin_tg": {
+    "status": "verified",
+    "text": "/remwikiadmin <@name or ID> — take the appointment away"
+  },
+  "cmd_run_dc": {
+    "status": "verified",
+    "text": "/run what: [numbers or codes] — set up a run; the bot asks which wiki, where the pages come from and what to do"
+  },
+  "cmd_run_tg": {
+    "status": "verified",
+    "text": "/run [numbers or codes] — set up a run; the bot asks which wiki, where the pages come from and what to do"
+  },
+  "cmd_schedule_dc": {
+    "status": "verified",
+    "text": "/schedule — the repeating runs; action: on|off|del with schedule_id: <id> changes one"
+  },
+  "cmd_schedule_tg": {
+    "status": "verified",
+    "text": "/schedule — the repeating runs; /schedule on|off|del <id> changes one"
+  },
+  "cmd_status": {
+    "status": "verified",
+    "text": "/status — what the slots hold and when the last pass ran"
+  },
+  "cmd_stop_dc": {
+    "status": "verified",
+    "text": "/stop task_id: <id> — stop a task"
+  },
+  "cmd_stop_tg": {
+    "status": "verified",
+    "text": "/stop <id> — stop a task"
+  },
+  "cmd_tasks": {
+    "status": "verified",
+    "text": "/tasks — the numbered list of tasks the bot can be set to"
+  },
+  "cmd_update": {
+    "status": "verified",
+    "text": "/update — rebuild the news now; with «force», the pictures too"
+  },
+  "cmd_wikiadmin_dc": {
+    "status": "verified",
+    "text": "/wikiadmin — who is a wiki administrator; user: <who> wiki_user: <Fandom account> appoints one"
+  },
+  "cmd_wikiadmin_tg": {
+    "status": "verified",
+    "text": "/wikiadmin — who is a wiki administrator; /wikiadmin <@name or ID> <Fandom account> appoints one"
   },
   "dialog_bad_choice": {
     "status": "verified",
@@ -102,6 +190,10 @@
   "dialog_source_argument_links": {
     "status": "verified",
     "text": "Which page's links should be taken?"
+  },
+  "dialog_source_argument_pairs": {
+    "status": "verified",
+    "text": "Send the renames, one per line: old_title new_title. A space in a title is written as an underscore; on Discord wrap the whole block in ``` so it is not turned into italics."
   },
   "dialog_source_argument_prefix": {
     "status": "verified",
@@ -175,13 +267,9 @@
     "status": "verified",
     "text": "correct the labels of links too, [[Target|label]]"
   },
-  "flag_iw_no_propagate": {
-    "status": "verified",
-    "text": "do not collect links from the sister language versions"
-  },
   "flag_iw_sort_only": {
     "status": "verified",
-    "text": "only move them to the end and sort them, add nothing"
+    "text": "add nothing: only move the block to the end of the page and sort it"
   },
   "flag_list_categories": {
     "status": "verified",
@@ -213,7 +301,7 @@
   },
   "flag_no_typos": {
     "status": "verified",
-    "text": "no typo list, orthography only"
+    "text": "no typo list, only the spelling rules"
   },
   "flag_nocase": {
     "status": "verified",
@@ -279,9 +367,45 @@
     "status": "verified",
     "text": "an indented list"
   },
-  "help": {
+  "help_access": {
     "status": "verified",
-    "text": "Confederate Fandom — a bot for Fandom wikis: news on the main pages, a nightly standardisation of names, and the scripts run on request.\n\nWiki work\n/tasks — what the bot can do, as a numbered list\n/run [numbers or codes] — set up a run; the bot asks which wiki, where the pages come from and what to do\n/go <number> — start a prepared task; /go <number> dry previews it without editing\n/jobs — what is running and how the last tasks ended\n/stop <number> — stop a task\n/schedule — the repeating runs; /schedule on|off|del <number>\n\nNews\n/status — what the three slots hold and when the last pass ran\n/update — rebuild the news now; with «force», the pictures too\n/backfill — read the channel's web preview; with «all», refresh what the bot heard itself as well\n\nAccess\n/wikiadmin — who is a wiki administrator; /wikiadmin <@name or ID> <Fandom account> appoints one\n/remwikiadmin <@name or ID> — remove one\n\nThe commands are for the bot's administrators; the wiki work is also for wiki administrators who hold rights on that wiki."
+    "text": "Access"
+  },
+  "help_footer": {
+    "status": "verified",
+    "text": "The commands are for the bot's administrators; the wiki work is also for wiki administrators who hold rights on that wiki."
+  },
+  "help_intro": {
+    "status": "verified",
+    "text": "Confederate Fandom — a bot for Fandom wikis: news on the main pages, a nightly standardisation of names, and the tasks run on request."
+  },
+  "help_news": {
+    "status": "verified",
+    "text": "News"
+  },
+  "help_wiki": {
+    "status": "verified",
+    "text": "Wiki work"
+  },
+  "job_backup": {
+    "status": "verified",
+    "text": "the backup"
+  },
+  "job_news": {
+    "status": "verified",
+    "text": "the news"
+  },
+  "job_species": {
+    "status": "verified",
+    "text": "the species names"
+  },
+  "job_sweep": {
+    "status": "verified",
+    "text": "the nightly sweep"
+  },
+  "job_tasks": {
+    "status": "verified",
+    "text": "the task queue"
   },
   "jobs_active": {
     "status": "verified",
@@ -298,6 +422,10 @@
   "jobs_task": {
     "status": "verified",
     "text": "{id} — {wiki} [{state}] {mechanics}: {checked}/{total}, {edited} edits, {failed} failures"
+  },
+  "jobs_title": {
+    "status": "verified",
+    "text": "The queue and the tasks"
   },
   "mech_addtext": {
     "status": "verified",
@@ -321,7 +449,7 @@
   },
   "mech_category_graph_desc": {
     "status": "verified",
-    "text": "the tree of subcategories under one, as text or as a .dot file"
+    "text": "the tree of subcategories under one: as text or as a .dot file"
   },
   "mech_cosmetic": {
     "status": "verified",
@@ -329,7 +457,7 @@
   },
   "mech_cosmetic_desc": {
     "status": "verified",
-    "text": "spaces in headings, indents, blank lines, a dash instead of a hyphen"
+    "text": "markup only, words untouched: spaces in headings, indents, spare blank lines, a dash for a hyphen"
   },
   "mech_delete": {
     "status": "verified",
@@ -337,7 +465,7 @@
   },
   "mech_delete_desc": {
     "status": "verified",
-    "text": "delete a list of pages; this cannot be undone by editing"
+    "text": "delete pages from a list"
   },
   "mech_delinker": {
     "status": "verified",
@@ -345,7 +473,7 @@
   },
   "mech_delinker_desc": {
     "status": "verified",
-    "text": "take out of the articles the files that have already been deleted"
+    "text": "take files already deleted from the wiki off the pages; page links are left alone"
   },
   "mech_image": {
     "status": "verified",
@@ -353,7 +481,7 @@
   },
   "mech_image_desc": {
     "status": "verified",
-    "text": "swap a file for another, or take it out of everywhere it is shown"
+    "text": "replace one file with another, or take it off the pages"
   },
   "mech_interwiki": {
     "status": "verified",
@@ -361,7 +489,7 @@
   },
   "mech_interwiki_desc": {
     "status": "verified",
-    "text": "complete the links between the language versions, move them to the end and sort them"
+    "text": "add the missing links to other language versions, gather them at the end and sort them"
   },
   "mech_listpages": {
     "status": "verified",
@@ -377,15 +505,15 @@
   },
   "mech_movepages_desc": {
     "status": "verified",
-    "text": "rename pages by a rule: a prefix, a suffix or a regular expression"
+    "text": "rename pages: from a list of «old new», or by a rule — prefix, suffix, regular expression"
   },
   "mech_pravopys_uk": {
     "status": "verified",
-    "text": "Ukrainian orthography 2019"
+    "text": "Spelling-2019 (Ukrainian)"
   },
   "mech_pravopys_uk_desc": {
     "status": "verified",
-    "text": "§126, §35 and §36 of the Ukrainian orthography, plus the typo list"
+    "text": "§35, §36 and §126 of the 2019 Ukrainian spelling rules, and typos from a list of 172 rules"
   },
   "mech_protect": {
     "status": "verified",
@@ -393,7 +521,7 @@
   },
   "mech_protect_desc": {
     "status": "verified",
-    "text": "set or lift protection on editing, moving and re-uploading"
+    "text": "protect pages from editing, renaming and uploading a new version of a file, or unprotect them"
   },
   "mech_punct_ru": {
     "status": "verified",
@@ -401,7 +529,7 @@
   },
   "mech_punct_ru_desc": {
     "status": "verified",
-    "text": "spaces around marks, typography and the commas that are always required"
+    "text": "punctuation only, words untouched: spaces around marks; ellipses and commas on request"
   },
   "mech_redirect": {
     "status": "verified",
@@ -409,7 +537,7 @@
   },
   "mech_redirect_desc": {
     "status": "verified",
-    "text": "fix double ones, point links straight at the target, find the broken ones"
+    "text": "fix double redirects, point links straight at the target, find redirects leading nowhere"
   },
   "mech_replace": {
     "status": "verified",
@@ -417,7 +545,7 @@
   },
   "mech_replace_desc": {
     "status": "verified",
-    "text": "find and replace text or a regular expression across pages"
+    "text": "find and replace text: by exact match or by regular expression"
   },
   "mech_revertbot": {
     "status": "verified",
@@ -425,7 +553,7 @@
   },
   "mech_revertbot_desc": {
     "status": "verified",
-    "text": "undo one account's run of edits at the top of the history"
+    "text": "undo one account's last consecutive edits"
   },
   "mech_templatecount": {
     "status": "verified",
@@ -433,7 +561,7 @@
   },
   "mech_templatecount_desc": {
     "status": "verified",
-    "text": "how many pages use the templates, and the list of them if asked"
+    "text": "how many pages use a template, several at once; the list itself on request"
   },
   "mech_typos_ru": {
     "status": "verified",
@@ -441,7 +569,7 @@
   },
   "mech_typos_ru_desc": {
     "status": "verified",
-    "text": "607 typo rules, punctuation and cosmetics; the summary says what was actually corrected"
+    "text": "fix typos from a list of 607 rules; spaces around marks come with it, commas and cosmetics on request"
   },
   "mech_unlink": {
     "status": "verified",
@@ -450,6 +578,10 @@
   "mech_unlink_desc": {
     "status": "verified",
     "text": "remove the links to a page and leave the words behind"
+  },
+  "move_mode_list": {
+    "status": "verified",
+    "text": "from a list of «old new» pairs"
   },
   "move_mode_prefix_add": {
     "status": "verified",
@@ -475,6 +607,22 @@
     "status": "verified",
     "text": "This command is for the bot's administrators only."
   },
+  "page_next": {
+    "status": "verified",
+    "text": "Next ▶"
+  },
+  "page_not_yours": {
+    "status": "verified",
+    "text": "These pages belong to whoever ran the command — run it yourself to page through it."
+  },
+  "page_of": {
+    "status": "verified",
+    "text": "Page {page} of {total}"
+  },
+  "page_prev": {
+    "status": "verified",
+    "text": "◀ Back"
+  },
   "pageset_all": {
     "status": "verified",
     "text": "every page of the wiki"
@@ -498,6 +646,10 @@
   "pageset_new": {
     "status": "verified",
     "text": "recently created pages"
+  },
+  "pageset_pairs": {
+    "status": "verified",
+    "text": "a list of renames I will send"
   },
   "pageset_prefix": {
     "status": "verified",
@@ -605,7 +757,7 @@
   },
   "param_pravopys_uk_flags": {
     "status": "verified",
-    "text": "What else to do beside the orthography?"
+    "text": "What else to do along with the spelling?"
   },
   "param_protect_expiry": {
     "status": "verified",
@@ -663,6 +815,30 @@
     "status": "verified",
     "text": "Which page should the links be taken off?"
   },
+  "presence_busy": {
+    "status": "verified",
+    "text": "Working: {job}"
+  },
+  "presence_editing": {
+    "status": "verified",
+    "text": "Editing {wiki}"
+  },
+  "presence_idle": {
+    "status": "verified",
+    "text": "Waiting for work"
+  },
+  "presence_news": {
+    "status": "verified",
+    "text": "Updating the TeleRadiopedia news"
+  },
+  "presence_next": {
+    "status": "verified",
+    "text": "Next: {job}, in {when}."
+  },
+  "presence_next_run": {
+    "status": "verified",
+    "text": "Next: a run on {wiki}, in {when}."
+  },
   "protect_level_all": {
     "status": "verified",
     "text": "everybody — that is, lift the protection"
@@ -685,7 +861,15 @@
   },
   "protect_what_upload": {
     "status": "verified",
-    "text": "re-uploading the file (for files, this is the one that matters)"
+    "text": "uploading a new version of a file (the point of it, for files)"
+  },
+  "queue_place": {
+    "status": "verified",
+    "text": "Task {id} is in the queue: place {position}."
+  },
+  "queue_place_eta": {
+    "status": "verified",
+    "text": "Task {id} is in the queue: place {position}. It should start in about {eta}."
   },
   "redirect_mode_broken": {
     "status": "verified",
@@ -751,7 +935,11 @@
     "status": "verified",
     "text": "There is no schedule {id}."
   },
-  "schedule_usage": {
+  "schedule_usage_discord": {
+    "status": "verified",
+    "text": "How it works: /schedule lists them; /schedule action: on|off|del schedule_id: <number> changes one."
+  },
+  "schedule_usage_telegram": {
     "status": "verified",
     "text": "How it works: /schedule lists them, /schedule on|off|del <number>."
   },
@@ -851,6 +1039,14 @@
     "status": "verified",
     "text": "✖ Task {id} — {wiki} failed: {error}"
   },
+  "task_go_discord": {
+    "status": "verified",
+    "text": "Run it: /go task_id: {id}\nSee first what it would do, writing nothing: /go task_id: {id} dry: true"
+  },
+  "task_go_telegram": {
+    "status": "verified",
+    "text": "Run it: /go {id}\nSee first what it would do, writing nothing: /go {id} dry"
+  },
   "task_not_waiting": {
     "status": "verified",
     "text": "Task {id} is «{state}» — there is nothing to confirm."
@@ -861,7 +1057,7 @@
   },
   "task_planned": {
     "status": "verified",
-    "text": "Task {id} — {wiki}\nMechanics: {mechanics}\nPages: {pages}\n{sample}\n{warning}\n{notes}\n\nRun it: /go {id}\nSee first what it would do, writing nothing: /go {id} dry"
+    "text": "Task {id} — {wiki}\nMechanics: {mechanics}\nPages: {pages}\n{sample}\n{warning}\n{notes}\n\n{how}"
   },
   "task_progress": {
     "status": "verified",
@@ -885,11 +1081,27 @@
   },
   "tasks_destructive_mark": {
     "status": "verified",
-    "text": "⚠ cannot be undone by editing"
+    "text": "(⚠ can only be undone by the opposite action)"
   },
   "tasks_header": {
     "status": "verified",
     "text": "What the bot can be told to do. Answer with a number or a code — several, separated by spaces, are fine."
+  },
+  "tasks_title": {
+    "status": "verified",
+    "text": "Tasks"
+  },
+  "unit_hours": {
+    "status": "verified",
+    "text": "h"
+  },
+  "unit_minutes": {
+    "status": "verified",
+    "text": "min"
+  },
+  "unit_seconds": {
+    "status": "verified",
+    "text": "s"
   },
   "update_busy": {
     "status": "verified",

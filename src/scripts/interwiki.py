@@ -11,23 +11,67 @@
     step.
 
 **Which wikis are linked.** Not guessed and not configured: read from the
-wiki's own ``meta=siteinfo&siprop=interwikimap``, keeping the entries marked as
-languages that point back into the same host family. So the bot works out that
-``telepedia.fandom.com/ru`` has ``uk`` beside it, and nobody has to keep a list
-in a config file.
+wiki's own ``meta=siteinfo&siprop=interwikimap``. Every entry marked as a
+language is one this mechanic *manages* — its lines are kept, sorted and put
+at the end — but only the ones on the same host are *opened*, because only
+those share the bot's login and can be read and checked. On tadc.fandom.com
+the Japanese version lives on theamazingdigitalcircus.fandom.com: its link is
+a real language link, the reader sees it in the menu, and it is kept exactly
+as written; it is simply never used to find more.
+
+That distinction is written down because it was once missing. The block used
+to be rebuilt from the same-host languages alone, so a ``[[ja:…]]`` line was
+taken out with the others and never put back — two pages of tadc:ru lost
+their link to the Japanese wiki in one run. A line with a prefix that is not a
+language at all (``[[wikipedia:…]]``) is not this mechanic's business and is
+left where it stands.
 
 **What gets added.** The rule the operator asked for: a link that stands on one
 of two linked wikis and not on the other. So the bot reads the interwiki links
 of every page this one already points at, and brings back what those pages know
-and this one does not. A link is never invented from a title that happens to
-match — two wikis of the same farm can easily have an article of the same name
-about different things, and a wrong interlanguage link is worse than none. Every
-candidate is checked to exist before it is written.
+and this one does not — an article with a link to the Ukrainian version gets
+the English one from *that* page, without anybody having found it. This is the
+whole of what `flag_iw_sort_only` switches off.
+
+**All of it in one pass.** A link brought back is walked in its turn, so `ru`
+takes `en` from `uk` and then `pl` from `en` without waiting for the next run.
+This used to stop after one hop, which bounded nothing worth bounding: the
+next run started from the enlarged set and reached the same place anyway — in
+two edits to the same article instead of one, and a page history is a thing
+people read. The walk cannot run away: a language enters the queue only when
+it is new to this page, and the languages are the handful the wiki's own
+interwiki table declares, so the queue is shorter than that table and each
+sister page is read once and remembered.
+
+It settles. Once there is nothing left to bring back the pass finds the block
+already correct and writes nothing at all, so a scheduled run does not churn.
+
+What keeps a wrong link out is not the hop limit but the three checks. A link
+is never invented from a title that happens to match — two wikis of the same
+farm can easily have an article of the same name about different things, and a
+wrong interlanguage link is worse than none. Only the languages the wiki's own
+interwiki table declares are considered. Every candidate is checked to exist
+before it is written, and a language the page already carries is left as its
+author wrote it. The corollary is worth knowing: a wrong link on one wiki of
+the farm will spread to the others over a few runs, exactly as a right one
+does.
 
 **Where they go and in what order.** The block is moved to the very end of the
-page, after the categories, and sorted by language code — which is the order
-Fandom's own language list follows and the order the operator's earlier script
-used (``en``, ``ru``, ``uk``).
+page, after the categories, and sorted by language code — the order the
+operator's earlier script used (``en``, ``ru``, ``uk``). It is also the order
+Fandom shows, and that was checked rather than assumed: the main page of
+tadc:ru carries its links as en, es, id, ja, pl, uk, zh, pt-br, and the
+language menu on the rendered page reads en, es, id, ja, pl, pt-br, uk, zh.
+Fandom sorts the menu by code itself, whatever the source says, so sorting
+the source changes nothing a reader sees — it makes the source read the way
+the menu already does. The one change a reader *can* see is a link added.
+
+**No edit for whitespace.** A page whose links are already complete, already
+in order and already last is left alone even if the blank lines around the
+block differ, and a link taken out of the middle of the text goes with its
+line break, so it leaves no gap. Both were missing once: a run over tadc:ru
+made 221 edits that added nothing, 151 of them leaving a triple line break
+where a link had been.
 
 **What is not touched.** ``[[:uk:Назва]]`` with a leading colon is an ordinary
 link in the running text, not an interlanguage link, and it stays exactly where
@@ -46,7 +90,17 @@ from tasks.params import FLAGS, Param
 logger = logging.getLogger("fd.scripts.interwiki")
 
 FLAG_SORT_ONLY = "sort_only"
-FLAG_NO_PROPAGATE = "no_propagate"
+"""Add nothing: only move the block to the end of the page and sort it.
+
+The one thing this mechanic can usefully be told, because adding links is the
+only thing it does that somebody might not want done.
+
+There was a second flag beside it, `no_propagate`, offered as «не собирать
+ссылки с соседних языковых версий». It named the implementation rather than
+the result, and it gated the very same condition as this one — two options in
+the dialog, one behaviour, and a person having to guess which was which. The
+plainer of the two stayed. Nothing stored used the other, so nothing had to be
+migrated; do not bring it back."""
 
 _IW_LINE_RE = re.compile(
     r"^[ \t]*\[\[[ \t]*(?P<lang>[a-z][a-z0-9-]{1,11})[ \t]*:[ \t]*"
@@ -90,24 +144,31 @@ def prepare(ctx):
             own_host = None
 
     langs = {}
+    managed = set()
     for entry in data:
         prefix = str(entry.get("prefix") or "").lower()
         if not prefix or prefix == ctx.lang:
             continue
         if "language" not in entry and not entry.get("language"):
             continue
+        managed.add(prefix)
         host = _host_family(entry.get("url"))
         if not host or (own_host and host != own_host):
             continue
         langs[prefix] = {"family": families.family_name(host),
                          "lang": prefix, "url": entry.get("url")}
 
-    if not langs:
+    if not managed:
         ctx.note("на этой вики не объявлено ни одной языковой версии — "
                  "интервики ставить некуда")
     else:
-        ctx.note("языковые версии: " + ", ".join(sorted(langs)))
-    return {"langs": langs, "sites": {}, "exists": {}, "links": {}}
+        ctx.note("языковые версии: " + ", ".join(sorted(managed)))
+        elsewhere = sorted(managed - set(langs))
+        if elsewhere:
+            ctx.note("на другом хосте: {} — их ссылки сохраняются, но не "
+                     "проверяются и не дополняются".format(", ".join(elsewhere)))
+    return {"langs": langs, "managed": managed, "sites": {}, "exists": {},
+            "links": {}}
 
 
 def _sister_site(ctx, lang):
@@ -128,7 +189,10 @@ def _sister_site(ctx, lang):
     site = None
     if entry:
         try:
-            site = wiki.get_site(entry["family"], entry["lang"])
+            from wiki import families
+
+            family, code = families.ensure_family(entry["url"])
+            site = wiki.get_site(family, code)
         except Exception as e:
             logger.warning("cannot reach the %s wiki: %s", lang, e)
             ctx.note("языковая версия «{}» недоступна: {}".format(lang, e))
@@ -189,29 +253,72 @@ def _links_of(ctx, lang, title):
     return found
 
 
-def _strip(text):
-    """Take the interwiki block out. -> (text without it, {lang: title})."""
-    found = {}
-    for match in _IW_LINE_RE.finditer(text):
-        found[match.group("lang").lower()] = match.group("title").strip()
-    return _IW_LINE_RE.sub("", text), found
+def _strip(text, managed):
+    """Take the managed language lines out. -> (rest, {lang: title}, clash).
+
+    Only prefixes in `managed` are touched; any other ``[[prefix:…]]`` line
+    stays where it is. A line is removed together with its line break, and the
+    blank lines that stood *after* a removed block are absorbed into the ones
+    before it — a block with a blank line on each side would otherwise leave
+    the two side by side, which is the triple line break a run over tadc:ru
+    left on 151 pages.
+
+    `clash` is True when one language is linked twice with two different
+    titles. The page is then left exactly as it is: which of the two is right
+    is a question for a person, and rebuilding the block would silently keep
+    one and drop the other.
+    """
+    found, kept, clash = {}, [], False
+    after_removal = False
+    for line in text.split("\n"):
+        match = _IW_LINE_RE.match(line)
+        lang = match.group("lang").lower() if match else None
+        if lang is None or lang not in managed:
+            blank = not line.strip()
+            if after_removal and blank and kept and not kept[-1].strip():
+                continue
+            kept.append(line)
+            if not blank:
+                after_removal = False
+            continue
+        after_removal = True
+        title = match.group("title").strip()
+        if lang in found and found[lang] != title:
+            clash = True
+        found.setdefault(lang, title)
+    return "\n".join(kept), found, clash
+
+
+def _squash(text):
+    """Text with the differences no reader sees taken out: trailing spaces,
+    runs of blank lines, the ends. Two versions equal under this are the same
+    page, and are not worth an edit."""
+    text = re.sub(r"[ \t]+\n", "\n", text)
+    return re.sub(r"\n{3,}", "\n\n", text).strip()
 
 
 def apply(ctx, page, text):
     """One page's interlanguage links completed and sorted."""
     state = ctx.state.get(SPEC.code) or {}
     known_langs = state.get("langs") or {}
-    if not known_langs:
+    managed = state.get("managed") or set(known_langs)
+    if not managed:
         return text, []
 
     flags = set(ctx.params.get("interwiki_flags") or [])
-    body, present = _strip(text)
-    links = {lang: title for lang, title in present.items()
-             if lang in known_langs}
+    body, present, clash = _strip(text, managed)
+    if clash:
+        ctx.note("на странице «{}» две ссылки на один язык — оставлена как "
+                 "есть".format(page.title() if page is not None else "?"))
+        return text, []
+    links = dict(present)
 
     added = []
-    if FLAG_SORT_ONLY not in flags and FLAG_NO_PROPAGATE not in flags:
-        for lang, title in list(links.items()):
+    if FLAG_SORT_ONLY not in flags:
+        pending = [(lang, title) for lang, title in links.items()
+                   if lang in known_langs]
+        while pending:
+            lang, title = pending.pop(0)
             for other_lang, other_title in _links_of(ctx, lang, title).items():
                 if other_lang == ctx.lang or other_lang in links:
                     continue
@@ -220,14 +327,15 @@ def apply(ctx, page, text):
                 if _exists(ctx, other_lang, other_title):
                     links[other_lang] = other_title
                     added.append(other_lang)
+                    pending.append((other_lang, other_title))
 
     if not links:
         return text, []
 
     block = "\n".join("[[{}:{}]]".format(lang, links[lang])
                       for lang in sorted(links))
-    new = body.rstrip("\n") + "\n\n" + block + "\n"
-    if new == text:
+    new = body.rstrip() + "\n\n" + block
+    if _squash(new) == _squash(text):
         return text, []
 
     labels = []
@@ -255,7 +363,6 @@ SPEC = mech.Mechanic(
     params=(
         Param("interwiki_flags", FLAGS, "param_interwiki_flags", options=(
             (FLAG_SORT_ONLY, "flag_iw_sort_only"),
-            (FLAG_NO_PROPAGATE, "flag_iw_no_propagate"),
         )),
     ),
 )

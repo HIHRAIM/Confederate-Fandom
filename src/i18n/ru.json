@@ -27,6 +27,18 @@
     "status": "verified",
     "text": "Читаю публичное превью канала…"
   },
+  "backup_failed": {
+    "status": "verified",
+    "text": "Не удалось сделать резервную копию: {error}"
+  },
+  "backup_no_key": {
+    "status": "verified",
+    "text": "BACKUP_KEY не задан — шифровать копию нечем, а незашифрованную базу бот не отправляет."
+  },
+  "backup_private_only": {
+    "status": "verified",
+    "text": "Запросите копию в личном чате: это вся база, и она не должна попадать в группу — даже в административную."
+  },
   "category_action_add": {
     "status": "verified",
     "text": "добавить"
@@ -38,6 +50,82 @@
   "category_action_remove": {
     "status": "verified",
     "text": "убрать"
+  },
+  "cmd_backfill": {
+    "status": "verified",
+    "text": "/backfill — дочитать канал из веб-превью; со словом «all» — обновить и то, что бот слышал сам"
+  },
+  "cmd_backup_dc": {
+    "status": "verified",
+    "text": "/backup — зашифрованная копия базы; ответ увидите только вы"
+  },
+  "cmd_backup_tg": {
+    "status": "verified",
+    "text": "/backup — зашифрованная копия базы; только в личном чате"
+  },
+  "cmd_go_dc": {
+    "status": "verified",
+    "text": "/go task_id: <номер> — запустить подготовленную задачу; с dry: true — сначала предпросмотр, без правок"
+  },
+  "cmd_go_tg": {
+    "status": "verified",
+    "text": "/go <номер> — запустить подготовленную задачу; /go <номер> dry — сначала предпросмотр, без правок"
+  },
+  "cmd_jobs": {
+    "status": "verified",
+    "text": "/jobs — что идёт сейчас и чем кончились последние задачи"
+  },
+  "cmd_remwikiadmin_dc": {
+    "status": "verified",
+    "text": "/remwikiadmin user: <кто> — снять назначение"
+  },
+  "cmd_remwikiadmin_tg": {
+    "status": "verified",
+    "text": "/remwikiadmin <@ник или ID> — снять назначение"
+  },
+  "cmd_run_dc": {
+    "status": "verified",
+    "text": "/run what: [номера или коды] — задать работу; бот спросит вики, откуда брать страницы и что делать"
+  },
+  "cmd_run_tg": {
+    "status": "verified",
+    "text": "/run [номера или коды] — задать работу; бот спросит вики, откуда брать страницы и что делать"
+  },
+  "cmd_schedule_dc": {
+    "status": "verified",
+    "text": "/schedule — регулярные запуски; action: on|off|del и schedule_id: <номер> — изменить"
+  },
+  "cmd_schedule_tg": {
+    "status": "verified",
+    "text": "/schedule — регулярные запуски; /schedule on|off|del <номер> — изменить"
+  },
+  "cmd_status": {
+    "status": "verified",
+    "text": "/status — что стоит в слотах и когда был последний проход"
+  },
+  "cmd_stop_dc": {
+    "status": "verified",
+    "text": "/stop task_id: <номер> — остановить задачу"
+  },
+  "cmd_stop_tg": {
+    "status": "verified",
+    "text": "/stop <номер> — остановить задачу"
+  },
+  "cmd_tasks": {
+    "status": "verified",
+    "text": "/tasks — список задач, которые можно поручить боту, с номерами"
+  },
+  "cmd_update": {
+    "status": "verified",
+    "text": "/update — обновить новости сейчас; со словом «force» — и картинки"
+  },
+  "cmd_wikiadmin_dc": {
+    "status": "verified",
+    "text": "/wikiadmin — кто назначен администратором вики; user: <кто> wiki_user: <ник на Fandom> — назначить"
+  },
+  "cmd_wikiadmin_tg": {
+    "status": "verified",
+    "text": "/wikiadmin — кто назначен администратором вики; /wikiadmin <@ник или ID> <ник на Fandom> — назначить"
   },
   "dialog_bad_choice": {
     "status": "verified",
@@ -102,6 +190,10 @@
   "dialog_source_argument_links": {
     "status": "verified",
     "text": "С какой страницы брать ссылки?"
+  },
+  "dialog_source_argument_pairs": {
+    "status": "verified",
+    "text": "Пришлите переименования, по одному в строке: старое_название новое_название. Пробел в названии пишется подчёркиванием; в Discord заверните весь список в ```, иначе он станет курсивом."
   },
   "dialog_source_argument_prefix": {
     "status": "verified",
@@ -175,13 +267,9 @@
     "status": "verified",
     "text": "править и подписи ссылок [[Цель|подпись]]"
   },
-  "flag_iw_no_propagate": {
-    "status": "verified",
-    "text": "не собирать ссылки с соседних языковых версий"
-  },
   "flag_iw_sort_only": {
     "status": "verified",
-    "text": "только перенести в конец и отсортировать, ничего не добавлять"
+    "text": "ничего не дописывать: только перенести блок в конец страницы и отсортировать"
   },
   "flag_list_categories": {
     "status": "verified",
@@ -213,7 +301,7 @@
   },
   "flag_no_typos": {
     "status": "verified",
-    "text": "без списка опечаток, только правопис"
+    "text": "без списка опечаток, только правила правописания"
   },
   "flag_nocase": {
     "status": "verified",
@@ -279,9 +367,45 @@
     "status": "verified",
     "text": "списком с отступами"
   },
-  "help": {
+  "help_access": {
     "status": "verified",
-    "text": "Confederate Fandom — бот для вики Fandom: новости на заглавных, ночная стандартизация названий и запуск скриптов по вики.\n\nРаботы по вики\n/tasks — что бот умеет, списком с номерами\n/run [номера или коды] — задать работу; бот спросит вики, откуда брать страницы и что делать\n/go <номер> — запустить подготовленную задачу; /go <номер> dry — сначала предпросмотр, без правок\n/jobs — что идёт сейчас и чем кончились последние задачи\n/stop <номер> — остановить задачу\n/schedule — регулярные запуски; /schedule on|off|del <номер>\n\nНовости\n/status — что стоит в трёх слотах и когда был последний проход\n/update — обновить новости сейчас; со словом «force» — и картинки\n/backfill — дочитать канал из веб-превью; со словом «all» — обновить и то, что бот слышал сам\n\nДоступ\n/wikiadmin — кто назначен администратором вики; /wikiadmin <@ник или ID> <ник на Fandom> — назначить\n/remwikiadmin <@ник или ID> — снять\n\nКоманды доступны администраторам бота; работы по вики — ещё и администраторам вики, если у них есть права на той вики."
+    "text": "Доступ"
+  },
+  "help_footer": {
+    "status": "verified",
+    "text": "Команды доступны администраторам бота; работы по вики — ещё и администраторам вики, если у них есть права на той вики."
+  },
+  "help_intro": {
+    "status": "verified",
+    "text": "Confederate Fandom — бот для вики Fandom: новости на заглавных, ночная стандартизация названий и запуск задач по вики."
+  },
+  "help_news": {
+    "status": "verified",
+    "text": "Новости"
+  },
+  "help_wiki": {
+    "status": "verified",
+    "text": "Работы по вики"
+  },
+  "job_backup": {
+    "status": "verified",
+    "text": "резервная копия"
+  },
+  "job_news": {
+    "status": "verified",
+    "text": "новости"
+  },
+  "job_species": {
+    "status": "verified",
+    "text": "названия видов"
+  },
+  "job_sweep": {
+    "status": "verified",
+    "text": "ночная уборка"
+  },
+  "job_tasks": {
+    "status": "verified",
+    "text": "очередь задач"
   },
   "jobs_active": {
     "status": "verified",
@@ -298,6 +422,10 @@
   "jobs_task": {
     "status": "verified",
     "text": "{id} — {wiki} [{state}] {mechanics}: {checked}/{total}, правок {edited}, ошибок {failed}"
+  },
+  "jobs_title": {
+    "status": "verified",
+    "text": "Очередь и задачи"
   },
   "mech_addtext": {
     "status": "verified",
@@ -321,7 +449,7 @@
   },
   "mech_category_graph_desc": {
     "status": "verified",
-    "text": "дерево подкатегорий от заданной, текстом или файлом .dot"
+    "text": "дерево подкатегорий от заданной: текстом или файлом .dot"
   },
   "mech_cosmetic": {
     "status": "verified",
@@ -329,7 +457,7 @@
   },
   "mech_cosmetic_desc": {
     "status": "verified",
-    "text": "пробелы в заголовках, отступы, пустые строки, тире вместо дефиса"
+    "text": "одна разметка, слов не трогает: пробелы в заголовках, отступы, лишние пустые строки, тире вместо дефиса"
   },
   "mech_delete": {
     "status": "verified",
@@ -337,7 +465,7 @@
   },
   "mech_delete_desc": {
     "status": "verified",
-    "text": "удалить страницы списком; отменить правкой нельзя"
+    "text": "удалить страницы списком"
   },
   "mech_delinker": {
     "status": "verified",
@@ -345,7 +473,7 @@
   },
   "mech_delinker_desc": {
     "status": "verified",
-    "text": "убрать из статей файлы, которые уже удалены с вики"
+    "text": "убрать со страниц файлы, уже удалённые с вики; ссылки на страницы не трогает"
   },
   "mech_image": {
     "status": "verified",
@@ -353,7 +481,7 @@
   },
   "mech_image_desc": {
     "status": "verified",
-    "text": "заменить файл на другой или убрать его отовсюду, где он показан"
+    "text": "заменить один файл другим или убрать его со страниц"
   },
   "mech_interwiki": {
     "status": "verified",
@@ -361,7 +489,7 @@
   },
   "mech_interwiki_desc": {
     "status": "verified",
-    "text": "достроить ссылки между языковыми версиями, перенести в конец и отсортировать"
+    "text": "дописать недостающие ссылки на другие языковые версии, собрать их в конце и отсортировать"
   },
   "mech_listpages": {
     "status": "verified",
@@ -377,15 +505,15 @@
   },
   "mech_movepages_desc": {
     "status": "verified",
-    "text": "переименовать страницы по правилу: префикс, суффикс или регулярное выражение"
+    "text": "переименовать страницы: списком «старое новое» или по правилу — префикс, суффикс, регулярное выражение"
   },
   "mech_pravopys_uk": {
     "status": "verified",
-    "text": "Правопис-2019 (украинский)"
+    "text": "Правописание-2019 (украинский)"
   },
   "mech_pravopys_uk_desc": {
     "status": "verified",
-    "text": "§126, §35 и §36 украинского правописа плюс список опечаток"
+    "text": "§35, §36 и §126 украинского правописания 2019 года и опечатки по списку из 172 правил"
   },
   "mech_protect": {
     "status": "verified",
@@ -393,7 +521,7 @@
   },
   "mech_protect_desc": {
     "status": "verified",
-    "text": "поставить или снять защиту на правку, переименование и перезалив"
+    "text": "поставить или снять защиту от правок, переименования и загрузки новой версии файла"
   },
   "mech_punct_ru": {
     "status": "verified",
@@ -401,7 +529,7 @@
   },
   "mech_punct_ru_desc": {
     "status": "verified",
-    "text": "только пробелы вокруг знаков, типографика и обязательные запятые"
+    "text": "одна пунктуация, слов не трогает: пробелы вокруг знаков; многоточия и запятые — по выбору"
   },
   "mech_redirect": {
     "status": "verified",
@@ -409,7 +537,7 @@
   },
   "mech_redirect_desc": {
     "status": "verified",
-    "text": "исправить двойные, заменить ссылки на прямые, найти битые"
+    "text": "исправить двойные перенаправления, заменить ссылки на них прямыми, найти ведущие в никуда"
   },
   "mech_replace": {
     "status": "verified",
@@ -417,7 +545,7 @@
   },
   "mech_replace_desc": {
     "status": "verified",
-    "text": "найти и заменить текст или регулярное выражение на страницах"
+    "text": "найти и заменить текст: по точному совпадению или по регулярному выражению"
   },
   "mech_revertbot": {
     "status": "verified",
@@ -425,7 +553,7 @@
   },
   "mech_revertbot_desc": {
     "status": "verified",
-    "text": "отменить подряд идущие правки одного участника наверху истории"
+    "text": "отменить последние подряд идущие правки одного участника"
   },
   "mech_templatecount": {
     "status": "verified",
@@ -433,7 +561,7 @@
   },
   "mech_templatecount_desc": {
     "status": "verified",
-    "text": "сколько страниц пользуется шаблонами; список страниц по желанию"
+    "text": "сколько страниц использует шаблон, можно несколько сразу; по запросу и сам список"
   },
   "mech_typos_ru": {
     "status": "verified",
@@ -441,7 +569,7 @@
   },
   "mech_typos_ru_desc": {
     "status": "verified",
-    "text": "607 правил опечаток, пунктуация и косметика; в описании — то, что реально исправлено"
+    "text": "исправить опечатки по списку из 607 правил; пробелы вокруг знаков — заодно, запятые и косметику — по выбору"
   },
   "mech_unlink": {
     "status": "verified",
@@ -450,6 +578,10 @@
   "mech_unlink_desc": {
     "status": "verified",
     "text": "убрать ссылки на страницу, оставив сам текст"
+  },
+  "move_mode_list": {
+    "status": "verified",
+    "text": "списком пар «старое новое»"
   },
   "move_mode_prefix_add": {
     "status": "verified",
@@ -475,6 +607,22 @@
     "status": "verified",
     "text": "Команда только для администраторов бота."
   },
+  "page_next": {
+    "status": "verified",
+    "text": "Вперёд ▶"
+  },
+  "page_not_yours": {
+    "status": "verified",
+    "text": "Эти страницы принадлежат тому, кто вызвал команду — вызовите её сами, чтобы листать."
+  },
+  "page_of": {
+    "status": "verified",
+    "text": "Страница {page} из {total}"
+  },
+  "page_prev": {
+    "status": "verified",
+    "text": "◀ Назад"
+  },
   "pageset_all": {
     "status": "verified",
     "text": "все страницы вики"
@@ -498,6 +646,10 @@
   "pageset_new": {
     "status": "verified",
     "text": "недавно созданные страницы"
+  },
+  "pageset_pairs": {
+    "status": "verified",
+    "text": "список переименований, который я пришлю"
   },
   "pageset_prefix": {
     "status": "verified",
@@ -605,7 +757,7 @@
   },
   "param_pravopys_uk_flags": {
     "status": "verified",
-    "text": "Что ещё делать вместе с правописом?"
+    "text": "Что ещё делать вместе с правописанием?"
   },
   "param_protect_expiry": {
     "status": "verified",
@@ -663,6 +815,30 @@
     "status": "verified",
     "text": "На какую страницу убрать ссылки?"
   },
+  "presence_busy": {
+    "status": "verified",
+    "text": "Работает: {job}"
+  },
+  "presence_editing": {
+    "status": "verified",
+    "text": "Правит {wiki}"
+  },
+  "presence_idle": {
+    "status": "verified",
+    "text": "Ждёт работы"
+  },
+  "presence_news": {
+    "status": "verified",
+    "text": "Обновляет новости ТелеРадиопедии"
+  },
+  "presence_next": {
+    "status": "verified",
+    "text": "Дальше: {job}, через {when}."
+  },
+  "presence_next_run": {
+    "status": "verified",
+    "text": "Дальше: запуск по {wiki}, через {when}."
+  },
   "protect_level_all": {
     "status": "verified",
     "text": "всем — то есть снять защиту"
@@ -685,7 +861,15 @@
   },
   "protect_what_upload": {
     "status": "verified",
-    "text": "перезалив файла (для файлов — обязательно)"
+    "text": "загрузку новой версии файла (для файлов это главное)"
+  },
+  "queue_place": {
+    "status": "verified",
+    "text": "Задача {id} встала в очередь: место {position}."
+  },
+  "queue_place_eta": {
+    "status": "verified",
+    "text": "Задача {id} встала в очередь: место {position}. Начало примерно через {eta}."
   },
   "redirect_mode_broken": {
     "status": "verified",
@@ -751,7 +935,11 @@
     "status": "verified",
     "text": "Расписания {id} нет."
   },
-  "schedule_usage": {
+  "schedule_usage_discord": {
+    "status": "verified",
+    "text": "Как это работает: /schedule — список; /schedule action: on|off|del schedule_id: <номер> — изменить."
+  },
+  "schedule_usage_telegram": {
     "status": "verified",
     "text": "Как это работает: /schedule — список, /schedule on|off|del <номер>."
   },
@@ -851,6 +1039,14 @@
     "status": "verified",
     "text": "✖ Задача {id} — {wiki} сорвалась: {error}"
   },
+  "task_go_discord": {
+    "status": "verified",
+    "text": "Запустить: /go task_id: {id}\nСначала посмотреть, что получится, ничего не записывая: /go task_id: {id} dry: true"
+  },
+  "task_go_telegram": {
+    "status": "verified",
+    "text": "Запустить: /go {id}\nСначала посмотреть, что получится, ничего не записывая: /go {id} dry"
+  },
   "task_not_waiting": {
     "status": "verified",
     "text": "Задача {id} сейчас в состоянии «{state}» — подтверждать нечего."
@@ -861,7 +1057,7 @@
   },
   "task_planned": {
     "status": "verified",
-    "text": "Задача {id} — {wiki}\nМеханики: {mechanics}\nСтраниц: {pages}\n{sample}\n{warning}\n{notes}\n\nЗапустить: /go {id}\nСначала посмотреть, что получится, ничего не записывая: /go {id} dry"
+    "text": "Задача {id} — {wiki}\nМеханики: {mechanics}\nСтраниц: {pages}\n{sample}\n{warning}\n{notes}\n\n{how}"
   },
   "task_progress": {
     "status": "verified",
@@ -885,11 +1081,27 @@
   },
   "tasks_destructive_mark": {
     "status": "verified",
-    "text": "⚠ правкой не отменить"
+    "text": "(⚠ отменяется только обратным действием)"
   },
   "tasks_header": {
     "status": "verified",
-    "text": "Что бот умеет делать по вики. Ответьте номером или кодовым названием — можно несколько через пробел."
+    "text": "Что бот может сделать на вики. Ответьте номером или кодовым названием — можно несколько через пробел."
+  },
+  "tasks_title": {
+    "status": "verified",
+    "text": "Задачи"
+  },
+  "unit_hours": {
+    "status": "verified",
+    "text": "ч"
+  },
+  "unit_minutes": {
+    "status": "verified",
+    "text": "мин"
+  },
+  "unit_seconds": {
+    "status": "verified",
+    "text": "с"
   },
   "update_busy": {
     "status": "verified",

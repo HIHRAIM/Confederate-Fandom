@@ -138,6 +138,53 @@ class Param:
         raise ValueError("this kind is not parsed here")
 
 
+def strip_fences(text):
+    """A pasted block with its ``` fences taken off, if it has any.
+
+    People wrap a list in a code fence to stop a messenger reformatting it,
+    and on Discord they have to: a title with underscores in it, which is how
+    spaces are written here, is turned into italics by Discord's own markdown
+    and the underscores are eaten before the bot ever sees the message. The
+    fence is the way round that, so it has to be accepted and removed.
+    """
+    lines = str(text or "").strip().split("\n")
+    if lines and lines[0].strip().startswith("```"):
+        lines = lines[1:]
+        while lines and not lines[-1].strip():
+            lines.pop()
+        if lines and lines[-1].strip().endswith("```"):
+            lines[-1] = lines[-1].strip()[:-3]
+    return "\n".join(lines).strip()
+
+
+def parse_pairs(text):
+    """A block of «old new» lines. -> [(old, new), ...], in the order given.
+
+    One rename per line, the two titles separated by whitespace — which is
+    why a title that contains a space is written with underscores, exactly as
+    MediaWiki writes it in a URL. They are turned back into spaces here, so
+    ``Список_серий Список_эпизодов`` renames «Список серий» to «Список
+    эпизодов».
+
+    Blank lines and ``#`` lines are skipped, and so is a line that does not
+    have two parts: a list pasted with a stray line in it should rename
+    everything it can name rather than refuse the lot. What the caller does
+    with an empty result is the caller's business.
+    """
+    pairs = []
+    for line in strip_fences(text).split("\n"):
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split()
+        if len(parts) != 2:
+            continue
+        old, new = (part.replace("_", " ").strip() for part in parts)
+        if old and new and old != new:
+            pairs.append((old, new))
+    return pairs
+
+
 def parse_flags(text, values):
     """«1 3 4» -> the values chosen; «0» or «-» -> none. Raises on nonsense.
 
