@@ -47,18 +47,15 @@ async def wikiadmin_cmd(interaction: discord.Interaction,
         return
 
     if user is None:
-        rows = db.list_wiki_admins()
-        if not rows:
+        from tasks import lists
+
+        title, lines = lists.wiki_admins(lang)
+        if not lines:
             await interaction.response.send_message(
                 localized("wikiadmin_empty", lang))
             return
-        lines = [localized("wikiadmin_header", lang)]
-        for row in rows:
-            lines.append(localized(
-                "wikiadmin_line", lang, platform=row["platform"],
-                name=row["display_name"] or row["user_id"],
-                user_id=row["user_id"], wiki_user=row["wiki_user"]))
-        await interaction.response.send_message("\n".join(lines)[:MESSAGE_LIMIT])
+        await interaction.response.send_message(
+            "\n".join([title] + lines)[:MESSAGE_LIMIT])
         return
 
     if not wiki_user.strip():

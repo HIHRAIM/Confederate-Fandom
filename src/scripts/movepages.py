@@ -31,9 +31,8 @@ outright rather than attempted:
 * a target that already exists — overwriting it would mean deleting somebody
   else's page, which is a decision for a person.
 
-Not leaving a redirect behind needs `suppressredirect`, which the bot group
-does not carry on Fandom; the flag is checked before the first page rather
-than failing on each one.
+Not leaving a redirect behind needs `suppressredirect`; the session's actual
+rights are checked before the first page rather than inferred from its group.
 """
 import re
 import sys
@@ -85,9 +84,9 @@ def prepare(ctx):
         from wiki import rights
 
         if not rights.has_right(ctx.site, "suppressredirect"):
-            raise ValueError(
-                "чтобы переименовывать без перенаправления, нужно право "
-                "suppressredirect — его даёт статус администратора")
+            from utils import localized, service_lang
+            raise ValueError(localized("mechanic_need_move_no_redirect_group",
+                                       service_lang()))
 
     if mode == LIST:
         from tasks import pagesets
@@ -122,14 +121,18 @@ def prepare(ctx):
 
 
 def _new_title(state, title):
-    """The title a page should have under this rule, or None to leave it."""
+    """The title under this rule, or None when it already satisfies it.
+
+    Adding an affix skips titles that already carry it, so selecting the
+    moved pages for another run does not duplicate the prefix or suffix.
+    """
     mode, argument = state["mode"], state["argument"]
     if mode == PREFIX_ADD:
-        return argument + title
+        return None if title.startswith(argument) else argument + title
     if mode == PREFIX_REMOVE:
         return title[len(argument):] if title.startswith(argument) else None
     if mode == SUFFIX_ADD:
-        return title + argument
+        return None if title.endswith(argument) else title + argument
     if mode == SUFFIX_REMOVE:
         return title[:-len(argument)] if title.endswith(argument) else None
     if mode == REGEX:
@@ -147,6 +150,8 @@ def act(ctx, page):
     state = ctx.state.get(SPEC.code) or {}
     flags = set(ctx.params.get("move_flags") or [])
     title = page.title()
+    if not page.exists():
+        return "skip", None
     target = _new_title(state, title)
 
     if not target or target == title:

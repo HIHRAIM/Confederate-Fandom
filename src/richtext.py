@@ -20,7 +20,9 @@ blockquotes, mentions, custom emoji. Their text stays, their markup does not.
 """
 import json
 import re
+from bisect import bisect_right
 from html.parser import HTMLParser
+from urllib.parse import quote
 
 BOLD = ("bold",)
 ITALIC = ("italic",)
@@ -102,9 +104,12 @@ def _link_token(url):
 
     Anything else — a `tg://` mention, a relative address, an empty href — is
     dropped rather than written out: a news card is read by people who are not
-    in Telegram."""
-    url = (url or "").strip()
-    return ("link", url) if LINK_RE.match(url) else None
+    in Telegram. URL characters that could end a wiki link or start markup
+    are percent-encoded, so a link destination cannot become page content."""
+    if not isinstance(url, str):
+        return None
+    url = url.strip()
+    return ("link", quote(url, safe=":/?#@!$&()*+,;=%-._~")) if LINK_RE.match(url) else None
 
 def annotate(text, entities):
     """Turn text and entities into the (character, formats) pairs everything
@@ -115,8 +120,14 @@ def annotate(text, entities):
         token = _entity_token(entity)
         if token is None:
             continue
-        start = max(0, int(entity.get("offset", 0)))
-        end = min(len(text), start + int(entity.get("length", 0)))
+        try:
+            start = int(entity.get("offset", 0))
+            length = int(entity.get("length", 0))
+        except (TypeError, ValueError, OverflowError):
+            continue
+        if start < 0 or length <= 0:
+            continue
+        end = min(len(text), start + length)
         for index in range(start, end):
             marks[index].append(token)
     return [(char, tuple(sorted(set(tokens), key=_rank)))
@@ -125,7 +136,11 @@ def annotate(text, entities):
 def _entity_token(entity):
     """The format one stored entity stands for, or None when the card has no
     use for it."""
+    if not isinstance(entity, dict):
+        return None
     kind = entity.get("type")
+    if not isinstance(kind, str):
+        return None
     if kind == "text_link":
         return _link_token(entity.get("url"))
     return ENTITY_TOKENS.get(kind)
@@ -242,25 +257,31 @@ def from_telegram(text, entities):
     if not entities:
         return []
 
-    units = text.encode("utf-16-le")
     index_of = {}
     position = 0
     for character_index, char in enumerate(text):
         index_of[position] = character_index
         position += len(char.encode("utf-16-le")) // 2
     index_of[position] = len(text)
+    boundaries = sorted(index_of)
 
     def to_character(offset):
-        """The character index for a UTF-16 offset, clamped into the text."""
-        if offset in index_of:
-            return index_of[offset]
-        return len(units) // 2 if offset > len(units) // 2 else len(text)
+        """Clamp in character units and never split an emoji surrogate pair."""
+        offset = min(position, max(0, offset))
+        return index_of[boundaries[bisect_right(boundaries, offset) - 1]]
 
     stored = []
     for entity in entities:
         kind = getattr(entity, "type", None) or ""
-        start = to_character(int(getattr(entity, "offset", 0)))
-        end = to_character(int(getattr(entity, "offset", 0)) + int(getattr(entity, "length", 0)))
+        try:
+            offset = int(getattr(entity, "offset", 0))
+            length = int(getattr(entity, "length", 0))
+        except (TypeError, ValueError, OverflowError):
+            continue
+        if offset < 0 or length <= 0:
+            continue
+        start = to_character(offset)
+        end = to_character(offset + length)
         item = {"type": kind, "offset": start, "length": max(0, end - start)}
         url = getattr(entity, "url", None)
         if url:
@@ -285,18 +306,21 @@ class _PreviewParser(HTMLParser):
 
     def _formats(self):
         """The formats every character gets right now."""
-        return tuple(sorted(set(self.stack), key=_rank))
+        return tuple(sorted({token for _tag, token in self.stack}, key=_rank))
 
     def handle_starttag(self, tag, attrs):
         """Open a format, a link, or nothing at all."""
         if tag == "br":
             self.chars.append(("\n", ()))
             return
+        if tag in ("area", "base", "col", "embed", "hr", "img", "input",
+                   "link", "meta", "param", "source", "track", "wbr"):
+            return
         if tag == "a":
             token = _link_token(dict(attrs).get("href"))
-            self.stack.append(token if token else ("ignored",))
+            self.stack.append((tag, token if token else ("ignored",)))
             return
-        self.stack.append(HTML_TOKENS.get(tag, ("ignored",)))
+        self.stack.append((tag, HTML_TOKENS.get(tag, ("ignored",))))
 
     def handle_startendtag(self, tag, attrs):
         """`<br>` is the only self-closing tag the preview uses."""
@@ -304,11 +328,17 @@ class _PreviewParser(HTMLParser):
             self.chars.append(("\n", ()))
 
     def handle_endtag(self, tag):
-        """Close the most recently opened format, whatever it was."""
+        """Close the matching tag even when the preview's tags cross.
+
+        Removing an unrelated last format would leave bold active after its
+        closing tag or let an unmatched closing tag discard a valid format.
+        """
         if tag == "br":
             return
-        if self.stack:
-            self.stack.pop()
+        for index in range(len(self.stack) - 1, -1, -1):
+            if self.stack[index][0] == tag:
+                del self.stack[index]
+                break
 
     def handle_data(self, data):
         """Text under whatever formats are open."""

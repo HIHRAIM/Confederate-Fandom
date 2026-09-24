@@ -4,11 +4,11 @@ This is the map of the code: what the pieces are called, how a post travels from
 
 ## The one idea
 
-Confederate Fandom does wiki work on the Fandom farm, under one account and in one process. Three kinds of it:
+Confederate Fandom automates wiki work on the Fandom farm from Discord and Telegram, under one account and in one process. Three kinds of it:
 
-- **the news** — the news block of two main pages, kept in step with a Telegram channel, four times an hour;
-- **the species names** — one wiki's articles walked once a night, the Russian names of Pokémon species brought to the standard ones;
-- **whatever it is asked** — nineteen mechanics over any Fandom wiki, set going by a command in Discord or Telegram, once or on a schedule.
+- **whatever it is asked** — nineteen mechanics over any Fandom wiki, set going by a command in Discord or Telegram, once or on a schedule;
+- **the news** — a standing module: the news block of two main pages, kept in step with a Telegram channel, four times an hour;
+- **the species names** — a standing module: one wiki's articles walked once a night, the Russian names of Pokémon species brought to the standard ones.
 
 All of it is slow, all of it is the same kind of slow, and none of it may interrupt the rest. That is why everything hangs off one queue (`scheduler.py`), and why the queue has priorities.
 
@@ -50,7 +50,7 @@ The two halves of the news never touch each other directly. The Telegram half **
 1. **`/run`** on either messenger builds a `Conversation` — `telegram_bot/dialogs.py` or `discord_bot/dialogs.py` — and hands it to `tasks/dialog.py: build`, which is the only place the questions live. The two halves differ in one thing only: aiogram cannot block for an answer, so it parks a future in `_pending_inputs` and `telegram_bot/catchall.py` resolves it; discord.py blocks on `wait_for` and needs neither.
 2. The dialog asks which mechanics, which wiki, where the pages come from, what each mechanic must be told, **every optional switch in one numbered message**, the summary, and whether it repeats. Then it writes a row: a `tasks` row, or a `schedules` row that will open one later.
 3. **`tasks/queue.py: tick`** is the scheduler job. It fires the schedules that are due, then works through the tasks chunk after chunk until there is nothing left or something more important is due. The loop is inside the job because `scheduler.enqueue` refuses a job that is already running, so a job that tried to re-queue itself would advance one chunk a minute.
-4. **`tasks/runner.py: plan`** opens the wiki (generating a Pywikibot family for it if the bot has never seen it — `wiki/families.py`), puts the caller and the bot through every check (`tasks/access.py`), lets each mechanic `prepare` itself, and settles the page list into `task_pages`. Nothing is written. The person is told how many pages there are and shown the first twenty.
+4. **`tasks/runner.py: plan`** opens the wiki (generating a Pywikibot family for it if the bot has never seen it — `wiki/families.py`), puts the caller and the bot through every check (`tasks/access.py`), lets each mechanic `prepare` itself, and settles the page list into `task_pages` — asking the mechanics first whether they work on ordinary pages or on redirects (`Mechanic.redirects`, `tasks/registry.py: redirects_wanted`), because the sources that walk the whole wiki list only the kind asked for. Nothing is written. The person is told how many pages there are and shown the first twenty.
 5. **`/go`** moves the task to `running`. **`tasks/runner.py: run_chunk`** then walks fifty pages, or a minute's worth, or until something more important arrives in the queue — whichever comes first — and returns whether there is more. When a module job is due the whole task job steps aside, the news pass goes through, and the clock hands the worker back a minute later.
 6. Per page: the TEXT mechanics see the text one after another and it is saved **once**, with a summary built from what all of them actually did; then the ACTION mechanics act; then the REPORT ones collect. Every diff goes into a file.
 7. **`tasks/runner.py: finish`** lets the standalone mechanics do their work, writes the files, stores the counters. **`tasks/notify.py`** sends them to the person who asked and a line to the service chats.
@@ -73,7 +73,7 @@ The formatting is `richtext.py`'s, and it is built around one deliberately dumb 
 | `ACTION` | `act(ctx, page) -> (state, note)` | After the text ones, one page at a time |
 | `REPORT` | `collect(ctx, page) -> lines` | Changes nothing; the task ends with a file |
 
-Every kind may have `prepare(ctx)` (compile the rules, read the deletion log, work out the sister wikis) and `summary_part(ctx, labels)` (what this mechanic contributed to the edit summary). A `standalone` mechanic has no page list at all and does its work in `finish(ctx)` — counting a template's uses, drawing a category tree.
+Every kind may have `prepare(ctx)` (compile the rules, read the deletion log, work out the sister wikis), `summary_part(ctx, labels)` (what this mechanic contributed to the edit summary) and `redirects(params)` — whether it works on ordinary pages (the default), on redirects, or on both. The last decides what all pages, a prefix, new pages and recent changes list: `redirect` fixing double redirects is handed the wiki's redirects, where it used to be handed articles and finish with no edits. A `standalone` mechanic has no page list at all and does its work in `finish(ctx)` — counting a template's uses, drawing a category tree.
 
 `Mechanic` lives in a module of its own so that a mechanic and the catalogue can be imported in either order: the catalogue imports every mechanic, and every mechanic declares itself with the class.
 
@@ -102,6 +102,7 @@ Every kind may have `prepare(ctx)` (compile the rules, read the deletion log, wo
 | Waiting for an answer | `telegram_bot/dialogs.py` + `catchall.py`, `discord_bot/dialogs.py` |
 | Where the pages come from | `tasks/pagesets.py` |
 | Who may ask, and what the bot may do there | `tasks/access.py`, `wiki/rights.py` |
+| Appointing wiki administrators; Telegram's `@name` invitations | `discord_bot/commands/admins.py`, `telegram_bot/commands/admins.py`, `telegram_bot/people.py` (`resolve`, `_claim_invitation`), `db/admins.py` |
 | Planning, chunking, editing | `tasks/runner.py` |
 | The files that come back, and what may go into them | `tasks/report.py` (`safe_error`) |
 | Getting answers to the person and the service log | `tasks/notify.py` |
@@ -116,7 +117,7 @@ Every kind may have `prepare(ctx)` (compile the rules, read the deletion log, wo
 | Editing a template; uploading a file | `wiki/pages.py` |
 | The schedule, the queue and the priorities | `scheduler.py` |
 | Where a task stands in the queue, and when it will be reached | `tasks/queue.py` (`queue_place`, `queue_notice`), `utils.py` (`format_duration`) |
-| What the long list answers say | `tasks/lists.py` (`catalogue`, `jobs`, `schedules`, `help_text`) |
+| What the long list answers say | `tasks/lists.py` (`catalogue`, `jobs`, `schedules`, `help_text`, `wiki_admins`) |
 | What the Discord presence says | `discord_bot/status.py` (`text`, `loop`), `scheduler.py` (`job_names`), `db/schedules.py` (`next_schedule`) |
 | How they look, and their page arrows | `discord_bot/pages.py`, `telegram_bot/pages.py`, `utils.py` (`paginate`) |
 | An encrypted, consistent copy of the database | `backup_crypto.py`, `restore_backup.py`, `main.py` (`backup_job`) |
@@ -130,7 +131,7 @@ Every kind may have `prepare(ctx)` (compile the rules, read the deletion log, wo
 
 `@router.message`, `@router.channel_post`, `@router.edited_channel_post` and `@tree.command` fire when their module is *imported*. A module nobody imports registers nothing and the bot silently loses those handlers.
 
-`telegram_bot/__init__.py` imports in dependency order — `client` first, the domain module `channel` next, `commands`, and **`catchall` last**. That last one is not a matter of taste: `telegram_bot/catchall.py` is a `@router.message()` with no filter at all, aiogram dispatches in registration order, and registered any earlier it silently swallows every command below it.
+`telegram_bot/__init__.py` imports in dependency order — `client` first, `people` (no handler, but the outer middleware that claims `@name` invitations before any handler runs), the domain module `channel` next, `commands`, and **`catchall` last**. That last one is not a matter of taste: `telegram_bot/catchall.py` is a `@router.message()` with no filter at all, aiogram dispatches in registration order, and registered any earlier it silently swallows every command below it.
 
 `discord_bot/__init__.py` imports `client` (which builds the `CommandTree`) and then `commands`. The tree is synced once in `on_ready`.
 
@@ -163,6 +164,7 @@ Each of these exists exactly once, declared in one module and imported by name e
 - **`wiki_slots`** — one row per wiki and slot: the post the slot came from and the `file_unique_id` of the picture uploaded into it. Written only after that wiki accepted the change, which is what makes a failed slot retry itself.
 - **`state`** — the bot's own bookkeeping: the resolved channel, the time of the last pass, the last error.
 - **`wiki_admins`** — the people appointed with `/wikiadmin`: platform, numeric id, display name, Fandom account. The appointment; never the standing, which is asked of the wiki.
+- **`wiki_admin_invites`** — a Telegram appointment made by `@name` whose id the bot does not know yet: the `@name`, the Fandom account, who made it and when. The first message from the account holding that `@name` turns it into a `wiki_admins` row; unclaimed, it lapses after seven days.
 - **`tasks`** — one run: the wiki, the mechanics, the parameters, who asked, the state, the cursor and the counters.
 - **`task_pages`** — that run's page list, settled before the first edit. This is the table that makes a long run interruptible, resumable and countable.
 - **`schedules`** — a task that repeats, and when it is next due.

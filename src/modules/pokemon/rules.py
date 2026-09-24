@@ -93,7 +93,7 @@ PROTECT_RES = [
                r"[^\]|]*", re.I),
     re.compile(r"\[\[\s*:?\s*(?:Категория|Category)\s*:[^\]|]*", re.I),
     re.compile(r"\[\[\s*:?\s*(?:Special|Служебная)\s*:[^\]|]*", re.I),
-    re.compile(r"\[\[\s*(?::)?\s*[a-z][a-z-]{1,11}\s*:[^\]]*\]\]"),
+    re.compile(r"\[\[\s*(?::)?\s*[a-z][a-z-]{1,11}\s*:[^\]]*\]\]", re.I),
     re.compile(r"\|\s*(?:jtranslit|jname|jname2|tmname|romaji|translit)\s*="
                r"[^|\n}]*", re.I),
     re.compile(r"[=|][^=|\[\]{}<>\n]*?\.(?:" + MEDIA_EXT + r")\b", re.I),
@@ -127,7 +127,10 @@ def protect(text: str) -> tuple[str, list[str]]:
     return text, saved
 
 def unprotect(text: str, saved: list[str]) -> str:
-    return _PLACEHOLDER_RE.sub(lambda m: saved[int(m.group(1))], text)
+    """Restore enclosing masks first, including a gallery inside nowiki."""
+    for index in range(len(saved) - 1, -1, -1):
+        text = text.replace(_PLACEHOLDER.format(index), saved[index])
+    return text
 
 def load_pairs(path: str = TSV_PATH) -> list[tuple[str, str]]:
     """Читает пары замен из TSV. -> [(старое, новое)].
@@ -172,7 +175,7 @@ def build_rules(pairs: list[tuple[str, str]] | None = None) -> list:
             blocks = [TAIL_BLOCK]
             if spec.get("block"):
                 blocks.append(spec["block"])
-            if new.lower().startswith(old.lower()):
+            if len(new) > len(old) and new.lower().startswith(old.lower()):
                 blocks.append("^" + re.escape(new[len(old):].lower()))
             spec["block"] = "|".join(f"(?:{b})" for b in blocks)
         words.append(Rule(spec))

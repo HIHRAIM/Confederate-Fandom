@@ -147,7 +147,7 @@ PROTECT_RES = [
     re.compile(r"\[\[\s*:?\s*(?:Файл|File|Изображение|Image|Медиа|Media)\s*:"
                r"[^\]|]*", re.I),
     re.compile(r"\[\[\s*:?\s*(?:Special|Служебная)\s*:[^\]|]*", re.I),
-    re.compile(r"\[\[\s*(?::)?\s*[a-z][a-z-]{1,11}\s*:[^\]]*\]\]"),
+    re.compile(r"\[\[\s*(?::)?\s*[a-z][a-z-]{1,11}\s*:[^\]]*\]\]", re.I),
     re.compile(r"[^\s|=\[\]{}<>\n]+\.(?:" + _MEDIA_EXT + r")\b", re.I),
 ]
 
@@ -167,7 +167,10 @@ def protect(text: str) -> tuple[str, list[str]]:
     return text, saved
 
 def unprotect(text: str, saved: list[str]) -> str:
-    return _PLACEHOLDER_RE.sub(lambda m: saved[int(m.group(1))], text)
+    """Restore outer masks before the earlier masks that they may contain."""
+    for index in range(len(saved) - 1, -1, -1):
+        text = text.replace(_PLACEHOLDER.format(index), saved[index])
+    return text
 
 def apply_case(src: str, dst: str) -> str:
     """Регистр ``src`` -> строка ``dst`` (для одного слова)."""
@@ -176,6 +179,8 @@ def apply_case(src: str, dst: str) -> str:
         return dst
     if len(letters) > 1 and all(c.isupper() for c in letters):
         return dst.upper()
+    if all(c.islower() for c in letters):
+        return dst.lower()
     if letters[0].isupper():
         return dst[:1].upper() + dst[1:]
     return dst[:1].lower() + dst[1:]
@@ -217,7 +222,7 @@ class Rule:
                 if new_tail is None:
                     unknown.append(whole)
                     return whole
-                if tail[:1].isupper():
+                if tail[:1].isupper() or whole.isupper():
                     new_tail = new_tail.upper()
             else:
                 new_tail = tail

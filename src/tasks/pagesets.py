@@ -109,7 +109,7 @@ def _titles(pages, limit):
     out = []
     for page in pages:
         try:
-            title = page.title() if hasattr(page, "title") else str(page)
+            title = page if isinstance(page, str) else page.title()
         except Exception as e:
             logger.warning("skipping a page whose title could not be read: %s", e)
             continue
@@ -122,11 +122,21 @@ def _titles(pages, limit):
     return out
 
 
-def collect(site, params):
+def collect(site, params, redirects=False):
     """The page list of one task. -> a list of titles, in the order to walk.
 
     `params` carries `source`, `argument`, `namespaces`, `limit` and, for the
     category source, `recurse`.
+
+    `redirects` is what the task's mechanics can work on
+    (tasks/registry.py: redirects_wanted): False for ordinary pages, True for
+    redirects, None for both. Pywikibot spells the same three values the same
+    way, so it is handed on as it is — but only to the sources that enumerate
+    the wiki. Those used to be called with ``filterredir=False`` whatever the
+    task, which in Pywikibot means *no redirects*, not *no filter*; that is
+    how a run of the redirect mechanic over all pages was given 212 articles
+    and none of the wiki's 320 redirects. The sources that name their pages —
+    a category, a template, a list — are left alone.
     """
     import pywikibot
 
@@ -142,7 +152,7 @@ def collect(site, params):
         pages = []
         for namespace in namespaces:
             pages = _chain(pages, site.allpages(namespace=namespace,
-                                                filterredir=False))
+                                                filterredir=redirects))
         return _titles(pages, limit)
 
     if source == PREFIX:
@@ -150,7 +160,7 @@ def collect(site, params):
         for namespace in namespaces:
             pages = _chain(pages, site.allpages(prefix=argument,
                                                 namespace=namespace,
-                                                filterredir=False))
+                                                filterredir=redirects))
         return _titles(pages, limit)
 
     if source == CATEGORY:
@@ -179,7 +189,8 @@ def collect(site, params):
         name = argument
         if ":" not in name:
             name = "File:" + name
-        return _titles(pywikibot.FilePage(site, name).usingPages(), limit)
+        return _titles(pywikibot.FilePage(site, name).using_pages(
+            namespaces=namespaces), limit)
 
     if source == SEARCH:
         return _titles(site.search(argument, namespaces=namespaces), limit)
@@ -187,17 +198,18 @@ def collect(site, params):
     if source == TITLES:
         wanted = [line.strip() for line in
                   str(argument).replace("|", "\n").split("\n")]
-        return [title for title in wanted if title][:limit or None]
+        return _titles((title for title in wanted if title), limit)
 
     if source == PAIRS:
         from tasks.params import parse_pairs
 
-        return [old for old, _new in parse_pairs(argument)][:limit or None]
+        return _titles((old for old, _new in parse_pairs(argument)), limit)
 
     if source == NEWPAGES:
         total = limit or 200
         pages = (entry[0] if isinstance(entry, tuple) else entry
-                 for entry in site.newpages(total=total, namespaces=namespaces))
+                 for entry in site.newpages(total=total, namespaces=namespaces,
+                                            redirect=redirects))
         return _titles(pages, limit)
 
     if source == RECENT:
@@ -206,6 +218,7 @@ def collect(site, params):
         seen = []
         for change in site.recentchanges(total=total, namespaces=namespaces,
                                          changetype="edit|new",
+                                         redirect=redirects,
                                          end=_days_ago(days)):
             title = change.get("title")
             if title and title not in seen:

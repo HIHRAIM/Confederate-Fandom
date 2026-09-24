@@ -118,22 +118,20 @@ def check_rights(site, wiki_key, mechanics):
     """The rights this task needs. -> None, or raises Refusal naming a group."""
     from tasks import registry
     from wiki import rights
+    from utils import localized, service_lang
 
     needed = registry.rights_for(mechanics)
     missing = rights.missing_rights(site, needed)
     if not missing:
         return
     groups = rights.needed_groups(missing)
-    what = ", ".join(rights.right_label(right) for right, _group in missing)
+    lang = service_lang()
     if groups:
-        raise Refusal(
-            "На вики {} боту не хватает прав: {}. Нужен статус: {}.".format(
-                wiki_key, what,
-                ", ".join(rights.group_label(group) for group in groups)))
-    raise Refusal(
-        "На вики {} боту не хватает прав: {}. Это права обычного участника — "
-        "похоже, аккаунт заблокирован или вики закрыта для правок.".format(
-            wiki_key, what))
+        names = [localized("access_group_" + group.replace("-", "_"), lang)
+                 for group in groups]
+        raise Refusal(localized("task_missing_group_rights", lang,
+                                wiki=wiki_key, groups=", ".join(names)))
+    raise Refusal(localized("task_missing_basic_rights", lang, wiki=wiki_key))
 
 
 def check_caller_standing(site, wiki_key, requester):

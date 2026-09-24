@@ -23,7 +23,7 @@ when a repeating task comes due (db/schedules.py).
 import json
 import time
 
-from db import conn, cur
+from db import _db_lock, conn, cur
 
 STATES = ("pending", "running", "done", "failed", "stopped")
 
@@ -87,7 +87,7 @@ def task_report(row):
         return {}
 
 
-def set_task_state(task_id, state, error=None):
+def set_task_state(task_id, state, error=None, *, expected_state=None):
     """Move a task to another state, stamping the time where it matters.
 
     Not `set_state`, and the name is load-bearing. db/slots.py has a
@@ -99,17 +99,26 @@ def set_task_state(task_id, state, error=None):
     `db.set_state("last_pass_ts", …)` reached this function and died on
     `int("last_pass_ts")`, so a news pass that had already written its slots
     reported itself as a failure every fifteen minutes.
+    With expected_state, the transition succeeds only from that state. This
+    keeps a worker finishing a slow plan from reviving a task stopped by the
+    messenger thread. The check and update share the database lock.
     """
-    now = int(time.time())
-    if state == "running":
-        cur.execute("UPDATE tasks SET state=?, started_at=COALESCE(started_at, ?) "
-                    "WHERE id=?", (state, now, int(task_id)))
-    elif state in ("done", "failed", "stopped"):
-        cur.execute("UPDATE tasks SET state=?, finished_at=?, error=? WHERE id=?",
-                    (state, now, error, int(task_id)))
-    else:
-        cur.execute("UPDATE tasks SET state=? WHERE id=?", (state, int(task_id)))
-    conn.commit()
+    with _db_lock:
+        if expected_state is not None:
+            row = get_task(task_id)
+            if row is None or row["state"] != expected_state:
+                return False
+        now = int(time.time())
+        if state == "running":
+            cur.execute("UPDATE tasks SET state=?, started_at=COALESCE(started_at, ?) "
+                        "WHERE id=?", (state, now, int(task_id)))
+        elif state in ("done", "failed", "stopped"):
+            cur.execute("UPDATE tasks SET state=?, finished_at=?, error=? WHERE id=?",
+                        (state, now, error, int(task_id)))
+        else:
+            cur.execute("UPDATE tasks SET state=? WHERE id=?", (state, int(task_id)))
+        conn.commit()
+        return True
 
 
 def set_dry_run(task_id, dry_run=True):
@@ -199,6 +208,33 @@ def mark_page(task_id, seq, state, note=None):
     """Record what happened to one page."""
     cur.execute("UPDATE task_pages SET state=?, note=? WHERE task_id=? AND seq=?",
                 (str(state), note, int(task_id), int(seq)))
+
+
+def record_task_page(task_id, seq, state, note=None, report=None):
+    """Commit one completed page, counters and restart data together.
+
+    A chunk can be interrupted after any wiki request. Deferring its SQL
+    commit until the end would repeat earlier edits after a process restart.
+    The shared connection lock also prevents a messenger commit from splitting
+    this transaction. A completed page is never counted twice.
+    """
+    with _db_lock:
+        try:
+            changed = cur.execute(
+                "UPDATE task_pages SET state=?, note=? "
+                "WHERE task_id=? AND seq=? AND state='todo'",
+                (str(state), note, int(task_id), int(seq))).rowcount
+            if changed:
+                cur.execute(
+                    "UPDATE tasks SET checked=checked+1, edited=edited+?, "
+                    "failed=failed+?, cursor=?, report=? WHERE id=?",
+                    (int(state == "done"), int(state == "fail"), int(seq),
+                     json.dumps(dict(report or {}), ensure_ascii=False),
+                     int(task_id)))
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
 
 
 def failed_pages(task_id, limit=200):

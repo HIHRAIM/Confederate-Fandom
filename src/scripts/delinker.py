@@ -43,7 +43,12 @@ LOG_LIMIT = 500
 def prepare(ctx):
     """Read the deletion log. -> the set of file names to take out.
 
-    Only file deletions count: a deleted article is a red link somebody may
+    Filter the API to the file namespace before applying LOG_LIMIT, otherwise
+    unrelated article deletions can consume the entire window and hide a
+    file that still needs delinking. Only current file deletions count: the log also contains
+    restores and revision hiding, and a filename may have been reuploaded
+    since its deletion. None of those may remove a working illustration.
+    A deleted article is a red link somebody may
     want to keep as a request for that article, and removing those links is
     a different decision that nobody asked this mechanic to make.
     """
@@ -58,10 +63,13 @@ def prepare(ctx):
 
     names = []
     try:
-        for entry in ctx.site.logevents(logtype="delete", end=start,
+        for entry in ctx.site.logevents(logtype="delete", namespace=6, end=start,
                                         total=LOG_LIMIT):
             try:
-                title = entry.page().title()
+                if entry.action() != "delete":
+                    continue
+                page = entry.page()
+                title = page.title()
             except Exception:
                 continue
             if ":" not in title:
@@ -70,7 +78,7 @@ def prepare(ctx):
             if not rest:
                 continue
             try:
-                if entry.page().namespace() != 6:
+                if page.namespace() != 6 or page.exists():
                     continue
             except Exception:
                 continue

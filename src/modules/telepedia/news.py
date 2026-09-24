@@ -64,7 +64,9 @@ TRAILING_JUNK = " \t\n\u00a0,;:—–-‐.!?…"
 def news_timezone():
     """The time zone the dates are written in (config.NEWS_TIMEZONE), or UTC
     when the system has no such zone — a wrong hour is a smaller problem than
-    a bot that will not start."""
+    a bot that will not start. The tzdata dependency supplies IANA zones on
+    Windows, where zoneinfo otherwise falls back to UTC even for valid names.
+    """
     if ZoneInfo is None:
         return timezone.utc
     try:
@@ -106,8 +108,10 @@ def cut_length(text, limit):
     Returns ``(kept, truncated)``. The length is what the caller slices, which
     is what lets the same decision apply to plain text and to text carrying
     formatting: the formatting is sliced with it, not recomputed."""
-    if limit <= 1 or len(text) <= limit:
+    if limit <= 0 or len(text) <= limit:
         return len(text), False
+    if limit == 1:
+        return 0, True
 
     window = text[:limit - 1]
 
@@ -116,8 +120,13 @@ def cut_length(text, limit):
         if match.start() >= SENTENCE_CUT_FLOOR * (limit - 1):
             kept = match.start()
     if kept is None:
-        space = window.rfind(" ")
-        kept = space if space > 0 else len(window)
+        """A paragraph break is a word boundary too; a whole word exactly
+        filling the window must not be discarded for the preceding one."""
+        if text[len(window)].isspace():
+            kept = len(window)
+        else:
+            boundaries = [m.start() for m in re.finditer(r"\s", window)]
+            kept = boundaries[-1] if boundaries else len(window)
 
     while kept > 0 and window[kept - 1] in TRAILING_JUNK:
         kept -= 1

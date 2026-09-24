@@ -584,7 +584,7 @@ def has_bot_right(site):
     Worth a line in the log at every login, because the answer is invisible
     from the code's side: the bot asks for the flag on every edit and the wiki
     grants it only to an account in the local bot group whose BotPassword
-    carries the "High-volume editing" grant. Missing either, the edits are
+    carries the "High-volume (bot) access" grant. Missing either, the edits are
     written all the same and simply appear in Recent changes."""
     try:
         return "bot" in site.userinfo.get("rights", [])

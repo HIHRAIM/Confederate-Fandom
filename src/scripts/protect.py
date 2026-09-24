@@ -53,6 +53,17 @@ def act(ctx, page):
             for action, level in sorted(protections.items()))
 
     try:
+        current = page.protection()
+        def same(action, level):
+            """Compare MediaWiki's unprotected and infinite-expiry spellings."""
+            held, until = current.get(action, ("", "infinity"))
+            if level == ALL:
+                return held in ("", ALL)
+            forever = ("infinite", "infinity", "indefinite", "never")
+            return held == level and (str(until) == expiry or
+                (str(until) in forever and expiry in forever))
+        if all(same(action, level) for action, level in protections.items()):
+            return "skip", None
         page.protect(protections=protections, reason=ctx.summary or "",
                      expiry=expiry or DEFAULT_EXPIRY)
     except Exception as e:

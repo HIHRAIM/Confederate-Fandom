@@ -43,7 +43,7 @@ def collect(ctx, page):
             except Exception:
                 parts.append("-> ?")
         if FLAG_SIZE in flags:
-            parts.append("{} б".format(len(page.text)))
+            parts.append("{} б".format(len(page.text.encode("utf-8"))))
         if FLAG_TIMESTAMP in flags:
             parts.append(str(page.latest_revision.timestamp))
         if FLAG_CATEGORIES in flags:

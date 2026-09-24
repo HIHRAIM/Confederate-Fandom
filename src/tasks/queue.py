@@ -217,6 +217,9 @@ async def _plan(row):
     try:
         plan = await asyncio.to_thread(runner.plan, task_id)
     except access.Refusal as refusal:
+        if db.get_task(task_id)["state"] == "stopped":
+            runner.forget(task_id)
+            return
         db.set_task_state(task_id, "failed", error=refusal.text)
         runner.forget(task_id)
         await notify.send(row["reply_chat"], refusal.text)
@@ -225,6 +228,9 @@ async def _plan(row):
         return
     except Exception as e:
         logger.exception("task %s could not be planned", task_id)
+        if db.get_task(task_id)["state"] == "stopped":
+            runner.forget(task_id)
+            return
         text = report.safe_error(e)
         db.set_task_state(task_id, "failed", error=text)
         runner.forget(task_id)
@@ -232,6 +238,11 @@ async def _plan(row):
                           localized("task_plan_failed", lang, id=task_id, error=text))
         await notify.announce(
             localized("task_plan_failed", lang, id=task_id, error=text))
+        return
+
+    fresh = db.get_task(task_id)
+    if not plan or fresh is None or fresh["state"] != "confirm":
+        runner.forget(task_id)
         return
 
     if row["schedule_id"]:
@@ -246,7 +257,8 @@ async def _plan(row):
         "task_planned", lang,
         id=task_id, wiki=plan["wiki"], mechanics=names,
         pages=plan["pages"],
-        sample=sample + (("\n… и ещё {}".format(more)) if more > 0 else ""),
+        sample=sample + (("\n" + localized("task_sample_more", lang, count=more))
+                         if more > 0 else ""),
         warning=localized("task_destructive", lang) if plan["destructive"] else "",
         notes="\n".join(plan["notes"]),
         how=go_hint(row["reply_chat"], task_id, lang),
@@ -273,6 +285,11 @@ async def _chunk(row):
                                     wiki=row["wiki"], error=text))
         return False
 
+    fresh = db.get_task(task_id)
+    if fresh is None or fresh["state"] != "running":
+        runner.forget(task_id)
+        return False
+
     if more:
         fresh = db.get_task(task_id)
         total = db.count_pages(task_id)
@@ -294,6 +311,9 @@ async def _chunk(row):
                                     wiki=row["wiki"], error=text))
         return False
 
+    if not result:
+        runner.forget(task_id)
+        return False
     key = "task_done_dry" if result.get("dry_run") else "task_done"
     text = localized(key, lang, id=task_id, wiki=result.get("wiki"),
                      checked=result.get("checked", 0),
@@ -311,6 +331,9 @@ async def start(task_id, announce_only=False):
 
     `announce_only` is for a scheduled run, which nobody confirmed by hand:
     it is announced and started in one step.
+
+    Only the prepared 'confirm' state may start. A stop arriving after a
+    caller's earlier check must not be overwritten by this transition.
     """
     import db
     import scheduler
@@ -320,7 +343,8 @@ async def start(task_id, announce_only=False):
     row = db.get_task(task_id)
     if row is None:
         return False
-    db.set_task_state(task_id, "running")
+    if not db.set_task_state(task_id, "running", expected_state="confirm"):
+        return False
     lang = service_lang()
     requester = {"platform": row["requested_by_platform"],
                  "id": row["requested_by_id"],
@@ -358,7 +382,8 @@ async def stop(task_id):
     if row is None or row["state"] not in ("pending", "confirm", "running"):
         return False
     db.set_task_state(task_id, "stopped")
-    runner.forget(task_id)
+    if not runner.is_busy(task_id):
+        runner.forget(task_id)
     await notify.announce(localized(
         "task_stopped", service_lang(), id=task_id, wiki=row["wiki"],
         checked=row["checked"], edited=row["edited"]))

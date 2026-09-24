@@ -16,6 +16,12 @@ A person is recognised by (platform, user_id) — the numeric id on Discord or
 on Telegram — because that is the only thing about an account that does not
 change. display_name is kept for the log line and is refreshed on the way
 past; it is never what identifies anybody.
+
+On Telegram an appointment is made by @name, like on Discord it is made by
+picking the person, and the Bot API has no way to turn that @name into an id.
+So an @name the bot has no id for waits in `wiki_admin_invites` until its
+holder first writes to the bot (telegram_bot/people.py), and only then
+becomes a row here. Nothing is stored about anybody else who writes.
 """
 import time
 
@@ -92,3 +98,93 @@ def touch_display_name(platform, user_id, display_name):
         (str(display_name), str(platform), int(user_id)),
     )
     conn.commit()
+
+
+INVITE_DAYS = 7
+"""How long an appointment by @name waits for its person to write to the bot.
+
+A week is enough to tell somebody «напиши боту» and short enough that an
+@name given up in the meantime is unlikely to have found a new owner."""
+
+
+def _invite_key(username):
+    """An @name as the invitations table keys it: no '@', lower case."""
+    return str(username or "").strip().lstrip("@").lower()
+
+
+def _drop_lapsed_invites():
+    """Forget the invitations nobody claimed in time."""
+    cutoff = int(time.time()) - INVITE_DAYS * 86400
+    cur.execute("DELETE FROM wiki_admin_invites WHERE added_at < ?", (cutoff,))
+    conn.commit()
+
+
+def add_wiki_admin_invite(username, wiki_user, added_by=None):
+    """Appoint an @name whose id the bot does not know yet.
+
+    Written again rather than refused, like `add_wiki_admin`: repeating the
+    command is how the Fandom account of a waiting invitation is corrected,
+    and it starts the week again."""
+    cur.execute(
+        """
+        INSERT INTO wiki_admin_invites (username, wiki_user, added_by, added_at)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(username) DO UPDATE SET
+            wiki_user=excluded.wiki_user,
+            added_by=excluded.added_by,
+            added_at=excluded.added_at
+        """,
+        (_invite_key(username), str(wiki_user).strip(), added_by,
+         int(time.time())),
+    )
+    conn.commit()
+
+
+def take_wiki_admin_invite(username):
+    """The waiting invitation for this @name, removed. -> the row, or None.
+
+    Asked on every message from somebody who has an @name, so the question is
+    one indexed lookup; a lapsed row is treated as none and dropped."""
+    key = _invite_key(username)
+    if not key:
+        return None
+    row = cur.execute("SELECT * FROM wiki_admin_invites WHERE username=?",
+                      (key,)).fetchone()
+    if row is None:
+        return None
+    cur.execute("DELETE FROM wiki_admin_invites WHERE username=?", (key,))
+    conn.commit()
+    if int(row["added_at"] or 0) < int(time.time()) - INVITE_DAYS * 86400:
+        return None
+    return row
+
+
+def list_wiki_admin_invites():
+    """Every invitation still waiting, oldest first."""
+    _drop_lapsed_invites()
+    return cur.execute(
+        "SELECT * FROM wiki_admin_invites ORDER BY added_at, username"
+    ).fetchall()
+
+
+def remove_wiki_admin_invite(username):
+    """Withdraw a waiting invitation. -> whether there was one."""
+    key = _invite_key(username)
+    had = cur.execute("SELECT 1 FROM wiki_admin_invites WHERE username=?",
+                      (key,)).fetchone() is not None
+    cur.execute("DELETE FROM wiki_admin_invites WHERE username=?", (key,))
+    conn.commit()
+    return had
+
+
+def wiki_admins_named(platform, display_name):
+    """The appointed people currently shown under this name on a platform.
+
+    For taking an appointment away by @name: the bot keeps each person's
+    @name up to date as they use it (`touch_display_name`), and that stored
+    name is the only way back from an @name to an id the bot has without
+    asking the person to write."""
+    return cur.execute(
+        "SELECT * FROM wiki_admins WHERE platform=? AND lower(display_name)=?",
+        (str(platform), str(display_name or "").strip().lower()),
+    ).fetchall()

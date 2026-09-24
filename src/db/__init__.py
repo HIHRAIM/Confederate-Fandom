@@ -90,11 +90,17 @@ from db.slots import (
     set_state,
 )
 from db.admins import (
+    INVITE_DAYS,
     add_wiki_admin,
+    add_wiki_admin_invite,
     get_wiki_admin,
+    list_wiki_admin_invites,
     list_wiki_admins,
     remove_wiki_admin,
+    remove_wiki_admin_invite,
+    take_wiki_admin_invite,
     touch_display_name,
+    wiki_admins_named,
 )
 from db.tasks import (
     active_tasks,
@@ -108,6 +114,7 @@ from db.tasks import (
     next_pages,
     page_titles,
     recent_tasks,
+    record_task_page,
     running_task,
     set_dry_run,
     set_pages,

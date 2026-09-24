@@ -80,12 +80,18 @@ class DiffFile:
         self.dry_run = dry_run
         self.path = _path(task_id, "diff.txt")
         self.count = 0
+        if os.path.isfile(self.path):
+            with open(self.path, encoding="utf-8") as existing:
+                self.count = sum(line.startswith("=== ") for line in existing)
         self._handle = None
 
     def _open(self):
-        """Open the file and write its heading. Called on the first diff."""
+        """Append after a restart; an earlier chunk's evidence must survive."""
         _ensure_dir()
-        self._handle = open(self.path, "w", encoding="utf-8")
+        exists = os.path.exists(self.path) and os.path.getsize(self.path) > 0
+        self._handle = open(self.path, "a", encoding="utf-8")
+        if exists:
+            return
         self._handle.write("# {}\n# вики: {}\n# {}\n\n".format(
             "Предпросмотр правок (ничего не записано)" if self.dry_run
             else "Сделанные правки",
@@ -106,6 +112,7 @@ class DiffFile:
             self._handle.write("=== {}\n".format(title))
         self._handle.write(wt.diff_text(title, old, new))
         self._handle.write("\n\n")
+        self._handle.flush()
 
     def close(self):
         """Finish the file. -> its path, or None when there was nothing."""

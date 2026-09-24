@@ -10,6 +10,11 @@ order and telegram_bot/catchall.py is a ``@router.message()`` with no filter
 at all — the handler that feeds the dialogs. Registered any earlier it
 silently swallows every command below it and the bot answers nothing.
 
+`people` registers no handler. It puts an outer middleware in front of all of
+them, on messages and on button presses: the check that turns an invitation
+made by @name into an appointment keyed by the id, before the handler that
+answers the person's first message decides whether they may ask.
+
 `pages` comes before the commands because the commands reach for it, and
 because it registers the one ``@router.callback_query`` in this half — the
 arrows under a paged answer. Callback queries are dispatched on a chain of
@@ -31,6 +36,7 @@ from telegram_bot.client import (
     source_username,
 )
 from telegram_bot.files import download_photo
+from telegram_bot import people
 from telegram_bot import channel
 from telegram_bot import pages
 from telegram_bot import commands

@@ -1,4 +1,20 @@
 {
+  "access_group_bot": {
+    "status": "verified",
+    "text": "bot"
+  },
+  "access_group_content_moderator": {
+    "status": "verified",
+    "text": "moderador de conteúdo"
+  },
+  "access_group_rollback": {
+    "status": "verified",
+    "text": "reversor"
+  },
+  "access_group_sysop": {
+    "status": "verified",
+    "text": "administrador"
+  },
   "add_where_before_categories": {
     "status": "unverified",
     "text": "antes das categorias (depois do texto do artigo)"
@@ -243,6 +259,10 @@
     "status": "unverified",
     "text": "Não foi possível abrir essa wiki: {error}"
   },
+  "family_file_conflict": {
+    "status": "verified",
+    "text": "Não foi possível preparar a família de {host} com segurança: os arquivos existentes pertencem a outro host ou foram criados manualmente."
+  },
   "flag_add_again": {
     "status": "unverified",
     "text": "adicionar mesmo que esse texto já esteja na página"
@@ -297,7 +317,7 @@
   },
   "flag_no_redirect": {
     "status": "unverified",
-    "text": "não deixar redirecionamento (requer direito de administrador)"
+    "text": "não deixar redirecionamento"
   },
   "flag_no_typos": {
     "status": "unverified",
@@ -578,6 +598,14 @@
   "mech_unlink_desc": {
     "status": "unverified",
     "text": "remover as ligações para uma página e deixar o texto"
+  },
+  "mechanic_need_move_no_redirect_group": {
+    "status": "verified",
+    "text": "Para mover sem redirecionamento, é necessário o grupo de moderadores de conteúdo."
+  },
+  "mechanic_need_rollback_group": {
+    "status": "verified",
+    "text": "Para reverter, é necessário o grupo de reversores."
   },
   "move_mode_list": {
     "status": "unverified",
@@ -969,7 +997,7 @@
   },
   "service_species_no_flag": {
     "status": "unverified",
-    "text": "A passagem noturna pelos nomes de Pokémon foi ignorada: a conta não tem o sinalizador de bot em {wiki}, e centenas de edições sem sinalizador inundariam as mudanças recentes. São precisos o grupo bot na wiki e a permissão High-volume editing na BotPassword."
+    "text": "A passagem noturna pelos nomes de Pokémon foi ignorada: a conta não tem o sinalizador de bot em {wiki}, e centenas de edições sem sinalizador inundariam as mudanças recentes. São precisos o grupo bot na wiki e a permissão «Alta quantidade de acessos (robô)» na BotPassword."
   },
   "service_started": {
     "status": "unverified",
@@ -1047,6 +1075,14 @@
     "status": "unverified",
     "text": "Executar: /go {id}\nVer primeiro o que faria, sem escrever nada: /go {id} dry"
   },
+  "task_missing_basic_rights": {
+    "status": "verified",
+    "text": "A sessão atual do bot em {wiki} não tem as permissões necessárias de um usuário comum."
+  },
+  "task_missing_group_rights": {
+    "status": "verified",
+    "text": "A sessão atual do bot em {wiki} não tem permissão para esta operação. Ela está disponível para o grupo: {groups}."
+  },
   "task_not_waiting": {
     "status": "unverified",
     "text": "A tarefa {id} está em «{state}» — não há nada a confirmar."
@@ -1066,6 +1102,10 @@
   "task_refused": {
     "status": "unverified",
     "text": "✖ Tarefa {id} — {wiki}: {reason}"
+  },
+  "task_sample_more": {
+    "status": "verified",
+    "text": "… e mais {count}"
   },
   "task_started": {
     "status": "unverified",
@@ -1155,6 +1195,10 @@
     "status": "unverified",
     "text": "{name} ({user_id}) é agora administrador de wiki, conta no Fandom: {wiki_user}. Os direitos em cada wiki são verificados antes de cada execução."
   },
+  "wikiadmin_claimed": {
+    "status": "unverified",
+    "text": "O convite para @{username} foi aceite: o bot recebeu uma mensagem dessa conta e guardou o seu ID, {user_id}. Conta no Fandom: {wiki_user}."
+  },
   "wikiadmin_empty": {
     "status": "unverified",
     "text": "Ainda não há administradores de wiki."
@@ -1163,13 +1207,25 @@
     "status": "unverified",
     "text": "Administradores de wiki:"
   },
+  "wikiadmin_invite_line": {
+    "status": "unverified",
+    "text": "telegram: @{username} — no Fandom: {wiki_user} (à espera da primeira mensagem ao bot, até {until})"
+  },
+  "wikiadmin_invite_removed": {
+    "status": "unverified",
+    "text": "O convite para @{username} foi retirado."
+  },
+  "wikiadmin_invited": {
+    "status": "unverified",
+    "text": "Convite para @{username} guardado, conta no Fandom: {wiki_user}. O Telegram não diz aos bots a quem pertence um @nome, por isso a nomeação entra em vigor quando @{username} escrever qualquer coisa ao bot, por exemplo /tasks: o bot guarda então o ID dessa conta e passa a reconhecer a pessoa por ele, mesmo que o @nome mude. O convite é válido até {until}."
+  },
   "wikiadmin_line": {
     "status": "unverified",
     "text": "{platform}: {name} ({user_id}) — no Fandom: {wiki_user}"
   },
   "wikiadmin_no_user": {
     "status": "unverified",
-    "text": "Não ficou claro de quem se trata. Responda à mensagem dessa pessoa, ou dê um @nome ou um ID numérico."
+    "text": "Não ficou claro de quem se trata. Dê o @nome no Telegram ou o ID numérico."
   },
   "wikiadmin_no_wiki_user": {
     "status": "unverified",
@@ -1186,5 +1242,9 @@
   "wikiadmin_updated": {
     "status": "unverified",
     "text": "{name} ({user_id}) tem agora a conta {wiki_user} no Fandom."
+  },
+  "wikiadmin_welcome": {
+    "status": "unverified",
+    "text": "Foi nomeado administrador de wiki neste bot, conta no Fandom: {wiki_user}. Os seus direitos em cada wiki são verificados antes de cada execução. O que o bot sabe fazer: /tasks; iniciar uma tarefa: /run."
   }
 }

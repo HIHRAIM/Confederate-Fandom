@@ -83,8 +83,8 @@ def edit_template(site, title, wikitext, summary):
     The edit asks to be marked as a bot edit. Whether it *is* marked is the
     wiki's decision and not the code's: MediaWiki honours the flag only for an
     account that holds the `bot` right there, which takes both a local group
-    (a bureaucrat's `Special:UserRights`) and the "High-volume editing" grant
-    on the BotPassword. Without them the edit goes through unflagged and shows
+    (a bureaucrat's `Special:UserRights`) and the "High-volume (bot) access"
+    grant on the BotPassword. Without them the edit goes through unflagged and shows
     up in Recent changes like anyone else's — see README: The wiki login."""
     import pywikibot
 

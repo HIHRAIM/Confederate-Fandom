@@ -302,7 +302,7 @@ SUMMARY_TEST = [
 ]
 
 
-def self_test(rules=None):
+def self_test(rules=None, typos=True):
     """Run every rule's own tests. -> the list of failures, empty when sound.
 
     The original printed this to the console and the wrapper script refused to
@@ -312,13 +312,19 @@ def self_test(rules=None):
     Each case is checked twice — the second pass must change nothing, or the
     bot would edit the same page for ever. SELF_TEST_FLAGS carries a fourth
     element: the flags that case depends on.
+
+    With typos disabled, the typo-only examples must remain unchanged and
+    must produce no typo summary. The orthography and protection checks
+    still run in full; opting out of typos is not a broken ruleset.
     """
     if rules is None:
-        rules = build_rules()
+        rules = build_rules(typos=typos)
     failures = []
 
     for case in SELF_TEST + SELF_TEST_FLAGS:
         src, want, why = case[0], case[1], case[2]
+        if not typos and why == "typos.txt":
+            want = src
         kwargs = case[3] if len(case) > 3 else {}
         got, _ = wt.process_text(src, rules, **kwargs)
         again, _ = wt.process_text(got, rules, **kwargs)
@@ -330,6 +336,8 @@ def self_test(rules=None):
                             % (why, got, again))
 
     for src, want, why in SUMMARY_TEST:
+        if not typos and why == "лише опечатка":
+            want = ""
         _text, changes = wt.process_text(src, rules, skip_italics=True,
                                          skip_quotes=True, cosmetic=True)
         got = make_summary(changes)
@@ -354,7 +362,7 @@ def prepare(ctx):
     rules = build_rules(typos=FLAG_NO_TYPOS not in flags,
                         extra_components=FLAG_EXTRA in flags,
                         piv_solid=FLAG_PIV_SOLID in flags)
-    failures = self_test(rules)
+    failures = self_test(rules, typos=FLAG_NO_TYPOS not in flags)
     if failures:
         raise ValueError("самоперевірка правил не пройшла:\n" + "\n".join(failures[:5]))
     return {"rules": rules,

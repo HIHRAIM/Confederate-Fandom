@@ -127,6 +127,40 @@ def schedules(lang, fmt=PLAIN):
     return localized("schedule_header", lang), lines
 
 
+def invite_until(added_at):
+    """The day an invitation made at `added_at` lapses, as people read it."""
+    import time
+
+    import db
+
+    return time.strftime("%d.%m.%Y", time.localtime(
+        int(added_at or 0) + db.INVITE_DAYS * 86400))
+
+
+def wiki_admins(lang, fmt=PLAIN):
+    """Who is appointed, then who is invited. -> (title, lines); the lines are
+    empty when there is nobody, which the caller reports in its own words.
+
+    The invitations are Telegram's (telegram_bot/people.py) and are shown on
+    both messengers, like everything else here: whoever asks on Discord is
+    looking at the same list of people."""
+    import db
+    from utils import localized
+
+    lines = []
+    for row in db.list_wiki_admins():
+        lines.append(localized(
+            "wikiadmin_line", lang, platform=fmt.esc(row["platform"]),
+            name=fmt.esc(row["display_name"] or row["user_id"]),
+            user_id=row["user_id"], wiki_user=fmt.esc(row["wiki_user"])))
+    for row in db.list_wiki_admin_invites():
+        lines.append(localized(
+            "wikiadmin_invite_line", lang, username=fmt.esc(row["username"]),
+            wiki_user=fmt.esc(row["wiki_user"]),
+            until=invite_until(row["added_at"])))
+    return localized("wikiadmin_header", lang), lines
+
+
 TELEGRAM = "telegram"
 
 DISCORD = "discord"
@@ -193,9 +227,11 @@ def help_text(lang, fmt=PLAIN, platform=TELEGRAM):
     Built from HELP_SECTIONS rather than from a block of prose, so that the
     two halves cannot drift and neither can list a command the other one has.
 
-    Escaped whole. These are the project's own strings that carry angle
+    Lines are escaped whole. These are the project's own strings that carry angle
     brackets (`/go <номер>`), so a messenger sent HTML would swallow half of
-    them."""
+    them. The title stays plain like every other list title: each messenger
+    applies its own title formatting, so escaping it here would show literal
+    entities on Telegram and unnecessary markdown escapes on Discord."""
     from utils import localized
 
     lines = []
@@ -212,4 +248,4 @@ def help_text(lang, fmt=PLAIN, platform=TELEGRAM):
     if footer and footer != "help_footer":
         lines.append("")
         lines.append(fmt.esc(footer))
-    return fmt.esc(localized("help_intro", lang)), lines
+    return localized("help_intro", lang), lines

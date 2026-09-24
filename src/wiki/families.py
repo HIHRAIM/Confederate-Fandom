@@ -24,6 +24,7 @@ touch the cookie jar wiki/site.py swaps per wiki.
 Not this module's zone: logging in (wiki/site.py) and what may be done once
 logged in (wiki/rights.py).
 """
+import hashlib
 import logging
 import os
 import re
@@ -72,13 +73,14 @@ class Family(family.Family):
 
 
 def family_name(host):
-    """The Pywikibot family name of one host.
+    """The preferred legacy Pywikibot family name of one host.
 
     Everything but the letters and digits of the first label is dropped, so
     ``hihraim-test.fandom.com`` becomes ``hihraimtest`` — which is exactly
-    what the hand-written family of that wiki is called, and that is the
-    point: a generated name must never collide with, or shadow, one of the
-    four that already exist.
+    what the hand-written family of that wiki is called. This spelling is
+    retained for stored tasks, but is not a unique host identifier:
+    ``owarinoseraph`` and ``owari-no-seraph`` collide. ``ensure_family`` checks
+    the host before reusing it and chooses a separate key when necessary.
     """
     label = str(host).strip().lower().split("/")[0].split(".")[0]
     cleaned = re.sub(r"[^a-z0-9]", "", label)
@@ -159,8 +161,8 @@ def _family_path(family):
     return os.path.join(FAMILIES_DIR, "{}_family.py".format(family))
 
 
-def _read_langs(family):
-    """The language codes a family file already covers. -> {code: script path}.
+def _read_family(family):
+    """Read a family's actual hosts and paths through Pywikibot.
 
     The question is put to Pywikibot rather than to the text of the file,
     because a family may compute its languages instead of listing them — the
@@ -183,13 +185,67 @@ def _read_langs(family):
     except Exception as e:
         logger.warning("family %s exists but will not load: %s", family, e)
         return None
-    paths = {}
-    for code in loaded.langs:
-        try:
+    paths, hosts = {}, {}
+    try:
+        for code in loaded.langs:
+            hosts[code] = str(loaded.hostname(code)).lower()
             paths[code] = loaded.scriptpath(code)
-        except Exception:
-            paths[code] = "" if code == "en" else "/" + code
-    return paths
+    except Exception as e:
+        logger.warning("family %s has unreadable host or path: %s", family, e)
+        return None
+    return {"paths": paths, "hosts": hosts}
+
+
+def _read_langs(family):
+    """The known language paths, for the stored ``family:language`` spelling."""
+    known = _read_family(family)
+    return known["paths"] if known is not None else None
+
+
+def _generated_for(family, host):
+    """Only this module's generated files may be extended in place.
+
+    A handwritten family may have computed paths and other overrides that
+    the generic template cannot preserve. Its absence of our exact generator
+    heading is enough to keep it untouched, even when loading it failed.
+    """
+    try:
+        with open(_family_path(family), encoding="utf-8") as source:
+            heading = source.readline().strip()
+    except OSError:
+        return False
+    return heading == '\"\"\"Generated from {} by wiki/families.py.'.format(host)
+
+
+def _family_conflict(host):
+    """Explain a protected family-file conflict without exposing local paths."""
+    from utils import localized, service_lang
+    return ValueError(localized("family_file_conflict", service_lang(), host=host))
+
+
+def _family_for_host(preferred, host, lang):
+    """Choose a family that cannot silently redirect this host to another.
+
+    Existing short keys and handwritten aliases keep their meaning. A host
+    whose short key is occupied, or whose handwritten family cannot describe
+    the requested language, receives a stable key derived from the full host.
+    Every candidate is checked too: even a pre-existing digest-named file is
+    never trusted merely because its filename looks right.
+    """
+    digest = hashlib.sha256(host.encode("utf-8")).hexdigest()
+    candidates = (preferred, preferred + "x" + digest[:12],
+                  preferred + "x" + digest)
+    for candidate in candidates:
+        known = _read_family(candidate)
+        if known is not None:
+            if lang and known["hosts"].get(lang) == host:
+                return candidate, known["paths"]
+            if (_generated_for(candidate, host)
+                    and set(known["hosts"].values()) == {host}):
+                return candidate, known["paths"]
+        elif not os.path.exists(_family_path(candidate)):
+            return candidate, {}
+    raise _family_conflict(host)
 
 
 def _forget(family):
@@ -209,7 +265,17 @@ def _forget(family):
 
 
 def _write(family, host, langs):
-    """Write one family file. `langs` is {code: script path}."""
+    """Write a new family or extend this generator's file for the same host.
+
+    The ownership check also lives at the write boundary, so a future caller
+    cannot accidentally bypass the selection rules in ``ensure_family``.
+    ``langs`` is {code: script path}.
+    """
+    if os.path.exists(_family_path(family)):
+        known = _read_family(family)
+        if (known is None or not _generated_for(family, host)
+                or set(known["hosts"].values()) != {host}):
+            raise _family_conflict(host)
     os.makedirs(FAMILIES_DIR, exist_ok=True)
     note = ("The root of the host answers as '{root}'. Other languages live "
             "under a path of their own.").format(
@@ -231,9 +297,10 @@ def ensure_family(target):
     ``(family, lang)`` — the pair every other module addresses a wiki by, and
     the two halves of the ``family:lang`` key its rows are stored under.
 
-    A family file that already covers the language is left exactly as it is:
-    the four hand-written ones outrank anything generated, and rewriting a
-    file Pywikibot has open would be a way to lose a session for nothing.
+    A family file that covers both the language and its host is reused.
+    Handwritten files are never rewritten: a missing language gets a separate
+    generated family. Colliding legacy names also get separate generated
+    families instead of replacing the host of already configured languages.
     """
     if not isinstance(target, dict):
         target = parse_target(target)
@@ -241,10 +308,10 @@ def ensure_family(target):
     lang = target["lang"]
     host = target["host"]
 
-    known = _read_langs(family)
-    if known is not None and lang and lang in known:
-        return family, lang
     if host is None:
+        known = _read_langs(family)
+        if known is not None and lang and lang in known:
+            return family, lang
         if known is None:
             raise ValueError(
                 "вики «{}» бот не знает — укажите домен целиком".format(family))
@@ -254,12 +321,24 @@ def ensure_family(target):
             "в вики {} нет раздела «{}»; есть: {}".format(
                 family, lang, ", ".join(sorted(known))))
 
+    host = str(host).lower()
+    if lang:
+        selected, known = _family_for_host(family, host, lang)
+        if lang in known:
+            return selected, lang
+
     general = _probe(host, target["path"])
     root_lang = None
     script = (general.get("scriptpath") or "").rstrip("/")
     if not script:
         root_lang = general.get("lang") or "en"
     found = lang or general.get("lang") or "en"
+
+    canonical_host = str(general.get("servername") or host).lower()
+    preferred = family if canonical_host == host else family_name(canonical_host)
+    family, known = _family_for_host(preferred, canonical_host, found)
+    if found in known:
+        return family, found
 
     langs = dict(known or {})
     if root_lang and root_lang not in langs:
@@ -268,7 +347,7 @@ def ensure_family(target):
     if not lang and root_lang:
         langs[root_lang] = ""
         found = root_lang
-    _write(family, general.get("servername") or host, langs)
+    _write(family, canonical_host, langs)
     return family, found
 
 

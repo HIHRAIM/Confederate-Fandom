@@ -335,7 +335,7 @@ SUMMARY_TEST = [
 ]
 
 
-def self_test(rules=None):
+def self_test(rules=None, punct_level="safe"):
     """Run every rule's own tests. -> the list of failures, empty when sound.
 
     The original printed this to the console and the wrapper script refused to
@@ -345,9 +345,13 @@ def self_test(rules=None):
 
     Each case is checked twice — the second pass must change nothing, or the
     bot would edit the same page for ever.
+
+    Disabled punctuation has its own expected summaries and no-change
+    checks. Applying expectations for enabled punctuation to that option
+    previously refused every correctly configured ``punct_off`` task.
     """
     if rules is None:
-        rules = build_rules()
+        rules = build_rules(punct_level=punct_level)
     failures = []
     plain = Options()
     cosm = Options(cosmetic=True)
@@ -381,7 +385,18 @@ def self_test(rules=None):
             failures.append("пунктуация [%s]: неидемпотентно, %r -> %r"
                             % (why, got, again))
 
-    for src, want, why in SUMMARY_TEST:
+    summaries = SUMMARY_TEST
+    if punct_level == "off":
+        _check([("Слово,другое", "Слово,другое", "пунктуация отключена")],
+               "пунктуация", plain)
+        expected = (
+            SUMMARY_COSMETIC, SUMMARY_LANG, "",
+            f"{SUMMARY_LANG} и {SUMMARY_COSMETIC}", SUMMARY_LANG,
+            SUMMARY_COSMETIC, f"{SUMMARY_LANG} и {SUMMARY_COSMETIC}",
+        )
+        summaries = [(src, want, why)
+                     for (src, _old, why), want in zip(SUMMARY_TEST, expected)]
+    for src, want, why in summaries:
         _text, changes = process(src, rules, cosm)
         got = wt.make_summary(changes, SUMMARY_PARTS)
         if got != want:
@@ -409,7 +424,7 @@ def prepare(ctx):
     elif FLAG_PUNCT_TYPO in flags:
         level = "typo"
     rules = build_rules(punct_level=level, quotes=FLAG_QUOTES in flags)
-    failures = self_test(rules)
+    failures = self_test(rules, punct_level=level)
     if failures:
         raise ValueError("самопроверка правил не прошла:\n" + "\n".join(failures[:5]))
     return {"rules": rules,

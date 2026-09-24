@@ -1,4 +1,20 @@
 {
+  "access_group_bot": {
+    "status": "verified",
+    "text": "бот"
+  },
+  "access_group_content_moderator": {
+    "status": "verified",
+    "text": "модератор контента"
+  },
+  "access_group_rollback": {
+    "status": "verified",
+    "text": "откатчик"
+  },
+  "access_group_sysop": {
+    "status": "verified",
+    "text": "администратор"
+  },
   "add_where_before_categories": {
     "status": "verified",
     "text": "перед категориями (после текста статьи)"
@@ -243,6 +259,10 @@
     "status": "verified",
     "text": "Не получилось открыть эту вики: {error}"
   },
+  "family_file_conflict": {
+    "status": "verified",
+    "text": "Не удалось безопасно подготовить семейство для {host}: существующие файлы относятся к другому хосту или созданы вручную."
+  },
   "flag_add_again": {
     "status": "verified",
     "text": "добавить, даже если такой текст уже есть на странице"
@@ -297,7 +317,7 @@
   },
   "flag_no_redirect": {
     "status": "verified",
-    "text": "не оставлять перенаправление (нужно право администратора)"
+    "text": "не оставлять перенаправление"
   },
   "flag_no_typos": {
     "status": "verified",
@@ -578,6 +598,14 @@
   "mech_unlink_desc": {
     "status": "verified",
     "text": "убрать ссылки на страницу, оставив сам текст"
+  },
+  "mechanic_need_move_no_redirect_group": {
+    "status": "verified",
+    "text": "Для переименования без перенаправления нужен статус модератора контента."
+  },
+  "mechanic_need_rollback_group": {
+    "status": "verified",
+    "text": "Для отката нужен статус откатчика."
   },
   "move_mode_list": {
     "status": "verified",
@@ -969,7 +997,7 @@
   },
   "service_species_no_flag": {
     "status": "verified",
-    "text": "Ночной проход по названиям покемонов пропущен: у аккаунта нет флага бота на {wiki}, а сотни неотмеченных правок затопят свежие правки. Нужны группа bot на вики и грант «Массовое редактирование» у BotPassword."
+    "text": "Ночной проход по названиям покемонов пропущен: у аккаунта нет флага бота на {wiki}, а сотни неотмеченных правок затопят свежие правки. Нужны группа bot на вики и грант «Доступ (ботам) с высокой интенсивностью» у BotPassword."
   },
   "service_started": {
     "status": "verified",
@@ -1047,6 +1075,14 @@
     "status": "verified",
     "text": "Запустить: /go {id}\nСначала посмотреть, что получится, ничего не записывая: /go {id} dry"
   },
+  "task_missing_basic_rights": {
+    "status": "verified",
+    "text": "На вики {wiki} в текущей сессии бота нет необходимых прав обычного участника."
+  },
+  "task_missing_group_rights": {
+    "status": "verified",
+    "text": "На вики {wiki} в текущей сессии бота нет прав для этой операции. Они доступны группе: {groups}."
+  },
   "task_not_waiting": {
     "status": "verified",
     "text": "Задача {id} сейчас в состоянии «{state}» — подтверждать нечего."
@@ -1066,6 +1102,10 @@
   "task_refused": {
     "status": "verified",
     "text": "✖ Задача {id} — {wiki}: {reason}"
+  },
+  "task_sample_more": {
+    "status": "verified",
+    "text": "… и ещё {count}"
   },
   "task_started": {
     "status": "verified",
@@ -1155,6 +1195,10 @@
     "status": "verified",
     "text": "{name} ({user_id}) назначен администратором вики, ник на Fandom — {wiki_user}. Права на каждой вики бот проверит перед запуском."
   },
+  "wikiadmin_claimed": {
+    "status": "verified",
+    "text": "Приглашение для @{username} принято: бот получил сообщение от этого аккаунта и запомнил его ID — {user_id}. Ник на Fandom — {wiki_user}."
+  },
   "wikiadmin_empty": {
     "status": "verified",
     "text": "Администраторов вики пока нет."
@@ -1163,13 +1207,25 @@
     "status": "verified",
     "text": "Администраторы вики:"
   },
+  "wikiadmin_invite_line": {
+    "status": "verified",
+    "text": "telegram: @{username} — на Fandom: {wiki_user} (ждёт первого сообщения боту, до {until})"
+  },
+  "wikiadmin_invite_removed": {
+    "status": "verified",
+    "text": "Приглашение для @{username} отозвано."
+  },
+  "wikiadmin_invited": {
+    "status": "verified",
+    "text": "Приглашение для @{username} сохранено, ник на Fandom — {wiki_user}. По нику Telegram не сообщает ботам ID, поэтому назначение вступит в силу, когда @{username} напишет боту что угодно, например /tasks: бот запомнит ID этого аккаунта и дальше будет узнавать человека по нему, даже если ник сменится. Приглашение действует до {until}."
+  },
   "wikiadmin_line": {
     "status": "verified",
     "text": "{platform}: {name} ({user_id}) — на Fandom: {wiki_user}"
   },
   "wikiadmin_no_user": {
     "status": "verified",
-    "text": "Не понял, о ком речь. Ответьте на сообщение участника, или укажите @ник, или числовой ID."
+    "text": "Не понял, о ком речь. Укажите @ник в Telegram или числовой ID."
   },
   "wikiadmin_no_wiki_user": {
     "status": "verified",
@@ -1186,5 +1242,9 @@
   "wikiadmin_updated": {
     "status": "verified",
     "text": "У {name} ({user_id}) обновлён ник на Fandom — {wiki_user}."
+  },
+  "wikiadmin_welcome": {
+    "status": "verified",
+    "text": "Вас назначили администратором вики в этом боте, ник на Fandom — {wiki_user}. Права на каждой вики бот проверит перед запуском. Что бот умеет — /tasks, запустить задачу — /run."
   }
 }

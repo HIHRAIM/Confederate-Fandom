@@ -15,6 +15,7 @@ and marked, and the walk does not go round it again. Without that the file
 grows until the disk stops it, which is what a loop in a category tree does to
 a naive walk.
 """
+import json
 import sys
 
 from tasks import mechanic as mech
@@ -80,12 +81,21 @@ def finish(ctx):
     if shape == DOT:
         lines = ["digraph categories {", '  rankdir="LR";']
         parents = {}
+        declared = set()
         for level, title, _already in nodes:
+            """Explicit nodes keep an isolated root visible; quoted DOT
+            identifiers retain the wiki title rather than replacing quotes.
+            JSON string escaping covers DOT's quotes and backslashes too.
+            """
+            node = json.dumps(title, ensure_ascii=False)
+            if title not in declared:
+                lines.append("  {};".format(node))
+                declared.add(title)
             parents[level] = title
             if level:
-                lines.append('  "{}" -> "{}";'.format(
-                    parents.get(level - 1, root).replace('"', "'"),
-                    title.replace('"', "'")))
+                lines.append("  {} -> {};".format(
+                    json.dumps(parents.get(level - 1, root), ensure_ascii=False),
+                    node))
         lines.append("}")
         return lines
 

@@ -112,6 +112,23 @@ def needs_pages(mechanics):
     return any(not mechanic.standalone for mechanic in mechanics)
 
 
+def redirects_wanted(mechanics, params):
+    """Whether the page list should hold redirects. -> True, False or None.
+
+    True when every mechanic that walks pages works on redirects alone, False
+    when every one works on ordinary pages, None — both — when they differ:
+    a task that fixes double redirects and tidies articles in one run needs
+    the two kinds. Each mechanic of such a run is then handed both, exactly as
+    it always was by a category or a list of titles; the redirect mechanic
+    passes over whatever is not its own (see `Mechanic.redirects`).
+    """
+    wanted = {mechanic.redirects(params) for mechanic in mechanics
+              if not mechanic.standalone}
+    if len(wanted) == 1:
+        return wanted.pop()
+    return None
+
+
 def is_destructive(mechanics):
     """Whether any of them does something an edit cannot undo."""
     return any(mechanic.destructive for mechanic in mechanics)

@@ -1,8 +1,8 @@
 # Confederate Fandom Privacy Policy
 
-_Last updated: 2026-09-01_
+_Last updated: 2026-09-24_
 
-Confederate Fandom is a self-hosted, open-source bot that does three things on wikis of the Fandom farm: it copies the three latest posts of one Telegram channel onto the main pages of one or several wikis, it standardises the names of Pokémon species on another wiki once a night, and it runs maintenance work on any Fandom wiki when an administrator asks it to. This document describes what data the software processes, why, for how long, and what choices people have.
+Confederate Fandom is a self-hosted, open-source bot for automating work on the wikis of the Fandom farm from Discord and Telegram. It runs maintenance work on any Fandom wiki when an administrator asks it to, and two standing modules beside that: it copies the three latest posts of one Telegram channel onto the main pages of one or several wikis, and it standardises the names of Pokémon species on another wiki once a night. This document describes what data the software processes, why, for how long, and what choices people have.
 
 > **Who is responsible for your data.** Confederate Fandom is software, not a service: anyone can run their own instance. The person or team operating a given instance (the **operator**) controls that instance's database, configuration and wiki account, and is the data controller for it. This document describes what the software itself does; a specific operator may add their own infrastructure (hosting, logging, backups) around it.
 
@@ -14,6 +14,8 @@ The bot also receives the commands its administrators type, and their answers to
 
 Because the wiki work can now be delegated, the bot stores something about identifiable people for the first time: for each **wiki administrator** the operator appoints, their numeric id on Discord or Telegram, the name they are shown under there, and their account name on Fandom. All three are needed to answer the only question the bot asks about them — whether this person holds rights on the wiki they are asking it to work on — and the appointment is removed, row and all, with `/remwikiadmin`.
 
+On Telegram an administrator names the person by their `@name`, and Telegram does not tell a bot whose an `@name` is. So an appointment made by `@name` is kept as an **invitation** — the `@name`, the Fandom account, who made it and when — until the account holding that `@name` first writes to the bot, when it becomes the ordinary appointment keyed by the numeric id. To find that moment the bot compares the `@name` of each message it receives with the waiting invitations; a message that matches none leaves nothing behind.
+
 ## What the bot stores
 
 All data lives in a local SQLite database (`src/fd.db`) on the operator's machine.
@@ -24,6 +26,7 @@ All data lives in a local SQLite database (`src/fd.db`) on the operator's machin
 | Slot state | For each wiki and each of the three news slots: the message it was built from and the identifier of the picture uploaded into it | Overwritten at each pass; three rows per wiki |
 | Bookkeeping | The numeric id and `@name` the followed channel resolved to, the time of the last pass, the error text of the last failed pass | Overwritten; kept until the file is deleted |
 | Wiki administrators | For each person the operator appoints: the messenger, their numeric id there, their display name, their account name on Fandom, and who appointed them and when | Until `/remwikiadmin`, or until the file is deleted |
+| Telegram invitations | For an appointment made by `@name` that no account has claimed yet: the `@name`, the Fandom account, and who made it and when | Until claimed or withdrawn with `/remwikiadmin`, and never longer than **7 days** |
 | Tasks and schedules | What was asked for, on which wiki, with which parameters, by whom (messenger, id, display name, Fandom account), when it ran and what it changed | The page list of a finished run is deleted after **30 days**; the row is kept as the record of who asked for what |
 
 Beside the database, a finished run leaves up to three files in `src/reports/`: the diffs it made, whatever a reading mechanic collected, and the pages it could not write. They hold **wiki content and nothing else** — no traceback, no path on the host machine, no configuration — because they are sent to whoever asked for the run. A failure is written as its type and its message with anything path-shaped removed; the full traceback stays in the operator's own log. The files are a copy of what was already delivered and are deleted after **14 days**.
@@ -49,7 +52,7 @@ Everything published on the wikis: the text, the picture and the date of the thr
 
 - **The channel's operators** decide what the bot publishes by deciding what the channel posts. A post edited in the channel is corrected on every wiki at the next pass — while the bot is running it hears the edit from Telegram, and afterwards it notices it by re-reading the channel's public preview.
 - **A deleted post is a special case.** Telegram does not tell bots when a channel post is deleted, so the bot keeps publishing its copy until three newer posts have pushed it out. To take a published post off the main page at once, publish new posts, or have an administrator edit the post's text and run `/update`.
-- **A wiki administrator** can ask the operator to remove their appointment; `/remwikiadmin` deletes the row that names them. The tasks they ran keep their name and id, because a wiki's edit history keeps the edits and the record of who asked for them belongs beside it.
+- **A wiki administrator** can ask the operator to remove their appointment; `/remwikiadmin` deletes the row that names them, and withdraws an invitation that has not been claimed yet. The tasks they ran keep their name and id, because a wiki's edit history keeps the edits and the record of who asked for them belongs beside it.
 - **Anyone whose page a run would change** sees it in that wiki's history and its recent changes like any other edit, made under the bot's account with a summary saying what was done. Every mechanic's edits can be undone on the wiki in the ordinary way; a deletion or a move cannot, which is why those need a confirmation and are marked as such in the bot's own catalogue.
 - **The operator** can stop the bot, delete `src/fd.db` — which erases every stored post, appointment and task — delete `src/reports/`, and revoke the BotPassword on the wikis and the token with @BotFather.
 

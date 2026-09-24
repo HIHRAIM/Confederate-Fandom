@@ -64,11 +64,12 @@ def prepare(ctx):
         body = re.escape(title[1:]).replace(r"\ ", r"[ _]")
         return re.compile(
             r"\[\[\s*" + _ANY_CATEGORY_PREFIX + r"\s*:\s*"
-            r"[" + head.upper() + head.lower() + r"]" + body +
+            r"(?:" + re.escape(head.upper()) + "|" + re.escape(head.lower()) + r")" + body +
             r"\s*(\|[^\]]*)?\]\]\n?", re.UNICODE)
 
     return {"prefix": prefix, "name": name, "to": target,
-            "pattern": _pattern(name)}
+            "pattern": _pattern(name),
+            "target_pattern": _pattern(target) if target else None}
 
 
 def _insert(text, line):
@@ -97,12 +98,29 @@ def apply(ctx, page, text):
         return new.rstrip("\n") + "\n", ["убрана категория ×{}".format(count)]
 
     if action == MOVE:
-        new, count = pattern.subn("", text)
-        if not count:
+        """Keep the old sort key unless the target already has its own.
+
+        Matching the destination by its normalized pattern also recognizes
+        English namespace aliases and lowercase initials, preventing a
+        second categorization of the same page.
+        """
+        if name[:1].upper() + name[1:] == target[:1].upper() + target[1:]:
             return text, []
-        line = "[[{}:{}]]".format(prefix, target)
-        if line not in new:
-            new = _insert(new, line)
+        target_exists = bool(state["target_pattern"].search(text))
+
+        def _move(match):
+            """Replace one category in place, retaining its explicit key."""
+            nonlocal target_exists
+            if target_exists:
+                return ""
+            target_exists = True
+            tail = "\n" if match.group(0).endswith("\n") else ""
+            return "[[{}:{}{}]]{}".format(prefix, target,
+                                          match.group(1) or "", tail)
+
+        new, count = pattern.subn(_move, text)
+        if not count or new == text:
+            return text, []
         return new, ["категория заменена"]
 
     if pattern.search(text):

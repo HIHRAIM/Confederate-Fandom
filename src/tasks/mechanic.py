@@ -116,6 +116,24 @@ class Mechanic:
         hook = getattr(self.module, "finish", None)
         return hook(ctx) if hook else None
 
+    def redirects(self, params):
+        """Which pages this mechanic can do anything with, for these settings.
+
+        -> False: ordinary pages only, which is every mechanic that does not
+        say otherwise; True: redirects only; None: both.
+
+        Asked before the page list is built, and it decides what the sources
+        that enumerate a wiki (all pages, a prefix, new pages, recent changes)
+        list at all. They used to list ordinary pages whatever the task, so
+        the redirect mechanic, told to fix double redirects on a wiki that had
+        thirteen, was handed 212 articles and not one redirect, and finished
+        with 0 edits and no error. A source that names its pages itself — a
+        category, a list of titles — is not filtered: whoever named them meant
+        them.
+        """
+        hook = getattr(self.module, "redirects", None)
+        return hook(params) if hook else False
+
     def summary_part(self, ctx, labels):
         """This mechanic's contribution to the edit summary.
 

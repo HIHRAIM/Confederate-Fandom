@@ -1,4 +1,20 @@
 {
+  "access_group_bot": {
+    "status": "verified",
+    "text": "бот"
+  },
+  "access_group_content_moderator": {
+    "status": "verified",
+    "text": "модератор вмісту"
+  },
+  "access_group_rollback": {
+    "status": "verified",
+    "text": "відкочувач"
+  },
+  "access_group_sysop": {
+    "status": "verified",
+    "text": "адміністратор"
+  },
   "add_where_before_categories": {
     "status": "unverified",
     "text": "перед категоріями (після тексту статті)"
@@ -243,6 +259,10 @@
     "status": "unverified",
     "text": "Не вдалося відкрити цю вікі: {error}"
   },
+  "family_file_conflict": {
+    "status": "verified",
+    "text": "Не вдалося безпечно підготувати сімейство для {host}: наявні файли належать іншому хосту або створені вручну."
+  },
   "flag_add_again": {
     "status": "unverified",
     "text": "додати, навіть якщо такий текст уже є на сторінці"
@@ -297,7 +317,7 @@
   },
   "flag_no_redirect": {
     "status": "unverified",
-    "text": "не залишати перенаправлення (потрібне право адміністратора)"
+    "text": "не залишати перенаправлення"
   },
   "flag_no_typos": {
     "status": "unverified",
@@ -578,6 +598,14 @@
   "mech_unlink_desc": {
     "status": "unverified",
     "text": "прибрати посилання на сторінку, залишивши сам текст"
+  },
+  "mechanic_need_move_no_redirect_group": {
+    "status": "verified",
+    "text": "Для перейменування без перенаправлення потрібен статус модератора вмісту."
+  },
+  "mechanic_need_rollback_group": {
+    "status": "verified",
+    "text": "Для відкоту потрібен статус відкочувача."
   },
   "move_mode_list": {
     "status": "unverified",
@@ -969,7 +997,7 @@
   },
   "service_species_no_flag": {
     "status": "unverified",
-    "text": "Нічний прохід за назвами покемонів пропущено: акаунт не має прапорця бота на {wiki}, а сотні непозначених правок заллють свіжі правки. Потрібні група bot на вікі та грант «Масове редагування» у BotPassword."
+    "text": "Нічний прохід за назвами покемонів пропущено: акаунт не має прапорця бота на {wiki}, а сотні непозначених правок заллють свіжі правки. Потрібні група bot на вікі та грант «Доступ (бота) на високому рівні» у BotPassword."
   },
   "service_started": {
     "status": "unverified",
@@ -1047,6 +1075,14 @@
     "status": "unverified",
     "text": "Запустити: /go {id}\nСпершу подивитися, що вийде, нічого не записуючи: /go {id} dry"
   },
+  "task_missing_basic_rights": {
+    "status": "verified",
+    "text": "На вікі {wiki} поточна сесія бота не має потрібних прав звичайного учасника."
+  },
+  "task_missing_group_rights": {
+    "status": "verified",
+    "text": "На вікі {wiki} поточна сесія бота не має прав для цієї дії. Вони доступні групі: {groups}."
+  },
   "task_not_waiting": {
     "status": "unverified",
     "text": "Задача {id} зараз у стані «{state}» — підтверджувати нічого."
@@ -1066,6 +1102,10 @@
   "task_refused": {
     "status": "unverified",
     "text": "✖ Задача {id} — {wiki}: {reason}"
+  },
+  "task_sample_more": {
+    "status": "verified",
+    "text": "… і ще {count}"
   },
   "task_started": {
     "status": "unverified",
@@ -1155,6 +1195,10 @@
     "status": "unverified",
     "text": "{name} ({user_id}) призначено адміністратором вікі, нік на Fandom — {wiki_user}. Права на кожній вікі бот перевірить перед запуском."
   },
+  "wikiadmin_claimed": {
+    "status": "unverified",
+    "text": "Запрошення для @{username} прийнято: бот отримав повідомлення з цього акаунта й запамʼятав його ID — {user_id}. Нік на Fandom — {wiki_user}."
+  },
   "wikiadmin_empty": {
     "status": "unverified",
     "text": "Адміністраторів вікі поки немає."
@@ -1163,13 +1207,25 @@
     "status": "unverified",
     "text": "Адміністратори вікі:"
   },
+  "wikiadmin_invite_line": {
+    "status": "unverified",
+    "text": "telegram: @{username} — на Fandom: {wiki_user} (чекає на перше повідомлення боту, до {until})"
+  },
+  "wikiadmin_invite_removed": {
+    "status": "unverified",
+    "text": "Запрошення для @{username} відкликано."
+  },
+  "wikiadmin_invited": {
+    "status": "unverified",
+    "text": "Запрошення для @{username} збережено, нік на Fandom — {wiki_user}. Telegram не повідомляє ботам, чий це @нік, тому призначення набуде чинності, коли @{username} напише боту будь-що, наприклад /tasks: бот запамʼятає ID цього акаунта й далі впізнаватиме людину за ним, навіть якщо нік зміниться. Запрошення дійсне до {until}."
+  },
   "wikiadmin_line": {
     "status": "unverified",
     "text": "{platform}: {name} ({user_id}) — на Fandom: {wiki_user}"
   },
   "wikiadmin_no_user": {
     "status": "unverified",
-    "text": "Не зрозумів, про кого мова. Відповідайте на повідомлення учасника, або вкажіть @нік, або числовий ID."
+    "text": "Не зрозумів, про кого мова. Вкажіть @нік у Telegram або числовий ID."
   },
   "wikiadmin_no_wiki_user": {
     "status": "unverified",
@@ -1186,5 +1242,9 @@
   "wikiadmin_updated": {
     "status": "unverified",
     "text": "У {name} ({user_id}) оновлено нік на Fandom — {wiki_user}."
+  },
+  "wikiadmin_welcome": {
+    "status": "unverified",
+    "text": "Вас призначено адміністратором вікі в цьому боті, нік на Fandom — {wiki_user}. Права на кожній вікі бот перевірить перед запуском. Що вміє бот — /tasks, запустити задачу — /run."
   }
 }

@@ -46,7 +46,7 @@ def name_pattern(name):
     """A pattern matching one file name however it is spelt in wikitext."""
     head = name[0]
     body = re.escape(name[1:]).replace(r"\ ", r"[ _]")
-    return r"[" + head.upper() + head.lower() + r"]" + body
+    return r"(?:" + re.escape(head.upper()) + "|" + re.escape(head.lower()) + r")" + body
 
 
 def usage_patterns(name):
@@ -61,22 +61,42 @@ def usage_patterns(name):
         r"\[\[\s*" + FILE_PREFIX + r"\s*:\s*" + core + r"\s*(?:\|(?:[^\[\]]|\[\[[^\]]*\]\])*)?\]\]\n?",
         re.UNICODE)
     parameter = re.compile(
-        r"[ \t]*\|\s*" + IMAGE_PARAM + r"\s*=\s*(?:" + FILE_PREFIX + r"\s*:\s*)?"
-        + core + r"[ \t]*\n?", re.IGNORECASE | re.UNICODE)
+        r"[ \t]*\|\s*(?i:" + IMAGE_PARAM + r")\s*=\s*(?:" + FILE_PREFIX + r"\s*:\s*)?"
+        + core + r"(?=[ \t]*(?:\||\}\}|\r?$))[ \t]*\n?",
+        re.UNICODE | re.M)
     bare = re.compile(
-        r"(?<![\w/])(?:" + FILE_PREFIX + r"\s*:\s*)?" + core + r"(?![\w])",
+        r"(?<![\w/.-])(?P<prefix>" + FILE_PREFIX + r"\s*:\s*)?" + core + r"(?![\w/.-])",
         re.UNICODE)
     return construct, parameter, bare
 
 
 def remove_usages(text, name):
-    """Take every usage of one file out of a page. -> (text, how many)."""
+    """Take every usage of one file out of a page. -> (text, how many).
+
+    Gallery captions belong to the image's whole line. Removing only the
+    filename would leave a caption interpreted as another missing image.
+    Parameter matches require a complete value, so ``Old.jpg.png`` cannot
+    be mistaken for ``Old.jpg`` and damage the surrounding template.
+    """
     construct, parameter, bare = usage_patterns(name)
     total = 0
     text, count = construct.subn("", text)
     total += count
     text, count = parameter.subn("", text)
     total += count
+    gallery_line = re.compile(
+        r"^[ \t]*(?:" + FILE_PREFIX + r"[ \t]*:[ \t]*)?"
+        + name_pattern(name) + r"[ \t]*(?:\|[^\n]*)?(?:\n|$)", re.M)
+
+    def _gallery(match):
+        """Drop the matching image and its caption inside one gallery."""
+        nonlocal total
+        body, count = gallery_line.subn("", match.group(2))
+        total += count
+        return match.group(1) + body + match.group(3)
+
+    text = re.sub(r"(<gallery\b[^>]*>)(.*?)(</gallery\s*>)", _gallery,
+                  text, flags=re.I | re.S)
     lines = []
     changed = 0
     for line in text.split("\n"):
@@ -92,9 +112,13 @@ def remove_usages(text, name):
 
 
 def replace_usages(text, name, target):
-    """Point every usage of one file at another. -> (text, how many)."""
+    """Replace the filename while retaining its namespace spelling.
+
+    ``[[File:Old.jpg]]`` must stay a file inclusion; dropping ``File:``
+    silently turns the image into an ordinary article link.
+    """
     _construct, _parameter, bare = usage_patterns(name)
-    return bare.subn(lambda m: target, text)
+    return bare.subn(lambda m: (m.group("prefix") or "") + target, text)
 
 
 def prepare(ctx):

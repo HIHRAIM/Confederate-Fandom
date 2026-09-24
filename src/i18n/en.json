@@ -1,4 +1,20 @@
 {
+  "access_group_bot": {
+    "status": "verified",
+    "text": "bot"
+  },
+  "access_group_content_moderator": {
+    "status": "verified",
+    "text": "content moderator"
+  },
+  "access_group_rollback": {
+    "status": "verified",
+    "text": "rollbacker"
+  },
+  "access_group_sysop": {
+    "status": "verified",
+    "text": "administrator"
+  },
   "add_where_before_categories": {
     "status": "verified",
     "text": "before the categories (after the article's text)"
@@ -243,6 +259,10 @@
     "status": "verified",
     "text": "That wiki could not be opened: {error}"
   },
+  "family_file_conflict": {
+    "status": "verified",
+    "text": "The family for {host} could not be prepared safely: existing files belong to another host or were created manually."
+  },
   "flag_add_again": {
     "status": "verified",
     "text": "add it even when that text is already on the page"
@@ -297,7 +317,7 @@
   },
   "flag_no_redirect": {
     "status": "verified",
-    "text": "leave no redirect behind (needs an administrator's right)"
+    "text": "leave no redirect behind"
   },
   "flag_no_typos": {
     "status": "verified",
@@ -578,6 +598,14 @@
   "mech_unlink_desc": {
     "status": "verified",
     "text": "remove the links to a page and leave the words behind"
+  },
+  "mechanic_need_move_no_redirect_group": {
+    "status": "verified",
+    "text": "Moving without a redirect requires the content moderator group."
+  },
+  "mechanic_need_rollback_group": {
+    "status": "verified",
+    "text": "Rollback requires the rollbacker group."
   },
   "move_mode_list": {
     "status": "verified",
@@ -969,7 +997,7 @@
   },
   "service_species_no_flag": {
     "status": "verified",
-    "text": "The nightly walk over the Pokemon names was skipped: the account has no bot flag on {wiki}, and hundreds of unflagged edits would flood Recent changes. It needs the local bot group and the High-volume editing grant on the BotPassword."
+    "text": "The nightly walk over the Pokemon names was skipped: the account has no bot flag on {wiki}, and hundreds of unflagged edits would flood Recent changes. It needs the local bot group and the «High-volume (bot) access» grant on the BotPassword."
   },
   "service_started": {
     "status": "verified",
@@ -1047,6 +1075,14 @@
     "status": "verified",
     "text": "Run it: /go {id}\nSee first what it would do, writing nothing: /go {id} dry"
   },
+  "task_missing_basic_rights": {
+    "status": "verified",
+    "text": "The current bot session on {wiki} lacks the required ordinary user permissions."
+  },
+  "task_missing_group_rights": {
+    "status": "verified",
+    "text": "The current bot session on {wiki} lacks permission for this operation. It is available to the following group: {groups}."
+  },
   "task_not_waiting": {
     "status": "verified",
     "text": "Task {id} is «{state}» — there is nothing to confirm."
@@ -1066,6 +1102,10 @@
   "task_refused": {
     "status": "verified",
     "text": "✖ Task {id} — {wiki}: {reason}"
+  },
+  "task_sample_more": {
+    "status": "verified",
+    "text": "… and {count} more"
   },
   "task_started": {
     "status": "verified",
@@ -1155,6 +1195,10 @@
     "status": "verified",
     "text": "{name} ({user_id}) is now a wiki administrator, Fandom account {wiki_user}. Their rights on each wiki are checked before every run."
   },
+  "wikiadmin_claimed": {
+    "status": "verified",
+    "text": "The invitation for @{username} is accepted: the bot has received a message from that account and remembered its ID, {user_id}. Fandom account: {wiki_user}."
+  },
   "wikiadmin_empty": {
     "status": "verified",
     "text": "No wiki administrators have been appointed yet."
@@ -1163,13 +1207,25 @@
     "status": "verified",
     "text": "Wiki administrators:"
   },
+  "wikiadmin_invite_line": {
+    "status": "verified",
+    "text": "telegram: @{username} — on Fandom: {wiki_user} (waiting for a first message to the bot, until {until})"
+  },
+  "wikiadmin_invite_removed": {
+    "status": "verified",
+    "text": "The invitation for @{username} is withdrawn."
+  },
+  "wikiadmin_invited": {
+    "status": "verified",
+    "text": "Invitation for @{username} saved, Fandom account {wiki_user}. Telegram does not tell bots whose an @name is, so the appointment takes effect once @{username} sends the bot anything, /tasks for example: the bot then remembers that account's ID and recognises the person by it from then on, even if the @name changes. The invitation is valid until {until}."
+  },
   "wikiadmin_line": {
     "status": "verified",
     "text": "{platform}: {name} ({user_id}) — on Fandom: {wiki_user}"
   },
   "wikiadmin_no_user": {
     "status": "verified",
-    "text": "It is not clear who is meant. Reply to their message, or give an @name or a numeric ID."
+    "text": "It is not clear who is meant. Give their Telegram @name or numeric ID."
   },
   "wikiadmin_no_wiki_user": {
     "status": "verified",
@@ -1186,5 +1242,9 @@
   "wikiadmin_updated": {
     "status": "verified",
     "text": "{name} ({user_id}) now has the Fandom account {wiki_user}."
+  },
+  "wikiadmin_welcome": {
+    "status": "verified",
+    "text": "You have been made a wiki administrator in this bot, Fandom account {wiki_user}. Your rights on each wiki are checked before every run. What the bot can do: /tasks; to start a task: /run."
   }
 }

@@ -45,6 +45,13 @@ PREVIEW_TITLES = 20
 
 _contexts = {}
 
+_busy = set()
+
+
+def is_busy(task_id):
+    """Whether the worker owns this context; /stop must not close it then."""
+    return task_id in _busy
+
 
 class Context:
     """Everything one running task carries, handed to every mechanic.
@@ -121,12 +128,24 @@ def _build_context(row):
 
 
 def context_for(row):
-    """The context of one task, built once and kept between chunks."""
+    """Reuse preparation, but always read the current preview flag from SQL.
+
+    /go may enable dry mode after planning has cached a live context. Keeping
+    that old flag would turn an explicitly requested preview into real edits.
+    Page reports and notes are checkpointed with progress for process restarts.
+    """
+    import db
+
     ctx = _contexts.get(row["id"])
     if ctx is None:
         ctx = _build_context(row)
         _prepare(ctx)
+        saved = db.task_report(row).get("checkpoint") or {}
+        ctx.report_lines = list(saved.get("report_lines") or [])
+        for note in saved.get("notes") or []:
+            ctx.note(note)
         _contexts[row["id"]] = ctx
+    ctx.dry_run = bool(row["dry_run"])
     return ctx
 
 
@@ -144,6 +163,15 @@ def _prepare(ctx):
 
 
 def plan(task_id):
+    """Retain the preparing context while the messenger may stop this task."""
+    _busy.add(task_id)
+    try:
+        return _plan(task_id)
+    finally:
+        _busy.discard(task_id)
+
+
+def _plan(task_id):
     """Check everything and settle the page list. -> a mapping for the person.
 
     Nothing is written to the wiki here, and that is the whole point: this is
@@ -156,6 +184,8 @@ def plan(task_id):
     row = db.get_task(task_id)
     if row is None:
         raise ValueError("задача не найдена")
+    if row["state"] != "pending":
+        return {}
 
     ctx = _build_context(row)
     requester = ctx.requester
@@ -172,13 +202,17 @@ def plan(task_id):
     pages = 0
     sample = []
     if registry.needs_pages(ctx.mechanics):
-        titles = pagesets.collect(ctx.site, ctx.params)
+        titles = pagesets.collect(
+            ctx.site, ctx.params,
+            redirects=registry.redirects_wanted(ctx.mechanics, ctx.params))
         pages = db.set_pages(task_id, titles)
         sample = titles[:PREVIEW_TITLES]
         if not pages:
             ctx.note("по этому источнику не нашлось ни одной страницы")
 
-    db.set_task_state(task_id, "confirm")
+    if not db.set_task_state(task_id, "confirm", expected_state="pending"):
+        forget(task_id)
+        return {}
     return {"pages": pages, "sample": sample, "notes": list(ctx.notes),
             "destructive": registry.is_destructive(ctx.mechanics),
             "dry_run": ctx.dry_run,
@@ -232,14 +266,15 @@ def _walk_page(ctx, row):
         text = original
         parts = []
         for mechanic in text_mechanics:
+            before = text
             try:
                 text, labels = mechanic.apply(ctx, page, text)
             except Exception as e:
                 logger.exception("mechanic %s failed on %s", mechanic.code, title)
                 return "fail", "{}: {}".format(mechanic.code, report.safe_error(e))
-            if labels:
+            if labels and text != before:
                 parts.append(mechanic.summary_part(ctx, labels))
-        if text != original:
+        if text.rstrip() != original.rstrip():
             summary = _compose_summary(ctx, parts)
             if ctx.diffs is not None:
                 ctx.diffs.add(title, original, text, summary)
@@ -284,6 +319,15 @@ def _walk_page(ctx, row):
 
 
 def run_chunk(task_id):
+    """Keep ownership of the context until the worker finishes its chunk."""
+    _busy.add(task_id)
+    try:
+        return _run_chunk(task_id)
+    finally:
+        _busy.discard(task_id)
+
+
+def _run_chunk(task_id):
     """Walk one chunk of a task's pages. -> True while there is more to do.
 
     The chunk ends on whichever comes first: CHUNK_PAGES pages, CHUNK_SECONDS
@@ -304,21 +348,23 @@ def run_chunk(task_id):
 
     started = time.monotonic()
     cursor = row["cursor"]
-    checked = edited = failed = 0
+    checked = 0
 
     while True:
+        fresh = db.get_task(task_id)
+        if fresh is None or fresh["state"] != "running":
+            return False
+        ctx.dry_run = bool(fresh["dry_run"])
         pages = db.next_pages(task_id, cursor, 1)
         if not pages:
             break
         page_row = pages[0]
         state, note = _walk_page(ctx, page_row)
-        db.mark_page(task_id, page_row["seq"], state, note)
         cursor = page_row["seq"]
         checked += 1
-        if state == "done":
-            edited += 1
-        elif state == "fail":
-            failed += 1
+        db.record_task_page(task_id, cursor, state, note, {
+            "checkpoint": {"notes": list(ctx.notes),
+                           "report_lines": list(ctx.report_lines)}})
 
         if checked >= CHUNK_PAGES:
             break
@@ -328,11 +374,19 @@ def run_chunk(task_id):
             logger.info("task %s yields the worker: something is due", task_id)
             break
 
-    db.bump(task_id, checked=checked, edited=edited, failed=failed, cursor=cursor)
     return bool(db.next_pages(task_id, cursor, 1))
 
 
 def finish(task_id):
+    """Close a task while retaining exclusive ownership of its context."""
+    _busy.add(task_id)
+    try:
+        return _finish(task_id)
+    finally:
+        _busy.discard(task_id)
+
+
+def _finish(task_id):
     """Close a task: the standalone mechanics, the files, the counters.
 
     -> a mapping the caller reports: the counters, the notes and the files.
@@ -341,11 +395,13 @@ def finish(task_id):
     from tasks import report
 
     row = db.get_task(task_id)
-    if row is None:
+    if row is None or row["state"] != "running":
         return {}
     ctx = context_for(row)
 
     for mechanic in ctx.mechanics:
+        if db.get_task(task_id)["state"] != "running":
+            return {}
         try:
             lines = mechanic.finish(ctx)
         except Exception as e:
@@ -367,6 +423,8 @@ def finish(task_id):
         ["{}\t{}".format(entry["title"], entry["note"] or "") for entry in failures])
 
     row = db.get_task(task_id)
+    if row["state"] != "running":
+        return {}
     result = {
         "wiki": ctx.wiki,
         "checked": row["checked"],
@@ -379,6 +437,9 @@ def finish(task_id):
         "files": report.files_of(task_id),
     }
     db.set_report(task_id, {k: v for k, v in result.items() if k != "files"})
-    db.set_task_state(task_id, "done")
+    if not db.set_task_state(task_id, "done", expected_state="running"):
+        """A stop can arrive while the final report is being persisted."""
+        forget(task_id)
+        return {}
     forget(task_id)
     return result

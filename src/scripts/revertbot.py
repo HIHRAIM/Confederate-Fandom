@@ -38,8 +38,9 @@ def prepare(ctx):
         from wiki import rights
 
         if not rights.has_right(ctx.site, "rollback"):
-            raise ValueError("для отката нужно право rollback — его даёт "
-                             "статус откатчика")
+            from utils import localized, service_lang
+            raise ValueError(localized("mechanic_need_rollback_group",
+                                       service_lang()))
     return user.lstrip("@")
 
 
@@ -69,12 +70,20 @@ def act(ctx, page):
     if keep is None:
         return "skip", "все правки в истории от этого участника"
 
+    if revisions[0].text == keep.text:
+        """The bot's own restoration remains authored by the same bot.
+
+        A repeat therefore still finds its edits at the top, but saving the
+        same earlier text again would be a no-op counted as another revert.
+        """
+        return "skip", None
+
     if ctx.dry_run:
         return "skip", "будет откачено правок: {}".format(reverted)
 
     if FLAG_ROLLBACK in flags:
         try:
-            ctx.site.rollbackpage(page, user=user, reason=ctx.summary or "")
+            ctx.site.rollbackpage(page, user=user, summary=ctx.summary or "")
         except Exception as e:
             return "fail", "{}: {}".format(type(e).__name__, e)
         return "done", "откат ({} правок)".format(reverted)

@@ -21,14 +21,21 @@ That is why the class lives in a module of its own.
 """
 from tasks.mechanic import ACTION, REPORT, TEXT, Mechanic
 from tasks.params import Param, asked_params, fill_defaults, parse_flags
-from tasks.registry import (
-    MECHANICS,
-    all_params,
-    find,
-    find_all,
-    is_destructive,
-    needs_pages,
-    numbered,
-    of_kind,
-    rights_for,
+_REGISTRY_EXPORTS = (
+    "MECHANICS", "all_params", "find", "find_all", "is_destructive",
+    "needs_pages", "numbered", "of_kind", "rights_for",
 )
+
+
+def __getattr__(name):
+    """Load the catalogue only when it is requested, after a script's SPEC.
+
+    Importing a script first enters this package to obtain Mechanic. Eagerly
+    loading the catalogue at that point sees the half-initialized script,
+    drops it and shifts every later number. Lazy public re-exports retain the
+    same API while allowing either documented import order.
+    """
+    if name in _REGISTRY_EXPORTS:
+        from tasks import registry
+        return getattr(registry, name)
+    raise AttributeError(name)

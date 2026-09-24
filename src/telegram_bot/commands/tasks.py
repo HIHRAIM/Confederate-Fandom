@@ -48,6 +48,20 @@ async def _deny(message, lang):
     await message.answer(localized("not_admin", lang))
 
 
+def _positive_id(text):
+    """Read a task or schedule id that SQLite can represent, or None.
+
+    A Telegram argument is untrusted text. isdigit also accepts superscript
+    digits that int rejects, and a very large integer cannot be bound by
+    SQLite even when Python can parse it. Reject both as command usage errors
+    before any database lookup.
+    """
+    if not text or len(text) > 19 or not text.isascii() or not text.isdecimal():
+        return None
+    value = int(text)
+    return value if 0 < value <= 9223372036854775807 else None
+
+
 @router.message(Command("tasks"))
 async def tasks_cmd(message: Message):
     """The catalogue: what the bot can be told to do, numbered.
@@ -80,17 +94,23 @@ async def run_cmd(message: Message):
 
 @router.message(Command("go"))
 async def go_cmd(message: Message):
-    """Confirm a planned task and set it going. `dry` runs it without writing."""
+    """Confirm a planned task and set it going. `dry` runs it without writing.
+
+    Reject unknown flags before looking up the task. A misspelled preview
+    flag must never silently become a live run just because it is not exactly
+    the token `dry`.
+    """
     lang = user_lang(message.from_user)
     if _caller(message) is None:
         await _deny(message, lang)
         return
 
     parts = (message.text or "").split()[1:]
-    if not parts or not parts[0].isdigit():
+    task_id = _positive_id(parts[0]) if parts else None
+    flags = [part.lower() for part in parts[1:]]
+    if task_id is None or flags not in ([], ["dry"]):
         await message.answer(localized("go_usage", lang))
         return
-    task_id = int(parts[0])
     row = db.get_task(task_id)
     if row is None:
         await message.answer(localized("task_unknown", lang, id=task_id))
@@ -100,7 +120,7 @@ async def go_cmd(message: Message):
                                        state=row["state"]))
         return
 
-    if "dry" in [part.lower() for part in parts[1:]]:
+    if flags == ["dry"]:
         db.set_dry_run(task_id)
     await task_queue.start(task_id)
 
@@ -124,13 +144,14 @@ async def stop_cmd(message: Message):
         await _deny(message, lang)
         return
     parts = (message.text or "").split()[1:]
-    if not parts or not parts[0].isdigit():
+    task_id = _positive_id(parts[0]) if parts else None
+    if task_id is None:
         await message.answer(localized("stop_usage", lang))
         return
-    if await task_queue.stop(int(parts[0])):
-        await message.answer(localized("stop_done", lang, id=int(parts[0])))
+    if await task_queue.stop(task_id):
+        await message.answer(localized("stop_done", lang, id=task_id))
     else:
-        await message.answer(localized("task_unknown", lang, id=int(parts[0])))
+        await message.answer(localized("task_unknown", lang, id=task_id))
 
 
 @router.message(Command("schedule"))
@@ -143,10 +164,10 @@ async def schedule_cmd(message: Message):
 
     parts = (message.text or "").split()[1:]
     if parts and parts[0].lower() in ("off", "on", "del", "delete"):
-        if len(parts) < 2 or not parts[1].isdigit():
+        schedule_id = _positive_id(parts[1]) if len(parts) >= 2 else None
+        if schedule_id is None:
             await message.answer(localized("schedule_usage_telegram", lang))
             return
-        schedule_id = int(parts[1])
         action = parts[0].lower()
         if action in ("del", "delete"):
             ok = db.delete_schedule(schedule_id)

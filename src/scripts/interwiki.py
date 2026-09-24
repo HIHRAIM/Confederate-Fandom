@@ -86,6 +86,7 @@ import sys
 
 from tasks import mechanic as mech
 from tasks.params import FLAGS, Param
+from scripts import wikitools as wt
 
 logger = logging.getLogger("fd.scripts.interwiki")
 
@@ -192,6 +193,7 @@ def _sister_site(ctx, lang):
             from wiki import families
 
             family, code = families.ensure_family(entry["url"])
+            entry["family"], entry["lang"] = family, code
             site = wiki.get_site(family, code)
         except Exception as e:
             logger.warning("cannot reach the %s wiki: %s", lang, e)
@@ -203,7 +205,12 @@ def _sister_site(ctx, lang):
 
 
 def _exists(ctx, lang, title):
-    """Whether one page exists on one sister wiki, asked once per title."""
+    """Whether one page exists on one sister wiki, asked once per title.
+
+    Opening the sister restores the caller's jar before it returns, so the
+    sister's jar must be selected again for the actual page request. This
+    is equally necessary when its Site came from the cache.
+    """
     import wiki
     import pywikibot
 
@@ -215,6 +222,8 @@ def _exists(ctx, lang, title):
     found = False
     if site is not None:
         try:
+            entry = state["langs"][lang]
+            wiki.use_cookies("{}:{}".format(entry["family"], entry["lang"]))
             found = pywikibot.Page(site, title).exists()
         except Exception as e:
             logger.warning("cannot check %s:%s: %s", lang, title, e)
@@ -242,7 +251,9 @@ def _links_of(ctx, lang, title):
     found = {}
     if site is not None:
         try:
-            text = pywikibot.Page(site, title).text
+            entry = state["langs"][lang]
+            wiki.use_cookies("{}:{}".format(entry["family"], entry["lang"]))
+            text, _saved = _mask_disabled(pywikibot.Page(site, title).text)
             for match in _IW_LINE_RE.finditer(text):
                 found[match.group("lang").lower()] = match.group("title").strip()
         except Exception as e:
@@ -251,6 +262,19 @@ def _links_of(ctx, lang, title):
             wiki.use_cookies(ctx.wiki)
     state["links"][key] = found
     return found
+
+
+def _mask_disabled(text):
+    """Keep commented and escaped examples out of the language graph.
+
+    Moving a ``[[lang:Title]]`` line from inside nowiki or a comment into
+    the final block would turn an intentionally disabled link into a real
+    language link. The same protection is needed when reading sisters.
+    """
+    spans = [(match.start(), match.end())
+             for pattern in (wt.COMMENT_RE, wt.OPAQUE_RE)
+             for match in pattern.finditer(text)]
+    return wt.mask(text, wt.merge_spans(spans))
 
 
 def _strip(text, managed):
@@ -268,6 +292,7 @@ def _strip(text, managed):
     is a question for a person, and rebuilding the block would silently keep
     one and drop the other.
     """
+    text, saved = _mask_disabled(text)
     found, kept, clash = {}, [], False
     after_removal = False
     for line in text.split("\n"):
@@ -286,7 +311,7 @@ def _strip(text, managed):
         if lang in found and found[lang] != title:
             clash = True
         found.setdefault(lang, title)
-    return "\n".join(kept), found, clash
+    return wt.unmask("\n".join(kept), saved), found, clash
 
 
 def _squash(text):

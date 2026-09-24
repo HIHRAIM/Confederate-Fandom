@@ -19,8 +19,8 @@ DISCORD_TOKEN = os.environ["DISCORD_BOT_TOKEN"]
 # (Special:BotPasswords), not the account name: the login name the bot sends is
 # "<WIKI_USERNAME>@<WIKI_BOT_PASSWORD_SUFFIX>". The BotPassword needs the
 # "Edit existing pages" and "Upload new files / Upload, replace and move files"
-# grants for the news, "High-volume editing" for the bot flag, and — for the
-# mechanics that delete, move or protect — the matching grants beside them.
+# grants for the news, "High-volume (bot) access" for the bot flag, and — for
+# the mechanics that delete, move or protect — the matching grants beside them.
 WIKI_USERNAME = os.environ["WIKI_USERNAME"]
 WIKI_BOT_PASSWORD_SUFFIX = os.environ["WIKI_BOT_PASSWORD_SUFFIX"]
 WIKI_BOT_PASSWORD = os.environ["WIKI_BOT_PASSWORD"]
@@ -194,5 +194,5 @@ SPECIES_LIMIT = 0
 # Whether the walk refuses to start when the account has no bot flag on that
 # wiki. It is on by default because the walk is hundreds of edits at once:
 # unflagged, they arrive in Recent changes as a flood. The flag needs both
-# the local bot group and the High-volume editing grant on the BotPassword.
+# the local bot group and the "High-volume (bot) access" grant on the BotPassword.
 SPECIES_REQUIRE_BOT_FLAG = True

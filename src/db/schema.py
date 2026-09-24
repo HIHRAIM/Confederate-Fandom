@@ -108,6 +108,23 @@ CREATE TABLE IF NOT EXISTS wiki_admins (
     PRIMARY KEY (platform, user_id)
 );
 
+-- wiki_admin_invites: a Telegram appointment made by @name that has no
+-- numeric id yet. The Bot API cannot turn an @name into a person's id —
+-- getChat answers for public groups and channels only — so /wikiadmin @name
+-- writes the name here, lower-cased, with the Fandom account, and the first
+-- message the bot receives from an account holding that @name turns the row
+-- into an ordinary wiki_admins row keyed by the id; after that the @name no
+-- longer matters, and whoever takes it over later gets nothing. A row lapses
+-- after db/admins.py: INVITE_DAYS, because the longer it waits the likelier
+-- the @name is to have changed hands. Written by the /wikiadmin command on
+-- Telegram, consumed by telegram_bot/people.py.
+CREATE TABLE IF NOT EXISTS wiki_admin_invites (
+    username TEXT PRIMARY KEY,
+    wiki_user TEXT NOT NULL,
+    added_by TEXT,
+    added_at INTEGER
+);
+
 -- tasks: one run of one or more mechanics over one wiki.
 -- wiki is '<family>:<lang>' as utils.wiki_key spells it. mechanics is a JSON
 -- list of mechanic codes, run in that order over each page; params is a JSON

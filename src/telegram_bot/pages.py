@@ -23,12 +23,13 @@ Not this module's zone: what the lists say (`tasks/lists.py`).
 """
 import html
 import logging
+import re
 import types
 
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
 from telegram_bot.client import router
-from utils import localized, paginate
+from utils import PAGE_CHARS, localized, paginate
 
 logger = logging.getLogger("fd.telegram.pages")
 
@@ -99,6 +100,44 @@ def _allowed(kind, query):
     return access.caller("telegram", user.id, name) is not None
 
 
+def _clip_html(text, budget):
+    """Shorten this module's HTML without cutting a tag or an entity.
+
+    Lists are already formatted when they reach the shared paginator. Its
+    plain-text clipping used to leave long entries with an open code tag or
+    half an ampersand entity, which Telegram rejects. Consume our b/code tags
+    and escaped characters as whole tokens, reserving space for the ellipsis
+    and for closing every tag that is still open.
+    """
+    if len(text) <= budget:
+        return text
+    parts, opened = [], []
+    size = 0
+    tokens = re.finditer(
+        r"</?(?:b|code)>|&(?:#\d+|#x[\da-fA-F]+|[A-Za-z][\w]*);|.",
+        text, re.DOTALL)
+    for match in tokens:
+        token = match.group()
+        pending = list(opened)
+        if token in ("<b>", "<code>"):
+            pending.append(token[1:-1])
+        elif token in ("</b>", "</code>"):
+            pending.pop()
+        closing = sum(len(tag) + 3 for tag in pending)
+        if size + len(token) + closing + 1 > budget:
+            break
+        parts.append(token)
+        size += len(token)
+        opened = pending
+    return "".join(parts) + "…" + "".join(
+        "</{}>".format(tag) for tag in reversed(opened))
+
+
+def _pages(lines):
+    """Keep the shared pagination and make its long lines safe HTML first."""
+    return paginate([_clip_html(line, PAGE_CHARS) for line in lines])
+
+
 def render(title, pages, index, lang):
     """One page as the text of a message."""
     body = [bold(title), "", pages[index]]
@@ -106,7 +145,7 @@ def render(title, pages, index, lang):
         body.append("")
         body.append(esc(localized("page_of", lang, page=index + 1,
                                   total=len(pages))))
-    return "\n".join(body)[:MESSAGE_LIMIT]
+    return _clip_html("\n".join(body), MESSAGE_LIMIT)
 
 
 def keyboard(kind, index, total, lang):
@@ -136,7 +175,7 @@ async def send(message, kind, lang, index=0):
         logger.warning("no such pageable list: %s", kind)
         return
     title, lines = built
-    pages = paginate(lines)
+    pages = _pages(lines)
     index = max(0, min(len(pages) - 1, index))
     await message.answer(render(title, pages, index, lang),
                          parse_mode="HTML",
@@ -150,15 +189,24 @@ async def turn_page(query: CallbackQuery):
 
     Every failure is answered rather than left to spin: an unparseable button,
     a list this version does not know, somebody who may not see it, or an edit
-    Telegram refuses because the text came out identical.
+    Telegram refuses because the text came out identical. Match decimal
+    ASCII indices and guard conversion: isdigit accepts characters such as
+    superscript two that int cannot parse, and lstrip accepted repeated minus
+    signs. Neither malformed data nor an oversized integer may escape before
+    the callback is acknowledged.
     """
     from utils import user_lang
 
     parts = (query.data or "").split(":")
-    if len(parts) != 3 or not parts[2].lstrip("-").isdigit():
+    if (len(parts) != 3 or parts[0] != CALLBACK_PREFIX[:-1]
+            or re.fullmatch(r"-?[0-9]+", parts[2]) is None):
         await query.answer()
         return
-    kind, index = parts[1], int(parts[2])
+    try:
+        kind, index = parts[1], int(parts[2])
+    except ValueError:
+        await query.answer()
+        return
     lang = user_lang(query.from_user)
 
     if not _allowed(kind, query):
@@ -170,7 +218,7 @@ async def turn_page(query: CallbackQuery):
         await query.answer()
         return
     title, lines = built
-    pages = paginate(lines)
+    pages = _pages(lines)
     index = max(0, min(len(pages) - 1, index))
     try:
         await query.message.edit_text(
