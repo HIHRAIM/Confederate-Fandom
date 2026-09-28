@@ -20,6 +20,7 @@ bot's own pages were protected.
 import sys
 
 from tasks import mechanic as mech
+from utils import localized
 from tasks.params import CHOICE, FLAGS, TEXT, Param
 
 ALL = "all"
@@ -48,9 +49,9 @@ def act(ctx, page):
     expiry = (ctx.params.get("protect_expiry") or DEFAULT_EXPIRY).strip()
 
     if ctx.dry_run:
-        return "skip", "будет: " + ", ".join(
+        return "skip", localized("page_protect_will", ctx.reader, what=", ".join(
             "{}={}".format(action, level)
-            for action, level in sorted(protections.items()))
+            for action, level in sorted(protections.items())))
 
     try:
         current = page.protection()

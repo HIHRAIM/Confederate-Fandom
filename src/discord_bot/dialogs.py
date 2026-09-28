@@ -17,7 +17,7 @@ import logging
 
 from tasks.dialog import Conversation
 from tasks.notify import chat_key
-from utils import service_lang
+from utils import lang_of
 
 logger = logging.getLogger("fd.discord.dialogs")
 
@@ -42,7 +42,7 @@ class DiscordConversation(Conversation):
             user_id=user.id,
             display_name=getattr(user, "name", None) or str(user),
             chat_key=chat_key("discord", interaction.channel_id),
-            lang=lang or service_lang())
+            lang=lang or lang_of("discord", user.id))
         self.interaction = interaction
         self.channel = interaction.channel
 

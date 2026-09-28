@@ -72,28 +72,76 @@ def next_due(kind, minutes=None, hour=None, minute=None, weekdays=None, now=None
     return int((now + timedelta(days=7)).timestamp())
 
 
+PENDING = "pending"
+"""The approval state of a schedule no bot administrator has said yes to."""
+
+
 def create_schedule(wiki, mechanics, params, kind, requester, minutes=None,
-                    hour=None, minute=None, weekdays=None, reply_chat=None):
-    """Add a repeating run. -> its id."""
+                    hour=None, minute=None, weekdays=None, reply_chat=None,
+                    pending=False):
+    """Add a repeating run. -> its id.
+
+    `pending` makes it wait for a bot administrator (discord_bot/approvals.py):
+    written disabled and marked PENDING, so it fires nothing until
+    `approve_schedule`, and `set_enabled` will not switch it on either.
+    """
     now = int(time.time())
     row = cur.execute(
         """
         INSERT INTO schedules
             (wiki, mechanics, params, kind, minutes, hour, minute, weekdays,
              enabled, created_by_platform, created_by_id, created_by_name,
-             created_by_wiki_user, reply_chat, created_at, next_run)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?)
+             created_by_wiki_user, reply_chat, created_at, next_run, approval)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (str(wiki), json.dumps(list(mechanics), ensure_ascii=False),
          json.dumps(dict(params or {}), ensure_ascii=False),
-         str(kind), minutes, hour, minute, weekdays,
+         str(kind), minutes, hour, minute, weekdays, 0 if pending else 1,
          (requester or {}).get("platform"), (requester or {}).get("id"),
          (requester or {}).get("name"), (requester or {}).get("wiki_user"),
          reply_chat, now,
-         next_due(kind, minutes, hour, minute, weekdays)),
+         next_due(kind, minutes, hour, minute, weekdays),
+         PENDING if pending else None),
     )
     conn.commit()
     return row.lastrowid
+
+
+def is_pending(row):
+    """Whether a schedule still waits for a bot administrator's decision."""
+    try:
+        return row["approval"] == PENDING
+    except (IndexError, KeyError, TypeError):
+        return False
+
+
+def approve_schedule(schedule_id):
+    """Let a pending schedule run. -> its row, or None when it was not pending.
+
+    The next moment is worked out from now, as when a schedule is switched
+    back on: an approval that took a day does not owe a day of runs.
+    """
+    row = get_schedule(schedule_id)
+    if row is None or not is_pending(row):
+        return None
+    cur.execute(
+        "UPDATE schedules SET approval=NULL, enabled=1, next_run=? "
+        "WHERE id=? AND approval=?",
+        (next_due(row["kind"], row["minutes"], row["hour"], row["minute"],
+                  row["weekdays"]), int(schedule_id), PENDING))
+    conn.commit()
+    return get_schedule(schedule_id)
+
+
+def reject_schedule(schedule_id):
+    """Throw a pending schedule away. -> the row it was, or None."""
+    row = get_schedule(schedule_id)
+    if row is None or not is_pending(row):
+        return None
+    cur.execute("DELETE FROM schedules WHERE id=? AND approval=?",
+                (int(schedule_id), PENDING))
+    conn.commit()
+    return row
 
 
 def get_schedule(schedule_id):
@@ -143,9 +191,13 @@ def mark_fired(row):
 
 
 def set_enabled(schedule_id, enabled):
-    """Switch a repeating run on or off without losing it. -> whether it exists."""
+    """Switch a repeating run on or off without losing it. -> whether it exists.
+
+    A schedule waiting for approval is left as it is, and reported as not
+    switched: switching it on would be the way round the approval. The
+    commands say why before they get here."""
     row = get_schedule(schedule_id)
-    if row is None:
+    if row is None or is_pending(row):
         return False
     if enabled:
         cur.execute(

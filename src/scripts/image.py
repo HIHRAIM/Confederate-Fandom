@@ -26,7 +26,8 @@ import re
 import sys
 
 from tasks import mechanic as mech
-from tasks.params import TEXT, Param
+from utils import Explained
+from tasks.params import BLANK, TEXT, Param
 
 FILE_PREFIX = r"(?:[Фф]айл|[Ff]ile|[Ии]зображение|[Зз]ображення|[Ii]mage|[Мм]едиа|[Mm]edia)"
 
@@ -125,7 +126,7 @@ def prepare(ctx):
     """Check the arguments before a single page is read."""
     name = normalise(ctx.params.get("image_from"))
     if not name:
-        raise ValueError("не указан файл, который нужно заменить или убрать")
+        raise Explained("error_image_no_file")
     return {"name": name, "to": normalise(ctx.params.get("image_to"))}
 
 
@@ -161,6 +162,7 @@ SPEC = mech.Mechanic(
     rights=("edit",),
     params=(
         Param("image_from", TEXT, "param_image_from"),
-        Param("image_to", TEXT, "param_image_to"),
+        Param("image_to", TEXT, "param_image_to",
+              blank=BLANK + ("-", "—", "–")),
     ),
 )

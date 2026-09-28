@@ -20,6 +20,7 @@ import re
 import sys
 
 from tasks import mechanic as mech
+from utils import Explained
 from tasks.params import CHOICE, TEXT, Param
 
 ADD = "add"
@@ -49,9 +50,9 @@ def prepare(ctx):
     name = _clean(ctx.params.get("category_name"))
     target = _clean(ctx.params.get("category_to"))
     if not name:
-        raise ValueError("не указана категория")
+        raise Explained("error_category_no_name")
     if action == MOVE and not target:
-        raise ValueError("не указано, в какую категорию переносить")
+        raise Explained("error_category_no_target")
 
     try:
         prefix = ctx.site.namespace(14)

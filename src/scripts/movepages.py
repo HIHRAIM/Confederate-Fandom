@@ -38,7 +38,8 @@ import re
 import sys
 
 from tasks import mechanic as mech
-from tasks.params import CHOICE, FLAGS, TEXT, Param
+from utils import Explained, localized
+from tasks.params import BLANK, CHOICE, FLAGS, TEXT, Param
 
 PREFIX_ADD = "prefix_add"
 PREFIX_REMOVE = "prefix_remove"
@@ -84,38 +85,32 @@ def prepare(ctx):
         from wiki import rights
 
         if not rights.has_right(ctx.site, "suppressredirect"):
-            from utils import localized, service_lang
-            raise ValueError(localized("mechanic_need_move_no_redirect_group",
-                                       service_lang()))
+            raise rights.explain_missing(ctx.site, ["suppressredirect"])
 
     if mode == LIST:
         from tasks import pagesets
         from tasks.params import parse_pairs
 
         if (ctx.params.get("source") or "") != pagesets.PAIRS:
-            raise ValueError(
-                "переименование списком берёт из одного списка и страницы, и "
-                "новые названия — выберите источник страниц «список "
-                "переименований»")
+            raise Explained("error_move_list_source",
+                            source=lambda lang: localized(
+                                "pageset_" + pagesets.PAIRS, lang))
         pairs = parse_pairs(ctx.params.get("argument"))
         if not pairs:
-            raise ValueError(
-                "в списке не нашлось ни одной пары «старое новое»: по паре в "
-                "строке, пробел в названии пишется подчёркиванием")
+            raise Explained("error_move_no_pairs")
         return {"mode": mode, "pairs": _pair_map(pairs), "argument": "",
                 "pattern": None, "to": ""}
 
     argument = (ctx.params.get("move_argument") or "").strip()
     if not argument:
-        raise ValueError("не указано, что добавлять, убирать или искать в названии")
+        raise Explained("error_move_no_argument")
 
     pattern = None
     if mode == REGEX:
         try:
             pattern = re.compile(argument)
         except re.error as e:
-            raise ValueError("не удалось разобрать выражение «{}»: {}".format(
-                argument, e))
+            raise Explained("error_bad_regex", pattern=argument, error=str(e))
     return {"mode": mode, "argument": argument, "pattern": pattern,
             "pairs": {}, "to": ctx.params.get("move_to") or ""}
 
@@ -157,13 +152,13 @@ def act(ctx, page):
     if not target or target == title:
         return "skip", None
     if not target.strip():
-        return "fail", "новое название оказалось пустым"
+        return "fail", localized("page_move_empty", ctx.reader)
 
     if pywikibot.Page(ctx.site, target).exists():
-        return "fail", "страница «{}» уже существует".format(target)
+        return "fail", localized("page_move_exists", ctx.reader, title=target)
 
     if ctx.dry_run:
-        return "skip", "будет переименована в «{}»".format(target)
+        return "skip", localized("page_move_will", ctx.reader, title=target)
 
     try:
         page.move(target, reason=ctx.summary,
@@ -192,7 +187,7 @@ SPEC = mech.Mechanic(
         )),
         Param("move_argument", TEXT, "param_move_argument",
               depends=("move_mode", RULE_MODES)),
-        Param("move_to", TEXT, "param_move_to",
+        Param("move_to", TEXT, "param_move_to", blank=BLANK,
               depends=("move_mode", REGEX)),
         Param("move_flags", FLAGS, "param_move_flags", options=(
             (FLAG_NO_REDIRECT, "flag_no_redirect"),

@@ -42,6 +42,44 @@ client = discord.Client(intents=intents)
 
 tree = app_commands.CommandTree(client)
 
+DISCORD_LOCALES = {
+    "en-US": "en", "en-GB": "en", "es-ES": "es", "es-419": "es",
+    "pl": "pl", "pt-BR": "pt", "ru": "ru", "uk": "uk",
+}
+"""Discord's client languages, as the codes of the six i18n files."""
+
+
+def slash(key):
+    """The text of one slash-command description, from the i18n files.
+
+    Discord shows these in its command picker, before the bot has said a
+    word, so they cannot follow the person's /lang: they follow the language
+    of the Discord client instead, which is how Discord localizes everything
+    it shows. The English text is the base one — the default language of the
+    bot — and `_Translator` hands Discord the other five. They used to be
+    written in Russian in the decorators, which put Russian in front of
+    everyone whatever their Discord was set to.
+    """
+    from utils import DEFAULT_LANG, localized
+
+    return app_commands.locale_str(localized(key, DEFAULT_LANG), key=key)
+
+
+class _Translator(app_commands.Translator):
+    """Hands Discord the descriptions `slash` marked, in every language the
+    bot speaks. Anything without a key — the command names, the choices —
+    is left as it is."""
+
+    async def translate(self, string, locale, context):
+        """One string in one Discord locale, or None to keep the base text."""
+        from utils import DEFAULT_LANG, has_translation, localized
+
+        key = string.extras.get("key")
+        lang = DISCORD_LOCALES.get(str(locale))
+        if not key or not lang or lang == DEFAULT_LANG or not has_translation(key):
+            return None
+        return localized(key, lang)[:100]
+
 
 @client.event
 async def on_ready():
@@ -53,6 +91,8 @@ async def on_ready():
     start.
     """
     try:
+        if tree.translator is None:
+            await tree.set_translator(_Translator())
         synced = await tree.sync()
         logger.info("connected to Discord as %s, %s commands synced",
                     client.user, len(synced))
@@ -66,18 +106,18 @@ async def on_command_error(interaction, error):
     """Answer a command that raised, and put the reason in the log.
 
     What the person sees is deliberately short: the details belong in the log,
-    and an interaction that is never answered leaves «приложение не отвечает»
-    on their screen for ever.
+    and an interaction that is never answered leaves "The application did not
+    respond" on their screen for ever.
     """
+    from utils import lang_of, localized
+
     logger.exception("a Discord command failed: %s", error)
     try:
+        text = localized("command_failed", lang_of("discord", interaction.user.id))
         if interaction.response.is_done():
-            await interaction.followup.send("Команда не отработала — "
-                                            "подробности в служебном канале.")
+            await interaction.followup.send(text)
         else:
-            await interaction.response.send_message(
-                "Команда не отработала — подробности в служебном канале.",
-                ephemeral=True)
+            await interaction.response.send_message(text, ephemeral=True)
     except Exception:
         pass
 
@@ -113,14 +153,16 @@ async def send_log(channel_id, text):
         logger.warning("could not write to the Discord channel %s: %s", channel_id, e)
 
 
-async def send_files(channel_id, paths, caption=None):
+async def send_files(channel_id, paths, caption=None, lang=None):
     """Send a task's files into one channel. Never raises.
 
     Discord takes ten attachments per message and caps each at the server's
     upload limit; a file that is too large is skipped with a line saying so,
     because a run whose report will not fit still made its edits and the
-    person needs to hear that much.
+    person needs to hear that much. `lang` is the language of that line.
     """
+    from utils import DEFAULT_LANG, localized
+
     channel = await _channel(channel_id)
     if channel is None:
         return
@@ -140,7 +182,8 @@ async def send_files(channel_id, paths, caption=None):
                                         if caption else None),
                                files=attachments)
         if skipped:
-            await channel.send("Не удалось приложить: " + "; ".join(skipped))
+            await channel.send(localized("files_not_attached", lang or DEFAULT_LANG,
+                                         files="; ".join(skipped)))
     except Exception as e:
         logger.warning("could not send files to the Discord channel %s: %s",
                        channel_id, e)

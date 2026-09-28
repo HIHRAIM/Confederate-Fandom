@@ -16,6 +16,8 @@ Because the wiki work can now be delegated, the bot stores something about ident
 
 On Telegram an administrator names the person by their `@name`, and Telegram does not tell a bot whose an `@name` is. So an appointment made by `@name` is kept as an **invitation** — the `@name`, the Fandom account, who made it and when — until the account holding that `@name` first writes to the bot, when it becomes the ordinary appointment keyed by the numeric id. To find that moment the bot compares the `@name` of each message it receives with the waiting invitations; a message that matches none leaves nothing behind.
 
+Anybody who writes `/lang` chooses the language the bot answers them in, and that choice is kept: their messenger, their numeric id there and the language. Nothing else about them — and nothing at all when the language is English, which is the default and deletes an earlier choice.
+
 ## What the bot stores
 
 All data lives in a local SQLite database (`src/fd.db`) on the operator's machine.
@@ -26,6 +28,7 @@ All data lives in a local SQLite database (`src/fd.db`) on the operator's machin
 | Slot state | For each wiki and each of the three news slots: the message it was built from and the identifier of the picture uploaded into it | Overwritten at each pass; three rows per wiki |
 | Bookkeeping | The numeric id and `@name` the followed channel resolved to, the time of the last pass, the error text of the last failed pass | Overwritten; kept until the file is deleted |
 | Wiki administrators | For each person the operator appoints: the messenger, their numeric id there, their display name, their account name on Fandom, and who appointed them and when | Until `/remwikiadmin`, or until the file is deleted |
+| Language choices | For each person who chose a language other than English with `/lang`: the messenger, their numeric id there, the language, and when it was chosen | Until the person chooses English, or until the file is deleted |
 | Telegram invitations | For an appointment made by `@name` that no account has claimed yet: the `@name`, the Fandom account, and who made it and when | Until claimed or withdrawn with `/remwikiadmin`, and never longer than **7 days** |
 | Tasks and schedules | What was asked for, on which wiki, with which parameters, by whom (messenger, id, display name, Fandom account), when it ran and what it changed | The page list of a finished run is deleted after **30 days**; the row is kept as the record of who asked for what |
 
@@ -42,7 +45,9 @@ The Telegram token and the wiki password are read from `src/.env`, which is neve
 - **To any Fandom wiki an administrator names in a task**, and only what that task was asked to do there. The bot refuses to work on a wiki where its account holds no status (bot, content moderator or administrator), and refuses a request from a wiki administrator who holds no rights on that particular wiki — both checks are made against the wiki itself, before anything is written.
 - **To the person who asked for a run**, in the chat they asked from: the counters, and the files described above.
 - **To the service chats and channels**, if the operator configured any — in Telegram and in Discord alike: what a news pass changed and what it could not do, when the bot started and stopped, and a line per task saying that it started, how far it has got and how it ended, naming who asked for it by their username and numeric id in brackets. Never as a mention, and no post text.
-- **Nowhere else.** The software talks to Telegram's Bot API, to Discord's API, and to the wikis it is configured for or told to work on.
+- **To the Discord log channels, when a repeating run waits for approval**: the wiki, the mechanics, when it would run, the edit summary, and who asked for it — name, numeric id and Fandom account — with a ping of the first bot administrator. The person who asked is told the decision in a private message.
+- **To a GitHub repository, if the operator set up the archive module** (`config.MYARCHIVE`): the current text of the wiki pages listed there, and in each commit message the Fandom account names of the people who edited the page since it was last archived, with the GitHub accounts the operator linked to some of them added as co-authors. All of it is already public on the wiki; the repository is where the operator keeps a copy.
+- **Nowhere else.** The software talks to Telegram's Bot API, to Discord's API, to the wikis it is configured for or told to work on, and — with the archive module — to GitHub's API.
 
 ## What other people can see
 

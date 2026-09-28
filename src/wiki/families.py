@@ -32,6 +32,8 @@ import sys
 
 import requests
 
+from utils import Explained
+
 logger = logging.getLogger("fd.wiki.families")
 
 FAMILIES_DIR = os.path.join(
@@ -85,7 +87,7 @@ def family_name(host):
     label = str(host).strip().lower().split("/")[0].split(".")[0]
     cleaned = re.sub(r"[^a-z0-9]", "", label)
     if not cleaned:
-        raise ValueError("непонятный домен: {!r}".format(host))
+        raise Explained("error_wiki_bad_domain", host=str(host))
     if cleaned[0].isdigit():
         cleaned = "w" + cleaned
     return cleaned
@@ -102,7 +104,7 @@ def parse_target(text):
     """
     text = str(text or "").strip()
     if not text:
-        raise ValueError("не указана вики")
+        raise Explained("error_wiki_empty")
 
     if ":" in text and "/" not in text and "." not in text:
         family, _, lang = text.partition(":")
@@ -115,7 +117,7 @@ def parse_target(text):
 
     m = _URL_RE.match(text)
     if not m:
-        raise ValueError("непонятный адрес вики: {!r}".format(text))
+        raise Explained("error_wiki_bad_address", text=text)
     host = m.group("host").lower()
     path = (m.group("path") or "").rstrip("/")
 
@@ -152,7 +154,7 @@ def _probe(host, path):
     data = response.json()
     general = (data.get("query") or {}).get("general")
     if not general:
-        raise RuntimeError("вики {} не отвечает как MediaWiki".format(url))
+        raise Explained("error_wiki_not_mediawiki", url=url)
     return general
 
 
@@ -219,8 +221,7 @@ def _generated_for(family, host):
 
 def _family_conflict(host):
     """Explain a protected family-file conflict without exposing local paths."""
-    from utils import localized, service_lang
-    return ValueError(localized("family_file_conflict", service_lang(), host=host))
+    return Explained("family_file_conflict", host=host)
 
 
 def _family_for_host(preferred, host, lang):
@@ -313,13 +314,11 @@ def ensure_family(target):
         if known is not None and lang and lang in known:
             return family, lang
         if known is None:
-            raise ValueError(
-                "вики «{}» бот не знает — укажите домен целиком".format(family))
+            raise Explained("error_wiki_unknown_family", family=family)
         if lang is None:
-            raise ValueError("не указан языковой раздел вики {}".format(family))
-        raise ValueError(
-            "в вики {} нет раздела «{}»; есть: {}".format(
-                family, lang, ", ".join(sorted(known))))
+            raise Explained("error_wiki_no_lang", family=family)
+        raise Explained("error_wiki_no_section", family=family, lang=lang,
+                        langs=", ".join(sorted(known)))
 
     host = str(host).lower()
     if lang:

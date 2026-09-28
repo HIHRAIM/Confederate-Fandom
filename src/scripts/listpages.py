@@ -16,6 +16,7 @@ sizes and timestamps is one per page.
 import sys
 
 from tasks import mechanic as mech
+from utils import localized
 from tasks.params import FLAGS, Param
 
 FLAG_SIZE = "size"
@@ -43,14 +44,17 @@ def collect(ctx, page):
             except Exception:
                 parts.append("-> ?")
         if FLAG_SIZE in flags:
-            parts.append("{} б".format(len(page.text.encode("utf-8"))))
+            parts.append(localized("report_list_bytes", ctx.reader,
+                                   size=len(page.text.encode("utf-8"))))
         if FLAG_TIMESTAMP in flags:
             parts.append(str(page.latest_revision.timestamp))
         if FLAG_CATEGORIES in flags:
             names = [category.title(with_ns=False) for category in page.categories()]
-            parts.append("; ".join(names) if names else "без категорий")
+            parts.append("; ".join(names) if names
+                         else localized("report_list_no_categories", ctx.reader))
     except Exception as e:
-        parts.append("не удалось прочитать: {}".format(type(e).__name__))
+        parts.append(localized("report_unreadable", ctx.reader,
+                               error=type(e).__name__))
     return ["\t".join(parts)]
 
 

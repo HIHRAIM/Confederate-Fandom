@@ -3,6 +3,10 @@
     "status": "verified",
     "text": "bot"
   },
+  "access_group_bureaucrat": {
+    "status": "unverified",
+    "text": "biurokrata"
+  },
   "access_group_content_moderator": {
     "status": "verified",
     "text": "moderator treści"
@@ -14,6 +18,10 @@
   "access_group_sysop": {
     "status": "verified",
     "text": "administrator"
+  },
+  "access_group_threadmoderator": {
+    "status": "unverified",
+    "text": "moderator dyskusji"
   },
   "add_where_before_categories": {
     "status": "unverified",
@@ -91,6 +99,14 @@
     "status": "unverified",
     "text": "/jobs — co trwa teraz i jak skończyły się ostatnie zadania"
   },
+  "cmd_lang_dc": {
+    "status": "unverified",
+    "text": "/lang code: <język> — język, w którym bot odpowiada tobie; bez niego pokazuje obecny"
+  },
+  "cmd_lang_tg": {
+    "status": "unverified",
+    "text": "/lang <kod> — język, w którym bot odpowiada tobie: en, es, pl, pt, ru, uk; samo /lang pokazuje obecny"
+  },
   "cmd_remwikiadmin_dc": {
     "status": "unverified",
     "text": "/remwikiadmin user: <kto> — odbierz nominację"
@@ -117,7 +133,7 @@
   },
   "cmd_status": {
     "status": "unverified",
-    "text": "/status — co jest w slotach i kiedy był ostatni przebieg"
+    "text": "/status — stan wiadomości i kolejki zadań"
   },
   "cmd_stop_dc": {
     "status": "unverified",
@@ -143,6 +159,10 @@
     "status": "unverified",
     "text": "/wikiadmin — kto jest administratorem wiki; /wikiadmin <@nazwa lub ID> <konto Fandom> mianuje"
   },
+  "command_failed": {
+    "status": "unverified",
+    "text": "Polecenie nie zadziałało — szczegóły są w dzienniku bota."
+  },
   "dialog_bad_choice": {
     "status": "unverified",
     "text": "Nie ma takiego numeru na liście. Odpowiedz jednym z nich."
@@ -151,6 +171,10 @@
     "status": "unverified",
     "text": "Numery po spacji, albo «0», jeśli nic z tego."
   },
+  "dialog_bad_minutes": {
+    "status": "unverified",
+    "text": "Minuty to liczby od 0 do 59 po przecinku, na przykład «0, 30»."
+  },
   "dialog_bad_time": {
     "status": "unverified",
     "text": "Godzinę pisze się «GG:MM», na przykład «20:00»."
@@ -158,6 +182,10 @@
   "dialog_bad_value": {
     "status": "unverified",
     "text": "Nie zrozumiałem odpowiedzi. Spróbuj jeszcze raz."
+  },
+  "dialog_bad_weekdays": {
+    "status": "unverified",
+    "text": "Dni tygodnia to liczby od 1 do 7 po przecinku: 1 to poniedziałek, 7 to niedziela."
   },
   "dialog_failed": {
     "status": "unverified",
@@ -173,11 +201,11 @@
   },
   "dialog_limit": {
     "status": "unverified",
-    "text": "Najwyżej ile stron? «0» lub «-» to wszystkie."
+    "text": "Najwyżej ile stron? «0» to wszystkie."
   },
   "dialog_namespaces": {
     "status": "unverified",
-    "text": "W jakich przestrzeniach nazw? Numery po przecinku; «0» lub «-» to tylko artykuły."
+    "text": "Z których przestrzeni nazw brać strony? Numery po przecinku, na przykład «0, 14»: 0 — artykuły, 2 — użytkownicy, 4 — strony projektu, 6 — pliki, 10 — szablony, 14 — kategorie, 828 — moduły. «wszystkie» — wszystkie przestrzenie nazw."
   },
   "dialog_opened": {
     "status": "unverified",
@@ -229,7 +257,7 @@
   },
   "dialog_summary": {
     "status": "unverified",
-    "text": "Opis edycji? Sam myślnik «-» i bot napisze, co naprawdę zrobił."
+    "text": "Opis edycji? «0» i bot napisze, co naprawdę zrobił."
   },
   "dialog_when": {
     "status": "unverified",
@@ -245,7 +273,7 @@
   },
   "dialog_when_weekdays": {
     "status": "unverified",
-    "text": "W które dni tygodnia? Numery po przecinku, 0 to poniedziałek. Na przykład «0,3»."
+    "text": "W które dni tygodnia? Numery po przecinku: 1 — poniedziałek … 7 — niedziela. Na przykład «1, 4»."
   },
   "dialog_wiki": {
     "status": "unverified",
@@ -259,9 +287,125 @@
     "status": "unverified",
     "text": "Nie udało się otworzyć tej wiki: {error}"
   },
+  "error_addtext_no_text": {
+    "status": "unverified",
+    "text": "Nie podano tekstu do dodania."
+  },
+  "error_bad_regex": {
+    "status": "unverified",
+    "text": "Nie udało się odczytać wyrażenia «{pattern}»: {error}"
+  },
+  "error_category_no_name": {
+    "status": "unverified",
+    "text": "Nie podano kategorii."
+  },
+  "error_category_no_target": {
+    "status": "unverified",
+    "text": "Nie podano, do której kategorii przenieść."
+  },
+  "error_delete_no_reason": {
+    "status": "unverified",
+    "text": "Usunięcie wymaga powodu — trafi on do rejestru usunięć. Podaj go jako opis edycji."
+  },
+  "error_delinker_log": {
+    "status": "unverified",
+    "text": "Nie udało się odczytać rejestru usunięć: {error}"
+  },
+  "error_graph_no_root": {
+    "status": "unverified",
+    "text": "Nie podano kategorii, od której zacząć."
+  },
+  "error_image_no_file": {
+    "status": "unverified",
+    "text": "Nie podano pliku do zamiany lub usunięcia."
+  },
+  "error_interwiki_map": {
+    "status": "unverified",
+    "text": "Nie udało się odczytać tabeli interwiki: {error}"
+  },
+  "error_move_list_source": {
+    "status": "unverified",
+    "text": "Zmiana nazw z listy bierze z jednej listy i strony, i nowe nazwy — wybierz źródło stron «{source}»."
+  },
+  "error_move_no_argument": {
+    "status": "unverified",
+    "text": "Nie podano, co dodać, usunąć lub znaleźć w nazwie."
+  },
+  "error_move_no_pairs": {
+    "status": "unverified",
+    "text": "Na liście nie ma żadnej pary «stara nowa»: jedna para w wierszu, spacja w nazwie jako podkreślnik."
+  },
+  "error_no_mechanics": {
+    "status": "unverified",
+    "text": "W zadaniu nie została żadna mechanika."
+  },
+  "error_replace_no_find": {
+    "status": "unverified",
+    "text": "Nie podano, czego szukać."
+  },
+  "error_revert_no_user": {
+    "status": "unverified",
+    "text": "Nie podano, czyje edycje wycofać."
+  },
+  "error_source_needs_argument": {
+    "status": "unverified",
+    "text": "To źródło wymaga strony lub zapytania."
+  },
+  "error_task_not_found": {
+    "status": "unverified",
+    "text": "Nie znaleziono zadania."
+  },
+  "error_templatecount_none": {
+    "status": "unverified",
+    "text": "Nie podano żadnego szablonu."
+  },
+  "error_unknown_mechanics": {
+    "status": "unverified",
+    "text": "Nieznane mechaniki: {codes}"
+  },
+  "error_unknown_source": {
+    "status": "unverified",
+    "text": "Nieznane źródło stron: {source}"
+  },
+  "error_unlink_no_title": {
+    "status": "unverified",
+    "text": "Nie podano strony, do której linki usunąć."
+  },
+  "error_wiki_bad_address": {
+    "status": "unverified",
+    "text": "To nie wygląda na adres wiki: {text}"
+  },
+  "error_wiki_bad_domain": {
+    "status": "unverified",
+    "text": "To nie wygląda na domenę: {host}"
+  },
+  "error_wiki_empty": {
+    "status": "unverified",
+    "text": "Nie podano wiki."
+  },
+  "error_wiki_no_lang": {
+    "status": "unverified",
+    "text": "Nie podano wersji językowej wiki {family}."
+  },
+  "error_wiki_no_section": {
+    "status": "unverified",
+    "text": "Wiki {family} nie ma wersji «{lang}»; są: {langs}."
+  },
+  "error_wiki_not_mediawiki": {
+    "status": "unverified",
+    "text": "{url} nie odpowiada jak MediaWiki."
+  },
+  "error_wiki_unknown_family": {
+    "status": "unverified",
+    "text": "Bot nie zna wiki «{family}» — podaj całą domenę."
+  },
   "family_file_conflict": {
     "status": "verified",
     "text": "Nie można bezpiecznie przygotować rodziny dla {host}: istniejące pliki dotyczą innego hosta lub zostały utworzone ręcznie."
+  },
+  "files_not_attached": {
+    "status": "unverified",
+    "text": "Nie udało się dołączyć: {files}"
   },
   "flag_add_again": {
     "status": "unverified",
@@ -379,6 +523,42 @@
     "status": "unverified",
     "text": "Jak to działa: /go <numer zadania> uruchamia, /go <numer> dry pokazuje podgląd bez edycji."
   },
+  "grant_createeditmovepage": {
+    "status": "verified",
+    "text": "Tworzenie, edycja i przenoszenie stron"
+  },
+  "grant_delete": {
+    "status": "verified",
+    "text": "Usuwanie stron, wersji stron i wpisów rejestru"
+  },
+  "grant_editpage": {
+    "status": "verified",
+    "text": "Edycja istniejących stron"
+  },
+  "grant_editprotected": {
+    "status": "verified",
+    "text": "Edycja stron zabezpieczonych"
+  },
+  "grant_highvolume": {
+    "status": "verified",
+    "text": "Masowy dostęp (bot)"
+  },
+  "grant_protect": {
+    "status": "verified",
+    "text": "Zabezpieczanie i odbezpieczanie stron"
+  },
+  "grant_rollback": {
+    "status": "verified",
+    "text": "Wycofywanie zmian na stronach"
+  },
+  "grant_uploadeditmovefile": {
+    "status": "verified",
+    "text": "Przesyłanie, zamiana i przenoszenie plików"
+  },
+  "grant_uploadfile": {
+    "status": "verified",
+    "text": "Przesyłanie nowych plików"
+  },
   "graph_shape_dot": {
     "status": "unverified",
     "text": "plikiem .dot dla Graphviza"
@@ -397,7 +577,7 @@
   },
   "help_intro": {
     "status": "unverified",
-    "text": "Confederate Fandom — bot dla wiki Fandom: wiadomości na stronach głównych, nocne ujednolicanie nazw i zadania uruchamiane na życzenie."
+    "text": "Confederate Fandom — bot do automatyzacji pracy na wiki Fandomu z Discorda i Telegrama."
   },
   "help_news": {
     "status": "unverified",
@@ -406,6 +586,14 @@
   "help_wiki": {
     "status": "unverified",
     "text": "Prace na wiki"
+  },
+  "help_you": {
+    "status": "unverified",
+    "text": "Twoje ustawienia"
+  },
+  "job_archive": {
+    "status": "unverified",
+    "text": "archiwum stron"
   },
   "job_backup": {
     "status": "unverified",
@@ -446,6 +634,18 @@
   "jobs_title": {
     "status": "unverified",
     "text": "Kolejka i zadania"
+  },
+  "lang_current": {
+    "status": "unverified",
+    "text": "Język odpowiedzi bota dla ciebie: {name}. Zmiana: {how}. Dostępne: {langs}."
+  },
+  "lang_set": {
+    "status": "unverified",
+    "text": "Gotowe. Język odpowiedzi bota: {name}."
+  },
+  "lang_unknown": {
+    "status": "unverified",
+    "text": "Bot nie zna języka «{code}». Dostępne: {langs}."
   },
   "mech_addtext": {
     "status": "unverified",
@@ -599,14 +799,6 @@
     "status": "unverified",
     "text": "usuń linki do strony, zostawiając sam tekst"
   },
-  "mechanic_need_move_no_redirect_group": {
-    "status": "verified",
-    "text": "Do przenoszenia bez przekierowania potrzebna jest grupa moderatorów treści."
-  },
-  "mechanic_need_rollback_group": {
-    "status": "verified",
-    "text": "Do wycofywania zmian potrzebna jest grupa wycofujących."
-  },
   "move_mode_list": {
     "status": "unverified",
     "text": "z listy par «stara nowa»"
@@ -631,9 +823,93 @@
     "status": "unverified",
     "text": "usunąć z końca"
   },
+  "news_off": {
+    "status": "unverified",
+    "text": "Moduł wiadomości nie jest skonfigurowany w tej instalacji bota."
+  },
   "not_admin": {
     "status": "unverified",
     "text": "Polecenie tylko dla administratorów bota."
+  },
+  "note_delinker_count": {
+    "status": "unverified",
+    "text": "Plików usuniętych w tym okresie: {count}"
+  },
+  "note_delinker_none": {
+    "status": "unverified",
+    "text": "W wybranym okresie nie usunięto żadnych plików — nie ma czego usuwać."
+  },
+  "note_graph_cut": {
+    "status": "unverified",
+    "text": "Drzewo przycięto na {count} kategoriach."
+  },
+  "note_graph_size": {
+    "status": "unverified",
+    "text": "Kategorii w drzewie: {count}"
+  },
+  "note_interwiki_clash": {
+    "status": "unverified",
+    "text": "Strona «{title}» ma dwa linki do jednego języka — pozostawiona bez zmian."
+  },
+  "note_interwiki_elsewhere": {
+    "status": "unverified",
+    "text": "Na innym hoście: {langs} — ich linki zostają, ale nie są sprawdzane ani uzupełniane."
+  },
+  "note_interwiki_langs": {
+    "status": "unverified",
+    "text": "Wersje językowe: {langs}"
+  },
+  "note_interwiki_none": {
+    "status": "unverified",
+    "text": "Ta wiki nie deklaruje żadnych wersji językowych — nie ma dokąd linkować."
+  },
+  "note_interwiki_unreachable": {
+    "status": "unverified",
+    "text": "Wersja «{lang}» jest niedostępna: {error}"
+  },
+  "note_mechanic_failed": {
+    "status": "unverified",
+    "text": "{code}: {error}"
+  },
+  "note_no_pages": {
+    "status": "unverified",
+    "text": "To źródło nie zwróciło żadnej strony."
+  },
+  "note_redirect_broken": {
+    "status": "unverified",
+    "text": "Zerwane przekierowanie: {title} -> {target}"
+  },
+  "note_revert_no_rollback": {
+    "status": "unverified",
+    "text": "Wycofanie jest niedostępne, więc edycje są cofane zwykłą edycją. {reason}"
+  },
+  "note_templatecount_total": {
+    "status": "unverified",
+    "text": "Stron z tymi szablonami: {count}"
+  },
+  "page_delete_gone": {
+    "status": "unverified",
+    "text": "strony już nie ma"
+  },
+  "page_delete_talk_kept": {
+    "status": "unverified",
+    "text": "strona usunięta, jej dyskusja nie: {error}"
+  },
+  "page_delete_will": {
+    "status": "unverified",
+    "text": "zostałaby usunięta"
+  },
+  "page_move_empty": {
+    "status": "unverified",
+    "text": "nowa nazwa wyszła pusta"
+  },
+  "page_move_exists": {
+    "status": "unverified",
+    "text": "strona «{title}» już istnieje"
+  },
+  "page_move_will": {
+    "status": "unverified",
+    "text": "zostałaby przemianowana na «{title}»"
   },
   "page_next": {
     "status": "unverified",
@@ -651,9 +927,37 @@
     "status": "unverified",
     "text": "◀ Wstecz"
   },
+  "page_protect_will": {
+    "status": "unverified",
+    "text": "byłoby: {what}"
+  },
+  "page_revert_all_theirs": {
+    "status": "unverified",
+    "text": "wszystkie edycje w historii są tego konta"
+  },
+  "page_revert_done": {
+    "status": "unverified",
+    "text": "wycofane edycje: {count}"
+  },
+  "page_revert_no_history": {
+    "status": "unverified",
+    "text": "brak historii"
+  },
+  "page_revert_not_last": {
+    "status": "unverified",
+    "text": "ostatnia edycja nie jest autorstwa «{user}»"
+  },
+  "page_revert_rolled_back": {
+    "status": "unverified",
+    "text": "wycofano, edycji: {count}"
+  },
+  "page_revert_will": {
+    "status": "unverified",
+    "text": "edycje do wycofania: {count}"
+  },
   "pageset_all": {
     "status": "unverified",
-    "text": "wszystkie strony wiki"
+    "text": "wszystkie strony z wybranej przestrzeni nazw"
   },
   "pageset_backlinks": {
     "status": "unverified",
@@ -685,7 +989,7 @@
   },
   "pageset_recent": {
     "status": "unverified",
-    "text": "ostatnio zmienione strony"
+    "text": "strony zmienione w ciągu ostatnich 7 dni"
   },
   "pageset_search": {
     "status": "unverified",
@@ -757,7 +1061,7 @@
   },
   "param_image_to": {
     "status": "unverified",
-    "text": "Na który plik zamienić? Sam myślnik «-» usuwa całkiem."
+    "text": "Na który plik zamienić? «0» usuwa całkiem."
   },
   "param_interwiki_flags": {
     "status": "unverified",
@@ -781,7 +1085,7 @@
   },
   "param_move_to": {
     "status": "unverified",
-    "text": "Czym zastąpić znalezione w nazwie? Działają \\1, \\2."
+    "text": "Czym zastąpić znalezione w nazwie? Działają \\1, \\2; «0» usuwa znalezione."
   },
   "param_pravopys_uk_flags": {
     "status": "unverified",
@@ -809,7 +1113,7 @@
   },
   "param_replace": {
     "status": "unverified",
-    "text": "Czym zastąpić? Sam myślnik «-» usuwa znalezione."
+    "text": "Czym zastąpić? «0» usuwa znalezione."
   },
   "param_replace_flags": {
     "status": "unverified",
@@ -911,9 +1215,113 @@
     "status": "unverified",
     "text": "skieruj linki idące przez przekierowanie prosto do celu"
   },
+  "refusal_bot_no_status": {
+    "status": "unverified",
+    "text": "Na {wiki} bot nie ma ani statusu bota, ani moderatora treści, ani administratora{current}. Bez jednego z nich nie bierze się do pracy: setka edycji z konta bez statusu to powód do blokady."
+  },
+  "refusal_caller_no_standing": {
+    "status": "unverified",
+    "text": "{user} nie ma szczególnych uprawnień na {wiki}{current}. Uruchamiać pracę bota na tej wiki może tylko ktoś z jednym z tych statusów: {groups}."
+  },
+  "refusal_current_groups": {
+    "status": "unverified",
+    "text": " (obecnie: {groups})"
+  },
+  "refusal_no_fandom_account": {
+    "status": "unverified",
+    "text": "Nie masz zapisanego konta na Fandomie — poproś administratora bota, by mianował cię ponownie, podając nazwę konta."
+  },
+  "refusal_rights_unreadable": {
+    "status": "unverified",
+    "text": "Nie udało się sprawdzić twoich uprawnień na {wiki}: {error}"
+  },
+  "report_diff_done": {
+    "status": "unverified",
+    "text": "Wykonane edycje"
+  },
+  "report_diff_dry": {
+    "status": "unverified",
+    "text": "Podgląd edycji (nic nie zapisano)"
+  },
+  "report_diff_wiki": {
+    "status": "unverified",
+    "text": "wiki: {wiki}"
+  },
+  "report_errors_title": {
+    "status": "unverified",
+    "text": "Nie udało się przetworzyć — zadanie {id} — {wiki}"
+  },
+  "report_graph_seen": {
+    "status": "unverified",
+    "text": "(już wyżej w drzewie)"
+  },
+  "report_line_error": {
+    "status": "unverified",
+    "text": "błąd: {error}"
+  },
+  "report_list_bytes": {
+    "status": "unverified",
+    "text": "{size} B"
+  },
+  "report_list_no_categories": {
+    "status": "unverified",
+    "text": "bez kategorii"
+  },
+  "report_template_failed": {
+    "status": "unverified",
+    "text": "nie udało się policzyć: {error}"
+  },
+  "report_template_missing": {
+    "status": "unverified",
+    "text": "nie ma takiego szablonu"
+  },
+  "report_title": {
+    "status": "unverified",
+    "text": "Raport zadania {id} — {wiki}"
+  },
+  "report_unreadable": {
+    "status": "unverified",
+    "text": "nie udało się odczytać: {error}"
+  },
+  "requester_with_wiki_user": {
+    "status": "unverified",
+    "text": "{name} ({id}, na wiki {wiki_user})"
+  },
   "run_unknown": {
     "status": "unverified",
     "text": "Nie ma takiej mechaniki: {what}. Pełna lista — /tasks."
+  },
+  "schedule_already_decided": {
+    "status": "unverified",
+    "text": "W sprawie harmonogramu {id} już zdecydowano albo już go nie ma."
+  },
+  "schedule_approval_request": {
+    "status": "unverified",
+    "text": "Prośba o cykliczne uruchomienie {id} od {who} ({platform}).\nWiki: {wiki}\nMechaniki: {mechanics}\nKiedy: {when}\nOpis edycji: {summary}\nUruchomić?"
+  },
+  "schedule_approval_unavailable": {
+    "status": "unverified",
+    "text": "Cykliczne uruchomienia startują tu dopiero po zatwierdzeniu przez administratora bota, a nie ma kanału, w którym można go zapytać. Harmonogramu nie utworzono — napisz do administratora bota."
+  },
+  "schedule_approved": {
+    "status": "unverified",
+    "text": "Cykliczne uruchomienie {id} zatwierdzono i będzie działać: {wiki}, {mechanics}, {when}."
+  },
+  "schedule_approved_by": {
+    "status": "unverified",
+    "text": "✅ Zatwierdzone przez: {who}"
+  },
+  "schedule_awaiting": {
+    "status": "unverified",
+    "text": "Harmonogram {id} wciąż czeka na zatwierdzenie przez administratora bota — nie można go jeszcze włączyć."
+  },
+  "schedule_button_approve": {
+    "status": "unverified",
+    "text": "Zatwierdź"
+  },
+  "schedule_button_reject": {
+    "status": "unverified",
+    "text": "Odrzuć"
   },
   "schedule_created": {
     "status": "unverified",
@@ -951,6 +1359,18 @@
     "status": "unverified",
     "text": "Harmonogram {id} włączony."
   },
+  "schedule_pending": {
+    "status": "unverified",
+    "text": "Harmonogram {id} ({wiki}, {mechanics}, {when}) wysłano do zatwierdzenia administratorowi bota. Nie uruchomi się, dopóki nie zostanie zatwierdzony; o decyzji bot napisze ci w prywatnej wiadomości."
+  },
+  "schedule_rejected": {
+    "status": "unverified",
+    "text": "Cykliczne uruchomienie {id} ({wiki}, {mechanics}, {when}) nie zostało zatwierdzone i usunięto je."
+  },
+  "schedule_rejected_by": {
+    "status": "unverified",
+    "text": "❌ Odrzucone przez: {who}"
+  },
   "schedule_state_off": {
     "status": "unverified",
     "text": "wyłączone"
@@ -958,6 +1378,14 @@
   "schedule_state_on": {
     "status": "unverified",
     "text": "włączone"
+  },
+  "schedule_state_pending": {
+    "status": "unverified",
+    "text": "czeka na zatwierdzenie"
+  },
+  "schedule_summary_by_bot": {
+    "status": "unverified",
+    "text": "pisze bot"
   },
   "schedule_unknown": {
     "status": "unverified",
@@ -974,6 +1402,14 @@
   "schedule_weekly": {
     "status": "unverified",
     "text": "w {days} o {time}"
+  },
+  "service_archive_done": {
+    "status": "unverified",
+    "text": "Archiwum stron ({repo}): nowe pliki — {created}, zaktualizowane — {updated}. Nie znaleziono na wiki: {missing}. Błędy: {errors}"
+  },
+  "service_archive_failed": {
+    "status": "unverified",
+    "text": "Archiwum stron nie zostało zaktualizowane: {error}"
   },
   "service_channel_failed": {
     "status": "unverified",
@@ -1007,6 +1443,90 @@
     "status": "unverified",
     "text": "Confederate Fandom zatrzymany."
   },
+  "slash_backup": {
+    "status": "unverified",
+    "text": "wyślij kopię zapasową bazy (administratorzy bota)"
+  },
+  "slash_go": {
+    "status": "unverified",
+    "text": "potwierdź i uruchom zadanie"
+  },
+  "slash_go_dry": {
+    "status": "unverified",
+    "text": "tylko podgląd, bez edycji"
+  },
+  "slash_help": {
+    "status": "unverified",
+    "text": "co potrafi bot"
+  },
+  "slash_jobs": {
+    "status": "unverified",
+    "text": "co bot teraz robi"
+  },
+  "slash_lang": {
+    "status": "unverified",
+    "text": "język, w którym bot ci odpowiada"
+  },
+  "slash_lang_code": {
+    "status": "unverified",
+    "text": "język"
+  },
+  "slash_remwikiadmin": {
+    "status": "unverified",
+    "text": "odwołaj administratora wiki"
+  },
+  "slash_remwikiadmin_user": {
+    "status": "unverified",
+    "text": "komu odebrać dostęp"
+  },
+  "slash_run": {
+    "status": "unverified",
+    "text": "uruchom pracę na wiki"
+  },
+  "slash_run_what": {
+    "status": "unverified",
+    "text": "numery lub kody mechanik oddzielone spacjami"
+  },
+  "slash_schedule": {
+    "status": "unverified",
+    "text": "cykliczne uruchomienia"
+  },
+  "slash_schedule_action": {
+    "status": "unverified",
+    "text": "list, on, off lub del"
+  },
+  "slash_schedule_id": {
+    "status": "unverified",
+    "text": "numer harmonogramu"
+  },
+  "slash_status": {
+    "status": "unverified",
+    "text": "stan wiadomości i kolejki"
+  },
+  "slash_stop": {
+    "status": "unverified",
+    "text": "zatrzymaj zadanie"
+  },
+  "slash_task_id": {
+    "status": "unverified",
+    "text": "numer zadania"
+  },
+  "slash_tasks": {
+    "status": "unverified",
+    "text": "wybierz zadanie dla bota"
+  },
+  "slash_wikiadmin": {
+    "status": "unverified",
+    "text": "mianuj administratora wiki"
+  },
+  "slash_wikiadmin_user": {
+    "status": "unverified",
+    "text": "komu dać dostęp"
+  },
+  "slash_wikiadmin_wiki_user": {
+    "status": "unverified",
+    "text": "nazwa konta tej osoby na Fandomie"
+  },
   "status": {
     "status": "unverified",
     "text": "Kanał źródłowy: {channel}\nWiki: {wiki}\nZapisane wpisy: {posts}\nWiadomości są odświeżane o {schedule} każdej godziny.\nOstatni przebieg: {last_pass}{error}\n\n{slots}"
@@ -1018,6 +1538,10 @@
   "status_never": {
     "status": "unverified",
     "text": "jeszcze nie było"
+  },
+  "status_queue": {
+    "status": "unverified",
+    "text": "Teraz działa: {running}\nW kolejce: {waiting}"
   },
   "status_short": {
     "status": "unverified",
@@ -1078,6 +1602,10 @@
   "task_missing_basic_rights": {
     "status": "verified",
     "text": "Bieżąca sesja bota na {wiki} nie ma wymaganych uprawnień zwykłego użytkownika."
+  },
+  "task_missing_grants": {
+    "status": "unverified",
+    "text": "Na {wiki} konto bota ma potrzebne uprawnienia, ale jego BotPassword ich nie przepuszcza. Zaznacz na Special:BotPasswords uprawnienia: {grants}."
   },
   "task_missing_group_rights": {
     "status": "verified",

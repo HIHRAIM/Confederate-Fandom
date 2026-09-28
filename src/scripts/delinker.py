@@ -29,6 +29,7 @@ import sys
 from datetime import timedelta
 
 from tasks import mechanic as mech
+from utils import Explained
 from tasks.params import INT, Param
 
 from scripts import image
@@ -86,12 +87,12 @@ def prepare(ctx):
             if name and name not in names:
                 names.append(name)
     except Exception as e:
-        raise ValueError("не удалось прочитать журнал удалений: {}".format(e))
+        raise Explained("error_delinker_log", error=str(e))
 
     if not names:
-        ctx.note("за выбранный период файлов не удаляли — убирать нечего")
+        ctx.note("note_delinker_none")
     else:
-        ctx.note("удалённых файлов за период: {}".format(len(names)))
+        ctx.note("note_delinker_count", count=len(names))
     return names
 
 

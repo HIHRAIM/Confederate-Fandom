@@ -3,6 +3,10 @@
     "status": "verified",
     "text": "бот"
   },
+  "access_group_bureaucrat": {
+    "status": "verified",
+    "text": "бюрократ"
+  },
   "access_group_content_moderator": {
     "status": "verified",
     "text": "модератор контента"
@@ -14,6 +18,10 @@
   "access_group_sysop": {
     "status": "verified",
     "text": "администратор"
+  },
+  "access_group_threadmoderator": {
+    "status": "verified",
+    "text": "модератор обсуждений"
   },
   "add_where_before_categories": {
     "status": "verified",
@@ -91,6 +99,14 @@
     "status": "verified",
     "text": "/jobs — что идёт сейчас и чем кончились последние задачи"
   },
+  "cmd_lang_dc": {
+    "status": "verified",
+    "text": "/lang code: <язык> — язык, на котором бот отвечает лично вам; без него — какой сейчас"
+  },
+  "cmd_lang_tg": {
+    "status": "verified",
+    "text": "/lang <код> — язык, на котором бот отвечает лично вам: en, es, pl, pt, ru, uk; /lang без кода — какой сейчас"
+  },
   "cmd_remwikiadmin_dc": {
     "status": "verified",
     "text": "/remwikiadmin user: <кто> — снять назначение"
@@ -117,7 +133,7 @@
   },
   "cmd_status": {
     "status": "verified",
-    "text": "/status — что стоит в слотах и когда был последний проход"
+    "text": "/status — состояние новостей и очереди задач"
   },
   "cmd_stop_dc": {
     "status": "verified",
@@ -143,6 +159,10 @@
     "status": "verified",
     "text": "/wikiadmin — кто назначен администратором вики; /wikiadmin <@ник или ID> <ник на Fandom> — назначить"
   },
+  "command_failed": {
+    "status": "verified",
+    "text": "Команда не отработала — подробности в журнале бота."
+  },
   "dialog_bad_choice": {
     "status": "verified",
     "text": "Такого номера в списке нет. Ответьте одним из номеров."
@@ -151,6 +171,10 @@
     "status": "verified",
     "text": "Нужны номера через пробел, или «0», если ничего не нужно."
   },
+  "dialog_bad_minutes": {
+    "status": "verified",
+    "text": "Минуты — числа от 0 до 59 через запятую, например «0, 30»."
+  },
   "dialog_bad_time": {
     "status": "verified",
     "text": "Время пишется как «ЧЧ:ММ», например «20:00»."
@@ -158,6 +182,10 @@
   "dialog_bad_value": {
     "status": "verified",
     "text": "Не понял ответ. Попробуйте ещё раз."
+  },
+  "dialog_bad_weekdays": {
+    "status": "verified",
+    "text": "Дни недели — числа от 1 до 7 через запятую: 1 — понедельник, 7 — воскресенье."
   },
   "dialog_failed": {
     "status": "verified",
@@ -173,11 +201,11 @@
   },
   "dialog_limit": {
     "status": "verified",
-    "text": "Сколько страниц взять максимум? «0» или «-» — все."
+    "text": "Сколько страниц взять максимум? «0» — все."
   },
   "dialog_namespaces": {
     "status": "verified",
-    "text": "В каких пространствах имён? Номера через запятую; «0» или «-» — только статьи."
+    "text": "Из каких пространств имён брать страницы? Номера через запятую, например «0, 14»: 0 — статьи, 2 — участники, 4 — страницы проекта, 6 — файлы, 10 — шаблоны, 14 — категории, 828 — модули. «все» — все пространства имён."
   },
   "dialog_opened": {
     "status": "verified",
@@ -229,7 +257,7 @@
   },
   "dialog_summary": {
     "status": "verified",
-    "text": "Описание правки? Дефис «-» — бот напишет сам то, что реально сделал."
+    "text": "Описание правки? «0» — бот напишет сам то, что реально сделал."
   },
   "dialog_when": {
     "status": "verified",
@@ -245,7 +273,7 @@
   },
   "dialog_when_weekdays": {
     "status": "verified",
-    "text": "В какие дни недели? Номера через запятую, 0 — понедельник. Например «0,3»."
+    "text": "В какие дни недели? Номера через запятую: 1 — понедельник … 7 — воскресенье. Например «1, 4»."
   },
   "dialog_wiki": {
     "status": "verified",
@@ -259,9 +287,125 @@
     "status": "verified",
     "text": "Не получилось открыть эту вики: {error}"
   },
+  "error_addtext_no_text": {
+    "status": "verified",
+    "text": "Не указан текст, который нужно добавить."
+  },
+  "error_bad_regex": {
+    "status": "verified",
+    "text": "Не удалось разобрать выражение «{pattern}»: {error}"
+  },
+  "error_category_no_name": {
+    "status": "verified",
+    "text": "Не указана категория."
+  },
+  "error_category_no_target": {
+    "status": "verified",
+    "text": "Не указано, в какую категорию переносить."
+  },
+  "error_delete_no_reason": {
+    "status": "verified",
+    "text": "Для удаления нужна причина — она попадёт в журнал удалений. Укажите её в описании правки."
+  },
+  "error_delinker_log": {
+    "status": "verified",
+    "text": "Не удалось прочитать журнал удалений: {error}"
+  },
+  "error_graph_no_root": {
+    "status": "verified",
+    "text": "Не указана категория, с которой начинать."
+  },
+  "error_image_no_file": {
+    "status": "verified",
+    "text": "Не указан файл, который нужно заменить или убрать."
+  },
+  "error_interwiki_map": {
+    "status": "verified",
+    "text": "Не удалось прочитать таблицу интервики: {error}"
+  },
+  "error_move_list_source": {
+    "status": "verified",
+    "text": "Переименование списком берёт из одного списка и страницы, и новые названия — выберите источник страниц «{source}»."
+  },
+  "error_move_no_argument": {
+    "status": "verified",
+    "text": "Не указано, что добавлять, убирать или искать в названии."
+  },
+  "error_move_no_pairs": {
+    "status": "verified",
+    "text": "В списке не нашлось ни одной пары «старое новое»: по паре в строке, пробел в названии пишется подчёркиванием."
+  },
+  "error_no_mechanics": {
+    "status": "verified",
+    "text": "В задаче не осталось ни одной механики."
+  },
+  "error_replace_no_find": {
+    "status": "verified",
+    "text": "Не указано, что искать."
+  },
+  "error_revert_no_user": {
+    "status": "verified",
+    "text": "Не указано, чьи правки отменять."
+  },
+  "error_source_needs_argument": {
+    "status": "verified",
+    "text": "Для этого источника нужно указать страницу или запрос."
+  },
+  "error_task_not_found": {
+    "status": "verified",
+    "text": "Задача не найдена."
+  },
+  "error_templatecount_none": {
+    "status": "verified",
+    "text": "Не указан ни один шаблон."
+  },
+  "error_unknown_mechanics": {
+    "status": "verified",
+    "text": "Неизвестные механики: {codes}"
+  },
+  "error_unknown_source": {
+    "status": "verified",
+    "text": "Неизвестный источник страниц: {source}"
+  },
+  "error_unlink_no_title": {
+    "status": "verified",
+    "text": "Не указана страница, ссылки на которую нужно убрать."
+  },
+  "error_wiki_bad_address": {
+    "status": "verified",
+    "text": "Непонятный адрес вики: {text}"
+  },
+  "error_wiki_bad_domain": {
+    "status": "verified",
+    "text": "Непонятный домен: {host}"
+  },
+  "error_wiki_empty": {
+    "status": "verified",
+    "text": "Не указана вики."
+  },
+  "error_wiki_no_lang": {
+    "status": "verified",
+    "text": "Не указан языковой раздел вики {family}."
+  },
+  "error_wiki_no_section": {
+    "status": "verified",
+    "text": "В вики {family} нет раздела «{lang}»; есть: {langs}."
+  },
+  "error_wiki_not_mediawiki": {
+    "status": "verified",
+    "text": "Вики {url} не отвечает как MediaWiki."
+  },
+  "error_wiki_unknown_family": {
+    "status": "verified",
+    "text": "Вики «{family}» бот не знает — укажите домен целиком."
+  },
   "family_file_conflict": {
     "status": "verified",
     "text": "Не удалось безопасно подготовить семейство для {host}: существующие файлы относятся к другому хосту или созданы вручную."
+  },
+  "files_not_attached": {
+    "status": "verified",
+    "text": "Не удалось приложить: {files}"
   },
   "flag_add_again": {
     "status": "verified",
@@ -379,6 +523,42 @@
     "status": "verified",
     "text": "Как это работает: /go <номер задачи> — запустить, /go <номер> dry — предпросмотр без правок."
   },
+  "grant_createeditmovepage": {
+    "status": "verified",
+    "text": "Создание, редактирование и переименование страниц"
+  },
+  "grant_delete": {
+    "status": "verified",
+    "text": "Удаление страниц, правок и записей журнала"
+  },
+  "grant_editpage": {
+    "status": "verified",
+    "text": "Редактирование существующих страниц"
+  },
+  "grant_editprotected": {
+    "status": "verified",
+    "text": "Редактирование защищённых страниц"
+  },
+  "grant_highvolume": {
+    "status": "verified",
+    "text": "Доступ (ботам) с высокой интенсивностью"
+  },
+  "grant_protect": {
+    "status": "verified",
+    "text": "Защита страниц и снятие защиты"
+  },
+  "grant_rollback": {
+    "status": "verified",
+    "text": "Откат изменений страниц"
+  },
+  "grant_uploadeditmovefile": {
+    "status": "verified",
+    "text": "Загрузка, замена и переименовывание файлов"
+  },
+  "grant_uploadfile": {
+    "status": "verified",
+    "text": "Загрузка новых файлов"
+  },
   "graph_shape_dot": {
     "status": "verified",
     "text": "файлом .dot для Graphviz"
@@ -397,7 +577,7 @@
   },
   "help_intro": {
     "status": "verified",
-    "text": "Confederate Fandom — бот для вики Fandom: новости на заглавных, ночная стандартизация названий и запуск задач по вики."
+    "text": "Confederate Fandom — бот для автоматизации работы на вики Fandom из Discord и Telegram."
   },
   "help_news": {
     "status": "verified",
@@ -406,6 +586,14 @@
   "help_wiki": {
     "status": "verified",
     "text": "Работы по вики"
+  },
+  "help_you": {
+    "status": "verified",
+    "text": "Ваши настройки"
+  },
+  "job_archive": {
+    "status": "verified",
+    "text": "архив страниц"
   },
   "job_backup": {
     "status": "verified",
@@ -446,6 +634,18 @@
   "jobs_title": {
     "status": "verified",
     "text": "Очередь и задачи"
+  },
+  "lang_current": {
+    "status": "verified",
+    "text": "Язык ответов бота для вас: {name}. Сменить: {how}. Доступны: {langs}."
+  },
+  "lang_set": {
+    "status": "verified",
+    "text": "Готово. Язык ответов бота: {name}."
+  },
+  "lang_unknown": {
+    "status": "verified",
+    "text": "Такого языка бот не знает: «{code}». Доступны: {langs}."
   },
   "mech_addtext": {
     "status": "verified",
@@ -599,14 +799,6 @@
     "status": "verified",
     "text": "убрать ссылки на страницу, оставив сам текст"
   },
-  "mechanic_need_move_no_redirect_group": {
-    "status": "verified",
-    "text": "Для переименования без перенаправления нужен статус модератора контента."
-  },
-  "mechanic_need_rollback_group": {
-    "status": "verified",
-    "text": "Для отката нужен статус откатчика."
-  },
   "move_mode_list": {
     "status": "verified",
     "text": "списком пар «старое новое»"
@@ -631,9 +823,93 @@
     "status": "verified",
     "text": "убрать с конца"
   },
+  "news_off": {
+    "status": "verified",
+    "text": "Модуль новостей в этой установке бота не настроен."
+  },
   "not_admin": {
     "status": "verified",
     "text": "Команда только для администраторов бота."
+  },
+  "note_delinker_count": {
+    "status": "verified",
+    "text": "Удалённых файлов за период: {count}"
+  },
+  "note_delinker_none": {
+    "status": "verified",
+    "text": "За выбранный период файлов не удаляли — убирать нечего."
+  },
+  "note_graph_cut": {
+    "status": "verified",
+    "text": "Дерево обрезано на {count} категориях."
+  },
+  "note_graph_size": {
+    "status": "verified",
+    "text": "Категорий в дереве: {count}"
+  },
+  "note_interwiki_clash": {
+    "status": "verified",
+    "text": "На странице «{title}» две ссылки на один язык — оставлена как есть."
+  },
+  "note_interwiki_elsewhere": {
+    "status": "verified",
+    "text": "На другом хосте: {langs} — их ссылки сохраняются, но не проверяются и не дополняются."
+  },
+  "note_interwiki_langs": {
+    "status": "verified",
+    "text": "Языковые версии: {langs}"
+  },
+  "note_interwiki_none": {
+    "status": "verified",
+    "text": "На этой вики не объявлено ни одной языковой версии — интервики ставить некуда."
+  },
+  "note_interwiki_unreachable": {
+    "status": "verified",
+    "text": "Языковая версия «{lang}» недоступна: {error}"
+  },
+  "note_mechanic_failed": {
+    "status": "verified",
+    "text": "{code}: {error}"
+  },
+  "note_no_pages": {
+    "status": "verified",
+    "text": "По этому источнику не нашлось ни одной страницы."
+  },
+  "note_redirect_broken": {
+    "status": "verified",
+    "text": "Битое перенаправление: {title} -> {target}"
+  },
+  "note_revert_no_rollback": {
+    "status": "verified",
+    "text": "Откат недоступен, поэтому правки отменяются обычным редактированием. {reason}"
+  },
+  "note_templatecount_total": {
+    "status": "verified",
+    "text": "Всего страниц с этими шаблонами: {count}"
+  },
+  "page_delete_gone": {
+    "status": "verified",
+    "text": "страницы уже нет"
+  },
+  "page_delete_talk_kept": {
+    "status": "verified",
+    "text": "страница удалена, обсуждение — нет: {error}"
+  },
+  "page_delete_will": {
+    "status": "verified",
+    "text": "будет удалена"
+  },
+  "page_move_empty": {
+    "status": "verified",
+    "text": "новое название оказалось пустым"
+  },
+  "page_move_exists": {
+    "status": "verified",
+    "text": "страница «{title}» уже существует"
+  },
+  "page_move_will": {
+    "status": "verified",
+    "text": "будет переименована в «{title}»"
   },
   "page_next": {
     "status": "verified",
@@ -651,9 +927,37 @@
     "status": "verified",
     "text": "◀ Назад"
   },
+  "page_protect_will": {
+    "status": "verified",
+    "text": "будет: {what}"
+  },
+  "page_revert_all_theirs": {
+    "status": "verified",
+    "text": "все правки в истории от этого участника"
+  },
+  "page_revert_done": {
+    "status": "verified",
+    "text": "отменено правок: {count}"
+  },
+  "page_revert_no_history": {
+    "status": "verified",
+    "text": "истории нет"
+  },
+  "page_revert_not_last": {
+    "status": "verified",
+    "text": "последняя правка не от «{user}»"
+  },
+  "page_revert_rolled_back": {
+    "status": "verified",
+    "text": "откат, правок: {count}"
+  },
+  "page_revert_will": {
+    "status": "verified",
+    "text": "будет откачено правок: {count}"
+  },
   "pageset_all": {
     "status": "verified",
-    "text": "все страницы вики"
+    "text": "все страницы из выбранного пространства имён"
   },
   "pageset_backlinks": {
     "status": "verified",
@@ -685,7 +989,7 @@
   },
   "pageset_recent": {
     "status": "verified",
-    "text": "недавно изменённые страницы"
+    "text": "страницы, изменённые за последние 7 дней"
   },
   "pageset_search": {
     "status": "verified",
@@ -757,7 +1061,7 @@
   },
   "param_image_to": {
     "status": "verified",
-    "text": "На какой файл заменить? Дефис «-» — убрать совсем."
+    "text": "На какой файл заменить? «0» — убрать совсем."
   },
   "param_interwiki_flags": {
     "status": "verified",
@@ -781,7 +1085,7 @@
   },
   "param_move_to": {
     "status": "verified",
-    "text": "Чем заменить найденное в названии? Работают \\1, \\2."
+    "text": "Чем заменить найденное в названии? Работают \\1, \\2; «0» — убрать найденное."
   },
   "param_pravopys_uk_flags": {
     "status": "verified",
@@ -809,7 +1113,7 @@
   },
   "param_replace": {
     "status": "verified",
-    "text": "Чем заменить? Дефис «-» — удалить найденное."
+    "text": "Чем заменить? «0» — удалить найденное."
   },
   "param_replace_flags": {
     "status": "verified",
@@ -911,9 +1215,113 @@
     "status": "verified",
     "text": "заменить ссылки на перенаправления прямыми"
   },
+  "refusal_bot_no_status": {
+    "status": "verified",
+    "text": "На вики {wiki} у бота нет ни статуса бота, ни модератора контента, ни администратора{current}. Без одного из них он за работу не берётся: сотня правок от аккаунта без статуса — это то, за что банят."
+  },
+  "refusal_caller_no_standing": {
+    "status": "verified",
+    "text": "У участника {user} нет особых прав на вики {wiki}{current}. Запускать работы бота на этой вики может только тот, у кого там есть один из статусов: {groups}."
+  },
+  "refusal_current_groups": {
+    "status": "verified",
+    "text": " (сейчас: {groups})"
+  },
+  "refusal_no_fandom_account": {
+    "status": "verified",
+    "text": "У вас не указан аккаунт на Fandom — попросите администратора бота назначить вас заново, указав ник."
+  },
+  "refusal_rights_unreadable": {
+    "status": "verified",
+    "text": "Не удалось проверить ваши права на вики {wiki}: {error}"
+  },
+  "report_diff_done": {
+    "status": "verified",
+    "text": "Сделанные правки"
+  },
+  "report_diff_dry": {
+    "status": "verified",
+    "text": "Предпросмотр правок (ничего не записано)"
+  },
+  "report_diff_wiki": {
+    "status": "verified",
+    "text": "вики: {wiki}"
+  },
+  "report_errors_title": {
+    "status": "verified",
+    "text": "Не удалось обработать — задача {id} — {wiki}"
+  },
+  "report_graph_seen": {
+    "status": "verified",
+    "text": "(уже выше в дереве)"
+  },
+  "report_line_error": {
+    "status": "verified",
+    "text": "ошибка: {error}"
+  },
+  "report_list_bytes": {
+    "status": "verified",
+    "text": "{size} б"
+  },
+  "report_list_no_categories": {
+    "status": "verified",
+    "text": "без категорий"
+  },
+  "report_template_failed": {
+    "status": "verified",
+    "text": "не удалось посчитать: {error}"
+  },
+  "report_template_missing": {
+    "status": "verified",
+    "text": "шаблона нет"
+  },
+  "report_title": {
+    "status": "verified",
+    "text": "Отчёт задачи {id} — {wiki}"
+  },
+  "report_unreadable": {
+    "status": "verified",
+    "text": "не удалось прочитать: {error}"
+  },
+  "requester_with_wiki_user": {
+    "status": "verified",
+    "text": "{name} ({id}, на вики — {wiki_user})"
+  },
   "run_unknown": {
     "status": "verified",
     "text": "Не знаю такой механики: {what}. Полный список — /tasks."
+  },
+  "schedule_already_decided": {
+    "status": "verified",
+    "text": "По расписанию {id} уже есть решение (или его больше нет)."
+  },
+  "schedule_approval_request": {
+    "status": "verified",
+    "text": "Запрос на регулярную задачу {id} от {who} ({platform}).\nВики: {wiki}\nМеханики: {mechanics}\nКогда: {when}\nОписание правок: {summary}\nЗапустить?"
+  },
+  "schedule_approval_unavailable": {
+    "status": "verified",
+    "text": "Регулярные задачи здесь запускаются только после одобрения администратора бота, но канала, где его спросить, нет. Расписание не создано — напишите администратору бота."
+  },
+  "schedule_approved": {
+    "status": "verified",
+    "text": "Регулярная задача {id} одобрена и будет запускаться: {wiki}, {mechanics}, {when}."
+  },
+  "schedule_approved_by": {
+    "status": "verified",
+    "text": "✅ Одобрено: {who}"
+  },
+  "schedule_awaiting": {
+    "status": "verified",
+    "text": "Расписание {id} ещё ждёт одобрения администратора бота — включить его сейчас нельзя."
+  },
+  "schedule_button_approve": {
+    "status": "verified",
+    "text": "Одобрить"
+  },
+  "schedule_button_reject": {
+    "status": "verified",
+    "text": "Отклонить"
   },
   "schedule_created": {
     "status": "verified",
@@ -951,6 +1359,18 @@
     "status": "verified",
     "text": "Расписание {id} включено."
   },
+  "schedule_pending": {
+    "status": "verified",
+    "text": "Расписание {id} ({wiki}, {mechanics}, {when}) отправлено на одобрение администратору бота. Оно не запустится, пока его не одобрят; о решении бот напишет вам в личные сообщения."
+  },
+  "schedule_rejected": {
+    "status": "verified",
+    "text": "Регулярная задача {id} ({wiki}, {mechanics}, {when}) не одобрена и удалена."
+  },
+  "schedule_rejected_by": {
+    "status": "verified",
+    "text": "❌ Отклонено: {who}"
+  },
   "schedule_state_off": {
     "status": "verified",
     "text": "выключено"
@@ -958,6 +1378,14 @@
   "schedule_state_on": {
     "status": "verified",
     "text": "включено"
+  },
+  "schedule_state_pending": {
+    "status": "verified",
+    "text": "ждёт одобрения"
+  },
+  "schedule_summary_by_bot": {
+    "status": "verified",
+    "text": "бот пишет сам"
   },
   "schedule_unknown": {
     "status": "verified",
@@ -974,6 +1402,14 @@
   "schedule_weekly": {
     "status": "verified",
     "text": "в {days} в {time}"
+  },
+  "service_archive_done": {
+    "status": "verified",
+    "text": "Архив страниц ({repo}): новых файлов — {created}, обновлено — {updated}. Не найдены на вики: {missing}. Ошибки: {errors}"
+  },
+  "service_archive_failed": {
+    "status": "verified",
+    "text": "Архив страниц не обновлён: {error}"
   },
   "service_channel_failed": {
     "status": "verified",
@@ -1007,6 +1443,90 @@
     "status": "verified",
     "text": "Confederate Fandom остановлен."
   },
+  "slash_backup": {
+    "status": "verified",
+    "text": "прислать резервную копию базы (администраторам бота)"
+  },
+  "slash_go": {
+    "status": "verified",
+    "text": "подтвердить и запустить задачу"
+  },
+  "slash_go_dry": {
+    "status": "verified",
+    "text": "только предпросмотр, без правок"
+  },
+  "slash_help": {
+    "status": "verified",
+    "text": "что бот умеет"
+  },
+  "slash_jobs": {
+    "status": "verified",
+    "text": "что бот делает прямо сейчас"
+  },
+  "slash_lang": {
+    "status": "verified",
+    "text": "язык, на котором бот отвечает вам"
+  },
+  "slash_lang_code": {
+    "status": "verified",
+    "text": "язык"
+  },
+  "slash_remwikiadmin": {
+    "status": "verified",
+    "text": "снять администратора вики"
+  },
+  "slash_remwikiadmin_user": {
+    "status": "verified",
+    "text": "у кого забрать доступ"
+  },
+  "slash_run": {
+    "status": "verified",
+    "text": "запустить работу по вики"
+  },
+  "slash_run_what": {
+    "status": "verified",
+    "text": "номера или кодовые названия механик через пробел"
+  },
+  "slash_schedule": {
+    "status": "verified",
+    "text": "регулярные запуски"
+  },
+  "slash_schedule_action": {
+    "status": "verified",
+    "text": "list, on, off или del"
+  },
+  "slash_schedule_id": {
+    "status": "verified",
+    "text": "номер расписания"
+  },
+  "slash_status": {
+    "status": "verified",
+    "text": "состояние новостей и очереди"
+  },
+  "slash_stop": {
+    "status": "verified",
+    "text": "остановить задачу"
+  },
+  "slash_task_id": {
+    "status": "verified",
+    "text": "номер задачи"
+  },
+  "slash_tasks": {
+    "status": "verified",
+    "text": "выбрать задачу для бота"
+  },
+  "slash_wikiadmin": {
+    "status": "verified",
+    "text": "назначить администратора вики"
+  },
+  "slash_wikiadmin_user": {
+    "status": "verified",
+    "text": "кому выдать доступ"
+  },
+  "slash_wikiadmin_wiki_user": {
+    "status": "verified",
+    "text": "ник этого человека на Fandom"
+  },
   "status": {
     "status": "verified",
     "text": "Канал-источник: {channel}\nВики: {wiki}\nСохранено постов: {posts}\nНовости обновляются в {schedule} каждого часа.\nПоследний проход: {last_pass}{error}\n\n{slots}"
@@ -1018,6 +1538,10 @@
   "status_never": {
     "status": "verified",
     "text": "ещё не было"
+  },
+  "status_queue": {
+    "status": "verified",
+    "text": "Сейчас работает: {running}\nВ очереди: {waiting}"
   },
   "status_short": {
     "status": "verified",
@@ -1078,6 +1602,10 @@
   "task_missing_basic_rights": {
     "status": "verified",
     "text": "На вики {wiki} в текущей сессии бота нет необходимых прав обычного участника."
+  },
+  "task_missing_grants": {
+    "status": "verified",
+    "text": "На вики {wiki} у аккаунта бота есть нужные права, но его BotPassword их не пропускает. Отметьте на Special:BotPasswords гранты: {grants}."
   },
   "task_missing_group_rights": {
     "status": "verified",

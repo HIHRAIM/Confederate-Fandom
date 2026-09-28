@@ -19,7 +19,8 @@ import re
 import sys
 
 from tasks import mechanic as mech
-from tasks.params import FLAGS, TEXT, Param
+from utils import Explained
+from tasks.params import BLANK, FLAGS, TEXT, Param
 
 from scripts import wikitools as wt
 
@@ -39,14 +40,14 @@ def prepare(ctx):
     flags = set(params.get("replace_flags") or [])
     find = params.get("find") or ""
     if not find:
-        raise ValueError("не указано, что искать")
+        raise Explained("error_replace_no_find")
     pattern = find if FLAG_REGEX in flags else re.escape(find)
     options = re.IGNORECASE if FLAG_NOCASE in flags else 0
     engine = wt.engine() if FLAG_REGEX in flags else re
     try:
         return engine.compile(pattern, options)
     except Exception as e:
-        raise ValueError("не удалось разобрать выражение «{}»: {}".format(find, e))
+        raise Explained("error_bad_regex", pattern=find, error=str(e))
 
 
 def apply(ctx, page, text):
@@ -89,7 +90,7 @@ SPEC = mech.Mechanic(
     rights=("edit",),
     params=(
         Param("find", TEXT, "param_find"),
-        Param("replace", TEXT, "param_replace"),
+        Param("replace", TEXT, "param_replace", blank=BLANK),
         Param("replace_flags", FLAGS, "param_replace_flags", options=(
             (FLAG_REGEX, "flag_regex"),
             (FLAG_NOCASE, "flag_nocase"),

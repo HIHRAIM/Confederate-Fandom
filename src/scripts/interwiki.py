@@ -85,6 +85,8 @@ import re
 import sys
 
 from tasks import mechanic as mech
+from tasks import report
+from utils import Explained
 from tasks.params import FLAGS, Param
 from scripts import wikitools as wt
 
@@ -135,7 +137,7 @@ def prepare(ctx):
     try:
         data = ctx.site.siteinfo["interwikimap"]
     except Exception as e:
-        raise ValueError("не удалось прочитать таблицу интервики: {}".format(e))
+        raise Explained("error_interwiki_map", error=str(e))
 
     own_host = _host_family(ctx.site.base_url(""))
     if not own_host:
@@ -160,14 +162,12 @@ def prepare(ctx):
                          "lang": prefix, "url": entry.get("url")}
 
     if not managed:
-        ctx.note("на этой вики не объявлено ни одной языковой версии — "
-                 "интервики ставить некуда")
+        ctx.note("note_interwiki_none")
     else:
-        ctx.note("языковые версии: " + ", ".join(sorted(managed)))
+        ctx.note("note_interwiki_langs", langs=", ".join(sorted(managed)))
         elsewhere = sorted(managed - set(langs))
         if elsewhere:
-            ctx.note("на другом хосте: {} — их ссылки сохраняются, но не "
-                     "проверяются и не дополняются".format(", ".join(elsewhere)))
+            ctx.note("note_interwiki_elsewhere", langs=", ".join(elsewhere))
     return {"langs": langs, "managed": managed, "sites": {}, "exists": {},
             "links": {}}
 
@@ -197,7 +197,8 @@ def _sister_site(ctx, lang):
             site = wiki.get_site(family, code)
         except Exception as e:
             logger.warning("cannot reach the %s wiki: %s", lang, e)
-            ctx.note("языковая версия «{}» недоступна: {}".format(lang, e))
+            ctx.note("note_interwiki_unreachable", lang=lang,
+                     error=report.safe_error(e, ctx.reader))
         finally:
             wiki.use_cookies(ctx.wiki)
     state["sites"][lang] = site
@@ -333,8 +334,8 @@ def apply(ctx, page, text):
     flags = set(ctx.params.get("interwiki_flags") or [])
     body, present, clash = _strip(text, managed)
     if clash:
-        ctx.note("на странице «{}» две ссылки на один язык — оставлена как "
-                 "есть".format(page.title() if page is not None else "?"))
+        ctx.note("note_interwiki_clash",
+                 title=page.title() if page is not None else "?")
         return text, []
     links = dict(present)
 

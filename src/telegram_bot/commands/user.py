@@ -1,10 +1,12 @@
-"""The three commands the bot answers: /help, /status and /update.
+"""The general commands: /help, /status, /update, /backfill and /lang.
 
-All three are for the bot's administrators (config.ADMINS) — the bot has
-nothing to say to anyone else, and /update writes to the wiki. Replies are
-plain text in the language of the person who asked (utils.user_lang), which is
-why nothing here formats with HTML: a post's text can contain anything, and
-plain text cannot be broken by it.
+The first four are for the bot's administrators (config.ADMINS) — /update and
+/backfill write to the wiki. /lang is for everybody: it changes nothing but
+the language the bot answers that one person in (utils.lang_answer).
+
+Replies are plain text in the language of the person who asked
+(utils.user_lang), which is why nothing here formats with HTML: a post's text
+can contain anything, and plain text cannot be broken by it.
 
 The publishing pass itself lives in publisher.py and is imported at the call
 site: publisher reaches back into this half to download a picture, and the two
@@ -16,10 +18,12 @@ from aiogram.filters import Command
 from aiogram.types import Message
 
 import db
-from modules.telepedia import news
-from config import NEWS_TEMPLATES, SOURCE_CHANNEL, WIKIS
+from modules.teleradiopedia import news
+from modules.teleradiopedia import settings as news_settings
+from modules.teleradiopedia.settings import NEWS_TEMPLATES, SOURCE_CHANNEL, WIKIS
 from telegram_bot.client import router, source_chat_id, source_username
-from utils import is_admin, localized, publish_schedule, user_lang, wiki_key
+from utils import (is_admin, lang_answer, localized, publish_schedule,
+                   user_lang, wiki_key)
 
 logger = logging.getLogger("fd.commands")
 
@@ -104,6 +108,11 @@ async def status_cmd(message: Message):
     if not is_admin("telegram", message.from_user.id if message.from_user else 0):
         await _deny(message, lang)
         return
+    if not news_settings.enabled():
+        from utils import queue_status
+
+        await message.answer(queue_status(lang))
+        return
 
     chat_id = source_chat_id()
     error = db.get_state("last_error") or ""
@@ -129,8 +138,11 @@ async def update_cmd(message: Message):
     if not is_admin("telegram", message.from_user.id if message.from_user else 0):
         await _deny(message, lang)
         return
+    if not news_settings.enabled():
+        await message.answer(localized("news_off", lang))
+        return
 
-    from modules.telepedia import publisher
+    from modules.teleradiopedia import publisher
 
     if publisher.is_running():
         await message.answer(localized("update_busy", lang))
@@ -173,6 +185,9 @@ async def backfill_cmd(message: Message):
     if not is_admin("telegram", message.from_user.id if message.from_user else 0):
         await _deny(message, lang)
         return
+    if not news_settings.enabled():
+        await message.answer(localized("news_off", lang))
+        return
 
     chat_id = source_chat_id()
     username = source_username()
@@ -180,7 +195,7 @@ async def backfill_cmd(message: Message):
         await message.answer(localized("backfill_no_channel", lang))
         return
 
-    from modules.telepedia.backfill import sync
+    from modules.teleradiopedia.backfill import sync
 
     refresh_all = "all" in (message.text or "").lower().split()
     await message.answer(localized("backfill_started", lang))
@@ -192,3 +207,14 @@ async def backfill_cmd(message: Message):
         return
     await message.answer(localized(
         "backfill_done", lang, seen=seen, added=added, updated=updated))
+
+@router.message(Command("lang"))
+async def lang_cmd(message: Message):
+    """The language the bot answers this person in: `/lang ru`, or `/lang`
+    alone to see which one it is. Personal, and open to everybody."""
+    if message.from_user is None:
+        return
+    parts = (message.text or "").split()
+    await message.answer(lang_answer("telegram", message.from_user.id,
+                                     parts[1] if len(parts) > 1 else None,
+                                     "/lang ru"))

@@ -16,6 +16,7 @@ are different pages to MediaWiki, and the honest number for «сколько с�
 import sys
 
 from tasks import mechanic as mech
+from utils import Explained, localized
 from tasks.params import FLAGS, TEXT, Param
 
 FLAG_LIST = "list"
@@ -26,7 +27,7 @@ def prepare(ctx):
     """Check that there is something to count."""
     names = _names(ctx)
     if not names:
-        raise ValueError("не указан ни один шаблон")
+        raise Explained("error_templatecount_none")
     return names
 
 
@@ -55,12 +56,13 @@ def finish(ctx):
         page = pywikibot.Page(ctx.site, "Template:" + name)
         try:
             if not page.exists():
-                lines.append("{}\tшаблона нет".format(name))
+                lines.append("{}\t{}".format(name, localized(
+                    "report_template_missing", ctx.reader)))
                 continue
             users = list(page.getReferences(only_template_inclusion=True))
         except Exception as e:
-            lines.append("{}\tне удалось посчитать: {}".format(
-                name, type(e).__name__))
+            lines.append("{}\t{}".format(name, localized(
+                "report_template_failed", ctx.reader, error=type(e).__name__)))
             continue
 
         if FLAG_REDIRECTS in flags:
@@ -77,7 +79,7 @@ def finish(ctx):
         if FLAG_LIST in flags:
             lines += ["\t" + title for title in titles]
 
-    ctx.note("всего страниц с этими шаблонами: {}".format(total))
+    ctx.note("note_templatecount_total", count=total)
     return lines
 
 

@@ -1,4 +1,4 @@
-"""Appointing wiki administrators on Discord, the bot's own /help, and /backup.
+"""Appointing wiki administrators on Discord, /help, /status, /lang and /backup.
 
 Only a bot administrator may appoint: control of the bot lives in
 config.ADMINS and nothing stored can hand it out.
@@ -18,7 +18,8 @@ none of Telegram's guessing between a reply, an @name and an id.
 
 `/backup` sits here rather than beside the wiki commands because it is the
 same kind of thing as the two above: something only the people named in
-config.ADMINS may do.
+config.ADMINS may do. `/lang` is the one command here anybody may use: it
+changes nothing but the language the bot answers that person in.
 """
 import logging
 
@@ -26,21 +27,21 @@ import discord
 from discord import app_commands
 
 import db
-from discord_bot.client import tree
-from utils import is_admin, localized, service_lang
+from discord_bot.client import slash, tree
+from utils import LANG_NAMES, is_admin, lang_answer, lang_of, localized
 
 logger = logging.getLogger("fd.discord.admins")
 
 MESSAGE_LIMIT = 1900
 
 
-@tree.command(name="wikiadmin", description="назначить администратора вики")
-@app_commands.describe(user="кому выдать доступ",
-                       wiki_user="его ник на Fandom")
+@tree.command(name="wikiadmin", description=slash("slash_wikiadmin"))
+@app_commands.describe(user=slash("slash_wikiadmin_user"),
+                       wiki_user=slash("slash_wikiadmin_wiki_user"))
 async def wikiadmin_cmd(interaction: discord.Interaction,
                         user: discord.User = None, wiki_user: str = ""):
     """Appoint somebody, or list who is appointed."""
-    lang = service_lang()
+    lang = lang_of("discord", interaction.user.id)
     if not is_admin("discord", interaction.user.id):
         await interaction.response.send_message(localized("not_admin", lang),
                                                 ephemeral=True)
@@ -72,11 +73,11 @@ async def wikiadmin_cmd(interaction: discord.Interaction,
         name=name, user_id=user.id, wiki_user=wiki_user.strip()))
 
 
-@tree.command(name="remwikiadmin", description="снять администратора вики")
-@app_commands.describe(user="у кого забрать доступ")
+@tree.command(name="remwikiadmin", description=slash("slash_remwikiadmin"))
+@app_commands.describe(user=slash("slash_remwikiadmin_user"))
 async def remwikiadmin_cmd(interaction: discord.Interaction, user: discord.User):
     """Take an appointment away."""
-    lang = service_lang()
+    lang = lang_of("discord", interaction.user.id)
     if not is_admin("discord", interaction.user.id):
         await interaction.response.send_message(localized("not_admin", lang),
                                                 ephemeral=True)
@@ -89,7 +90,7 @@ async def remwikiadmin_cmd(interaction: discord.Interaction, user: discord.User)
             localized("wikiadmin_not_found", lang, user_id=user.id))
 
 
-@tree.command(name="help", description="что бот умеет")
+@tree.command(name="help", description=slash("slash_help"))
 async def help_cmd(interaction: discord.Interaction):
     """What the bot does and which commands it takes.
 
@@ -98,26 +99,31 @@ async def help_cmd(interaction: discord.Interaction):
     from discord_bot import pages
     from tasks import lists
 
-    lang = service_lang()
+    lang = lang_of("discord", interaction.user.id)
     title, lines = lists.help_text(lang, pages.MARKUP, lists.DISCORD)
     await pages.send(interaction, title, lines, lang, ephemeral=True)
 
 
-@tree.command(name="status", description="состояние новостей и очереди")
+@tree.command(name="status", description=slash("slash_status"))
 async def status_cmd(interaction: discord.Interaction):
     """The same answer /status gives on Telegram: slots, schedule, queue."""
     import scheduler
     from tasks import access
 
-    lang = service_lang()
+    lang = lang_of("discord", interaction.user.id)
     if access.caller("discord", interaction.user.id,
                      getattr(interaction.user, "name", None)) is None:
         await interaction.response.send_message(localized("not_admin", lang),
                                                 ephemeral=True)
         return
 
-    from config import SOURCE_CHANNEL, WIKIS
-    from utils import publish_schedule, wiki_key
+    from modules.teleradiopedia import settings as news_settings
+    from modules.teleradiopedia.settings import SOURCE_CHANNEL, WIKIS
+    from utils import publish_schedule, queue_status, wiki_key
+
+    if not news_settings.enabled():
+        await interaction.response.send_message(queue_status(lang))
+        return
 
     await interaction.response.send_message(localized(
         "status_short", lang,
@@ -129,8 +135,7 @@ async def status_cmd(interaction: discord.Interaction):
         error=db.get_state("last_error") or "—")[:MESSAGE_LIMIT])
 
 
-@tree.command(name="backup",
-              description="прислать резервную копию базы (администраторам бота)")
+@tree.command(name="backup", description=slash("slash_backup"))
 @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
 @app_commands.allowed_installs(guilds=True, users=True)
 async def backup_cmd(interaction: discord.Interaction):
@@ -148,7 +153,7 @@ async def backup_cmd(interaction: discord.Interaction):
     Without BACKUP_KEY the bot says so and sends nothing. A plaintext copy of
     the database is never what happens instead.
     """
-    lang = service_lang()
+    lang = lang_of("discord", interaction.user.id)
     if not is_admin("discord", interaction.user.id):
         await interaction.response.send_message(localized("not_admin", lang),
                                                 ephemeral=True)
@@ -177,4 +182,26 @@ async def backup_cmd(interaction: discord.Interaction):
     await interaction.followup.send(
         file=discord.File(io.BytesIO(data),
                           filename=backup_crypto.backup_filename()),
+        ephemeral=True)
+
+
+@tree.command(name="lang", description=slash("slash_lang"))
+@app_commands.describe(code=slash("slash_lang_code"))
+@app_commands.choices(code=[
+    app_commands.Choice(name=name, value=code)
+    for code, name in sorted(LANG_NAMES.items())])
+@app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
+@app_commands.allowed_installs(guilds=True, users=True)
+async def lang_cmd(interaction: discord.Interaction,
+                   code: app_commands.Choice[str] = None):
+    """The language the bot answers this person in, on this messenger.
+
+    Personal rather than per server, unlike the /lang of the other bots of
+    the family: a task's answers go to whoever asked for it, and two people
+    in one channel may read different languages. Open to everybody, and
+    ephemeral. Without a choice it says which language is in use.
+    """
+    await interaction.response.send_message(
+        lang_answer("discord", interaction.user.id,
+                    code.value if code else None, "/lang code: ru"),
         ephemeral=True)

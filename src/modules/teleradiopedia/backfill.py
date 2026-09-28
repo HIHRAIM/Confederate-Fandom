@@ -23,8 +23,8 @@ out of that rule when a post really was edited while the bot was away.
 import logging
 
 import db
-from modules.telepedia import preview
-from config import PREVIEW_LIMIT
+from modules.teleradiopedia import preview
+from modules.teleradiopedia.settings import PREVIEW_LIMIT
 
 logger = logging.getLogger("fd.backfill")
 

@@ -45,16 +45,6 @@ appointed: rollback, content moderator, discussions moderator, administrator,
 bureaucrat, bot. Fandom's global groups (staff, helper, soap) are deliberately
 not here — they are not this wiki's community."""
 
-GROUP_NAMES = {
-    "bot": "бот",
-    "content-moderator": "модератор контента",
-    "sysop": "администратор",
-    "threadmoderator": "модератор обсуждений",
-    "rollback": "откатчик",
-    "bureaucrat": "бюрократ",
-    "autoconfirmed": "автоподтверждённый",
-    "user": "участник",
-}
 
 RIGHT_GRANTED_BY = {
     "edit": None,
@@ -79,19 +69,32 @@ RIGHT_GRANTED_BY = {
 every registered account has it. Used only to word a refusal — the right
 itself is always read from the wiki, never guessed from a group."""
 
-RIGHT_NAMES = {
-    "edit": "править страницы",
-    "editprotected": "править защищённые страницы",
-    "move": "переименовывать страницы",
-    "suppressredirect": "переименовывать без перенаправления",
-    "delete": "удалять страницы",
-    "undelete": "восстанавливать страницы",
-    "protect": "защищать страницы",
-    "upload": "загружать файлы",
-    "reupload": "перезаливать файлы",
-    "rollback": "откатывать правки",
-    "bot": "помечать правки как ботовские",
+GRANT_OF = {
+    "edit": "editpage",
+    "createpage": "createeditmovepage",
+    "move": "createeditmovepage",
+    "move-subpages": "createeditmovepage",
+    "suppressredirect": "createeditmovepage",
+    "upload": "uploadfile",
+    "reupload-own": "uploadfile",
+    "reupload": "uploadeditmovefile",
+    "delete": "delete",
+    "undelete": "delete",
+    "deleterevision": "delete",
+    "protect": "protect",
+    "editprotected": "editprotected",
+    "rollback": "rollback",
+    "bot": "highvolume",
+    "apihighlimits": "highvolume",
 }
+"""Which BotPassword grant lets a session use a right its account holds.
+
+The bot logs in with a BotPassword, and the session gets only the rights that
+are both the account's and allowed by the password's grants. So a right can
+be missing for two different reasons, and they want two different fixes: the
+account lacks it (a group on the wiki), or the password does not pass it on
+(a checkbox on Special:BotPasswords). `explain_missing` tells them apart."""
+
 
 
 def _info(site, fresh=False):
@@ -128,16 +131,75 @@ def has_right(site, right, fresh=False):
     return right in rights(site, fresh)
 
 
-def group_label(group):
-    """A group's name as a person reads it, the raw name in brackets."""
-    name = GROUP_NAMES.get(group)
-    return "{} ({})".format(name, group) if name else group
+def account_rights(site):
+    """Every right the bot's *account* holds on one wiki, whatever the session
+    may use. -> a set, or None when the wiki would not say."""
+    import pywikibot
+
+    try:
+        return set(pywikibot.User(site, site.username()).rights(force=True))
+    except Exception as e:
+        logger.warning("could not read the account's rights on %s: %s", site, e)
+        return None
 
 
-def right_label(right):
-    """A right's name as a person reads it, the raw name in brackets."""
-    name = RIGHT_NAMES.get(right)
-    return "{} ({})".format(name, right) if name else right
+def explain_missing(site, missing, wiki_key=None):
+    """Why this session cannot use these rights. -> utils.Explained, or None.
+
+    `missing` is rights, or the (right, group) pairs `missing_rights` gives.
+
+    When the account holds a right the session lacks, the BotPassword is what
+    withholds it, and the answer names the grant to tick. Otherwise it names
+    the group that would give the account the right, or says the account
+    lacks even an ordinary user's rights. It used to name a group every time,
+    and told a content moderator — a group that holds rollback — that rollback
+    needed the rollbacker group, when what was missing was the grant.
+    """
+    from utils import Explained, localized
+
+    missing = [item[0] if isinstance(item, (list, tuple)) else item
+               for item in missing]
+    missing = [right for right in missing if right]
+    if not missing:
+        return None
+    wiki_key = wiki_key or "{}:{}".format(site.family.name, site.code)
+    held = account_rights(site) or set()
+    grants = []
+    for right in missing:
+        grant = GRANT_OF.get(right)
+        if right in held and grant and grant not in grants:
+            grants.append(grant)
+    if grants:
+        return Explained(
+            "task_missing_grants", wiki=wiki_key,
+            grants=lambda lang: ", ".join(
+                "«{}»".format(localized("grant_" + grant, lang))
+                for grant in grants))
+    groups = needed_groups([(right, RIGHT_GRANTED_BY.get(right))
+                            for right in missing])
+    if groups:
+        return Explained(
+            "task_missing_group_rights", wiki=wiki_key,
+            groups=lambda lang: ", ".join(group_label(group, lang)
+                                          for group in groups))
+    return Explained("task_missing_basic_rights", wiki=wiki_key)
+
+
+def group_label(group, lang):
+    """A group's name as a person reads it, in their language, with the raw
+    name in brackets; a group the i18n files do not name is shown raw.
+
+    The names live in the i18n files as `access_group_<group>`. They used to
+    be a Russian table here, which put Russian into every refusal whatever
+    the person read the bot in. A right is never named on its own — a refusal
+    names the group that grants it, the thing a person can ask for.
+    """
+    from utils import has_translation, localized
+
+    key = "access_group_" + str(group).replace("-", "_")
+    if not has_translation(key):
+        return group
+    return "{} ({})".format(localized(key, lang), group)
 
 
 def work_status(site, fresh=False):

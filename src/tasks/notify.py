@@ -72,11 +72,13 @@ async def send(key, text):
         logger.warning("could not answer %s: %s", key, e)
 
 
-async def send_files(key, paths, caption=None):
+async def send_files(key, paths, caption=None, lang=None):
     """The files a task produced, to the chat it was asked from.
 
     A file that is not there is skipped rather than reported: a task that
-    changed nothing leaves no diff, and saying so twice helps nobody.
+    changed nothing leaves no diff, and saying so twice helps nobody. `lang`
+    is the reader's, for the line Discord adds about a file too large to
+    attach.
     """
     target = parse_chat(key)
     if target is None:
@@ -99,9 +101,43 @@ async def send_files(key, paths, caption=None):
         elif platform == "discord":
             from discord_bot import send_files as discord_files
 
-            await discord_files(chat, real, caption)
+            await discord_files(chat, real, caption, lang)
     except Exception as e:
         logger.warning("could not send the files of a task to %s: %s", key, e)
+
+
+async def to_person(platform, user_id, text, fallback=None):
+    """A private message to one person; `fallback` is a chat key to use when
+    the messenger will not deliver it (a Telegram user who never opened a
+    chat with the bot, a Discord user who closed their DMs). Never raises.
+    -> whether it reached them one way or the other."""
+    try:
+        if platform == "telegram":
+            from telegram_bot import bot
+
+            await bot.send_message(int(user_id), str(text)[:MESSAGE_LIMIT])
+            return True
+        if platform == "discord":
+            from discord_bot.client import client
+
+            user = client.get_user(int(user_id)) or await client.fetch_user(int(user_id))
+            await user.send(str(text)[:MESSAGE_LIMIT])
+            return True
+    except Exception as e:
+        logger.info("no private message to %s:%s: %s", platform, user_id, e)
+    if fallback:
+        await send(fallback, text)
+        return True
+    return False
+
+
+async def request_approval(schedule_id):
+    """Ask a bot administrator whether a repeating run may start.
+    -> whether the question reached a channel. The asking is Discord's
+    (discord_bot/approvals.py): that is where the buttons are."""
+    from discord_bot import approvals
+
+    return await approvals.request(schedule_id)
 
 
 async def announce(text, files=None):
@@ -117,16 +153,5 @@ async def announce(text, files=None):
             await send_files(key, files)
 
 
-async def both(key, text, files=None):
-    """Answer the person and tell the service log the same thing.
 
-    Used for the lines that matter to both — a task started, a task finished —
-    so that the two never say different things about the same run. The files
-    go only to the person who asked: the service log wants to know that a run
-    made four hundred edits, not to carry four hundred diffs.
-    """
-    await send(key, text)
-    if files:
-        await send_files(key, files)
-    await announce(text)
 

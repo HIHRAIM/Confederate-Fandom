@@ -59,11 +59,17 @@ class Context:
     `state` is where each mechanic keeps whatever `prepare` gave it, under its
     own code. `notes` are the lines the run wants a person to read — they go
     into the report and, when there are few, into the message.
+
+    `lang` is the wiki's language; `reader` is the language of the person who
+    asked (utils.lang_of), which is what the files of the run and the notes
+    of a page are written in. The notes are kept as keys rather than text
+    (`note`, `render_notes`), because the same note is read twice: by the
+    person, in their language, and by the service chats, in theirs.
     """
 
     __slots__ = ("task_id", "site", "wiki", "family", "lang", "params",
                  "summary", "dry_run", "mechanics", "state", "notes",
-                 "requester", "diffs", "report_lines")
+                 "requester", "diffs", "report_lines", "reader")
 
     def __init__(self, task_id, site, wiki, family, lang, params, summary,
                  dry_run, mechanics, requester):
@@ -82,13 +88,43 @@ class Context:
         self.notes = []
         self.diffs = None
         self.report_lines = []
+        self.reader = DEFAULT_READER
 
-    def note(self, text):
-        """Say something a person should read at the end of the run."""
-        line = str(text)
-        if line not in self.notes:
-            self.notes.append(line)
-        logger.info("task %s: %s", self.task_id, line)
+    def note(self, key, **values):
+        """Say something a person should read at the end of the run.
+
+        `key` is an i18n key and `values` fill it; both are kept as they are,
+        so they must be plain — text and numbers — to survive the checkpoint
+        that carries them over a restart.
+        """
+        from utils import DEFAULT_LANG, localized
+
+        entry = {"key": key, "values": values}
+        if entry not in self.notes:
+            self.notes.append(entry)
+        logger.info("task %s: %s", self.task_id,
+                    localized(key, DEFAULT_LANG, **values))
+
+
+DEFAULT_READER = "en"
+"""The language of a context before `_build_context` has found the person."""
+
+
+def render_notes(notes, lang):
+    """A run's notes as the lines one reader reads. -> a list of strings.
+
+    A note saved by a version that kept text rather than keys comes back from
+    the checkpoint as a plain string and is shown as it was written.
+    """
+    from utils import localized
+
+    lines = []
+    for note in notes or []:
+        if isinstance(note, dict) and note.get("key"):
+            lines.append(localized(note["key"], lang, **(note.get("values") or {})))
+        elif note:
+            lines.append(str(note))
+    return lines
 
 
 def _target(row):
@@ -106,25 +142,28 @@ def _build_context(row):
     import db
     import wiki
     from tasks import registry
+    from utils import Explained, lang_of
 
     family, lang = _target(row)
     site = wiki.get_site(family, lang)
     params = db.task_params(row)
     mechanics, unknown = registry.find_all(db.task_mechanics(row))
     if unknown:
-        raise ValueError("неизвестные механики: {}".format(", ".join(unknown)))
+        raise Explained("error_unknown_mechanics", codes=", ".join(unknown))
     if not mechanics:
-        raise ValueError("в задаче не осталось ни одной механики")
+        raise Explained("error_no_mechanics")
 
     requester = {"platform": row["requested_by_platform"],
                  "id": row["requested_by_id"],
                  "name": row["requested_by_name"],
                  "wiki_user": row["requested_by_wiki_user"],
                  "role": None}
-    return Context(
+    ctx = Context(
         task_id=row["id"], site=site, wiki=str(row["wiki"]), family=family,
         lang=lang, params=params, summary=(params.get("summary") or "").strip(),
         dry_run=bool(row["dry_run"]), mechanics=mechanics, requester=requester)
+    ctx.reader = lang_of(requester["platform"], requester["id"])
+    return ctx
 
 
 def context_for(row):
@@ -143,7 +182,8 @@ def context_for(row):
         saved = db.task_report(row).get("checkpoint") or {}
         ctx.report_lines = list(saved.get("report_lines") or [])
         for note in saved.get("notes") or []:
-            ctx.note(note)
+            if note not in ctx.notes:
+                ctx.notes.append(note)
         _contexts[row["id"]] = ctx
     ctx.dry_run = bool(row["dry_run"])
     return ctx
@@ -183,7 +223,9 @@ def _plan(task_id):
 
     row = db.get_task(task_id)
     if row is None:
-        raise ValueError("задача не найдена")
+        from utils import Explained
+
+        raise Explained("error_task_not_found")
     if row["state"] != "pending":
         return {}
 
@@ -202,13 +244,19 @@ def _plan(task_id):
     pages = 0
     sample = []
     if registry.needs_pages(ctx.mechanics):
-        titles = pagesets.collect(
-            ctx.site, ctx.params,
-            redirects=registry.redirects_wanted(ctx.mechanics, ctx.params))
+        titles = []
+        for mechanic in ctx.mechanics:
+            if mechanic.own_pages:
+                titles += mechanic.pages(ctx)
+        if registry.needs_source(ctx.mechanics):
+            titles += pagesets.collect(
+                ctx.site, ctx.params,
+                redirects=registry.redirects_wanted(ctx.mechanics, ctx.params))
+        titles = list(dict.fromkeys(titles))
         pages = db.set_pages(task_id, titles)
         sample = titles[:PREVIEW_TITLES]
         if not pages:
-            ctx.note("по этому источнику не нашлось ни одной страницы")
+            ctx.note("note_no_pages")
 
     if not db.set_task_state(task_id, "confirm", expected_state="pending"):
         forget(task_id)
@@ -249,6 +297,7 @@ def _walk_page(ctx, row):
     import wiki
     from tasks import registry, report
     from tasks.mechanic import ACTION, REPORT, TEXT
+    from utils import localized
 
     wiki.use_cookies(ctx.wiki)
     title = row["title"]
@@ -262,7 +311,7 @@ def _walk_page(ctx, row):
         try:
             original = page.text
         except Exception as e:
-            return "fail", report.safe_error(e)
+            return "fail", report.safe_error(e, ctx.reader)
         text = original
         parts = []
         for mechanic in text_mechanics:
@@ -271,7 +320,8 @@ def _walk_page(ctx, row):
                 text, labels = mechanic.apply(ctx, page, text)
             except Exception as e:
                 logger.exception("mechanic %s failed on %s", mechanic.code, title)
-                return "fail", "{}: {}".format(mechanic.code, report.safe_error(e))
+                return "fail", "{}: {}".format(mechanic.code,
+                                               report.safe_error(e, ctx.reader))
             if labels and text != before:
                 parts.append(mechanic.summary_part(ctx, labels))
         if text.rstrip() != original.rstrip():
@@ -286,7 +336,7 @@ def _walk_page(ctx, row):
                     edited = True
                 except Exception as e:
                     logger.warning("could not save %s: %s", title, e)
-                    return "fail", report.safe_error(e)
+                    return "fail", report.safe_error(e, ctx.reader)
             else:
                 edited = True
 
@@ -295,7 +345,8 @@ def _walk_page(ctx, row):
             state, note = mechanic.act(ctx, page)
         except Exception as e:
             logger.exception("mechanic %s failed on %s", mechanic.code, title)
-            return "fail", "{}: {}".format(mechanic.code, report.safe_error(e))
+            return "fail", "{}: {}".format(mechanic.code,
+                                           report.safe_error(e, ctx.reader))
         if note:
             notes.append(note)
         if state == "fail":
@@ -311,7 +362,9 @@ def _walk_page(ctx, row):
         except Exception as e:
             logger.warning("report mechanic %s failed on %s: %s",
                            mechanic.code, title, e)
-            lines = ["{}\tошибка: {}".format(title, report.safe_error(e))]
+            lines = ["{}\t{}".format(title, localized(
+                "report_line_error", ctx.reader,
+                error=report.safe_error(e, ctx.reader)))]
         if lines:
             ctx.report_lines += list(lines)
 
@@ -344,7 +397,7 @@ def _run_chunk(task_id):
 
     ctx = context_for(row)
     if ctx.diffs is None:
-        ctx.diffs = report.DiffFile(task_id, ctx.wiki, ctx.dry_run)
+        ctx.diffs = report.DiffFile(task_id, ctx.wiki, ctx.dry_run, ctx.reader)
 
     started = time.monotonic()
     cursor = row["cursor"]
@@ -393,6 +446,7 @@ def _finish(task_id):
     """
     import db
     from tasks import report
+    from utils import localized
 
     row = db.get_task(task_id)
     if row is None or row["state"] != "running":
@@ -406,7 +460,8 @@ def _finish(task_id):
             lines = mechanic.finish(ctx)
         except Exception as e:
             logger.exception("mechanic %s failed to finish", mechanic.code)
-            ctx.note("{}: {}".format(mechanic.code, report.safe_error(e)))
+            ctx.note("note_mechanic_failed", code=mechanic.code,
+                     error=report.safe_error(e, ctx.reader))
             continue
         if lines:
             ctx.report_lines += list(lines)
@@ -414,12 +469,13 @@ def _finish(task_id):
     if ctx.diffs is not None:
         ctx.diffs.close()
     report.write_lines(task_id, "report.txt",
-                       "Отчёт задачи {} — {}".format(task_id, ctx.wiki),
+                       localized("report_title", ctx.reader, id=task_id,
+                                 wiki=ctx.wiki),
                        ctx.report_lines)
     failures = db.failed_pages(task_id)
     report.write_lines(
         task_id, "errors.txt",
-        "Не удалось обработать — задача {} — {}".format(task_id, ctx.wiki),
+        localized("report_errors_title", ctx.reader, id=task_id, wiki=ctx.wiki),
         ["{}\t{}".format(entry["title"], entry["note"] or "") for entry in failures])
 
     row = db.get_task(task_id)

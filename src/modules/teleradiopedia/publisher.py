@@ -38,8 +38,8 @@ import time
 
 import db
 import wiki
-from modules.telepedia import news, preview
-from config import (
+from modules.teleradiopedia import news, preview
+from modules.teleradiopedia.settings import (
     EDIT_SUMMARY, NEWS_CSS_PREFIX, NEWS_FILES, NEWS_TEMPLATES, UPLOAD_SUMMARY, WIKIS,
 )
 from telegram_bot import download_photo, source_chat_id, source_username

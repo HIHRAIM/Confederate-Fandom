@@ -8,13 +8,16 @@ Confederate Fandom automates wiki work on the Fandom farm from Discord and Teleg
 
 - **whatever it is asked** — nineteen mechanics over any Fandom wiki, set going by a command in Discord or Telegram, once or on a schedule;
 - **the news** — a standing module: the news block of two main pages, kept in step with a Telegram channel, four times an hour;
-- **the species names** — a standing module: one wiki's articles walked once a night, the Russian names of Pokémon species brought to the standard ones.
+- **the species names** — a standing module: one wiki's articles walked once a night, the Russian names of Pokémon species brought to the standard ones;
+- **the page archive** — a standing module: chosen wiki pages committed to a GitHub repository every midnight in Kyiv, behind everything else in the queue.
+
+The three modules are off until config.py sets them up, and then they are not there at all: no job, no line in `/help`, nothing in the presence.
 
 All of it is slow, all of it is the same kind of slow, and none of it may interrupt the rest. That is why everything hangs off one queue (`scheduler.py`), and why the queue has priorities.
 
 **Pywikibot is synchronous**, and that fact shapes the whole design. Every wiki call blocks, so the loop hands work to a worker thread (`asyncio.to_thread`), and that thread is the only place a wiki is spoken to. There is exactly one of it — not for tidiness but because Pywikibot keeps its cookie jar in a process-global (`wiki/site.py`), and two threads on two wikis would take turns unseating each other's session. The database is reached from both, which is why `db/__init__.py` wraps its single connection in a re-entrant lock.
 
-The two halves of the news never touch each other directly. The Telegram half **collects**; the wiki half **publishes** a finished plan. Between them sits `modules/telepedia/publisher.py`, the only module that knows both.
+The two halves of the news never touch each other directly. The Telegram half **collects**; the wiki half **publishes** a finished plan. Between them sits `modules/teleradiopedia/publisher.py`, the only module that knows both.
 
 ```
                       ┌──────────────── scheduler.py ────────────────┐
@@ -23,7 +26,7 @@ The two halves of the news never touch each other directly. The Telegram half **
                           │                │                  │
               priority 0  │    priority 0  │      priority 10 │
                           ▼                ▼                  ▼
-                 modules/telepedia  modules/pokemon      tasks/queue.py
+                 modules/teleradiopedia  modules/pokemon      tasks/queue.py
                    (news, :00…)      (species, 20:00)    (one chunk per turn)
                           │                │                  │
                           └────────────────┴──────────────────┘
@@ -35,9 +38,9 @@ The two halves of the news never touch each other directly. The Telegram half **
 
 ## The path of a post
 
-0. **`modules/telepedia/backfill.py: sync`** runs first, before each pass (`config.PREVIEW_SYNC`) and on `/backfill`: it reads the channel's public web preview through `preview.py`, stores the posts the bot was not there for and refreshes the preview-sourced ones that have changed. Its rows carry a picture *URL* where a Bot API row carries a `file_id`, which is the one difference the rest of the code has to know about (`publisher.py: _download`), and `channel_posts.source` is what keeps it from overwriting a row the bot heard itself.
+0. **`modules/teleradiopedia/backfill.py: sync`** runs first, before each pass (`config.PREVIEW_SYNC`) and on `/backfill`: it reads the channel's public web preview through `preview.py`, stores the posts the bot was not there for and refreshes the preview-sourced ones that have changed. Its rows carry a picture *URL* where a Bot API row carries a `file_id`, which is the one difference the rest of the code has to know about (`publisher.py: _download`), and `channel_posts.source` is what keeps it from overwriting a row the bot heard itself.
 1. **`telegram_bot/channel.py: on_channel_post`** fires for every post of every channel the bot administrates; `telegram_bot/client.py: is_source_chat` decides whether this is the followed one. The row written to `channel_posts` holds the text (or the caption), the Telegram timestamp, the `media_group_id` and both identifiers of the largest photo size — `file_id` to download it with, `file_unique_id` because it is the same for the same picture and is what lets a later pass skip an upload. Then `db.cleanup_old_posts` drops everything past the newest 60.
-2. **`modules/telepedia: job`** comes due. It makes sure the channel is resolved (`resolve_source_channel`, once, retried at every tick until it works) and calls `publisher.run_pass`.
+2. **`modules/teleradiopedia: job`** comes due. It makes sure the channel is resolved (`resolve_source_channel`, once, retried at every tick until it works) and calls `publisher.run_pass`.
 3. **`news.py: collect_news`** turns the stored rows into at most three news, newest first — folding albums, skipping textless posts, shortening the text, formatting the date in `NEWS_TIMEZONE`, and building the link from the channel's `@name`.
 4. **`publisher.py: _fetch_pictures` and `_build_plan`** decide what has to move. A picture is downloaded once per pass and only when *some* wiki is missing it (`wiki_slots` holds each wiki's answer, as the `file_unique_id` of what its slot holds). Then one plan is built per wiki: each entry carries the template title, the file name, the finished wikitext (`news.render_template`), the bytes to upload or `None`, and the two edit summaries. A slot whose picture this wiki neither holds nor can be given is rendered with no image block at all, so a card never points at a file holding an older news' picture. A download that will not work is tried three times before it comes to that (`publisher.PICTURE_ATTEMPTS` — Telegram's CDN answers the occasional `HTTP 500` for a file that is there), and the slot is then recorded holding *no* picture, which is the state the next pass reads as "this wiki is missing it" and acts on.
 5. **`wiki/site.py: get_site`** hands over that wiki's session, having first asked the wiki whether it still recognises it — a session that expired is renewed here rather than discovered by six failing edits. **`wiki/pages.py: apply_plan`** then runs in the worker thread, once per wiki: for each slot, upload the file *then* edit the template — that order, so a template never points at a file that has not arrived yet. Each slot is wrapped on its own, so one failure costs one slot; each wiki is wrapped on its own too.
@@ -91,10 +94,10 @@ Every kind may have `prepare(ctx)` (compile the rules, read the deletion log, wo
 |---|---|
 | Collecting the channel's posts | `telegram_bot/channel.py` |
 | Which channel is followed, and its `@name` | `telegram_bot/client.py` (`_source`, `is_source_chat`, `resolve_source_channel`) |
-| Downloading a picture | `telegram_bot/files.py` (Bot API), `modules/telepedia/preview.py` (the web preview) |
-| Recovering older posts, and noticing edits | `modules/telepedia/preview.py`, `modules/telepedia/backfill.py` |
-| What a news is; shortening; the card's wikitext | `modules/telepedia/news.py` |
-| The sequence of a news pass; what may be skipped | `modules/telepedia/publisher.py` |
+| Downloading a picture | `telegram_bot/files.py` (Bot API), `modules/teleradiopedia/preview.py` (the web preview) |
+| Recovering older posts, and noticing edits | `modules/teleradiopedia/preview.py`, `modules/teleradiopedia/backfill.py` |
+| What a news is; shortening; the card's wikitext | `modules/teleradiopedia/news.py` |
+| The sequence of a news pass; what may be skipped | `modules/teleradiopedia/publisher.py` |
 | Formatting: Telegram entities and preview HTML into wikitext | `richtext.py` |
 | The Pokémon names: rules, engine, the walk | `modules/pokemon/names.py`, `rules.py`, `walk.py` |
 | The catalogue of mechanics | `tasks/registry.py`, `tasks/mechanic.py` |
@@ -102,6 +105,14 @@ Every kind may have `prepare(ctx)` (compile the rules, read the deletion log, wo
 | Waiting for an answer | `telegram_bot/dialogs.py` + `catchall.py`, `discord_bot/dialogs.py` |
 | Where the pages come from | `tasks/pagesets.py` |
 | Who may ask, and what the bot may do there | `tasks/access.py`, `wiki/rights.py` |
+| Whether a module is set up, and its settings with defaults | `modules/teleradiopedia/settings.py`, `modules/pokemon/__init__.py` (`setting`, `enabled`), `modules/myarchive/__init__.py` (`settings`, `enabled`) |
+| The page archive: reading pages, the GitHub calls, one pass | `modules/myarchive/fandom.py`, `github.py`, `archive.py` |
+| Approving a repeating run | `tasks/dialog.py` (`pending`), `db/schedules.py` (`approve_schedule`, `reject_schedule`, `is_pending`), `discord_bot/approvals.py`, `tasks/notify.py` (`to_person`), `utils.py` (`first_admin`, `schedule_approval`) |
+| Why a right is missing: the group, or the BotPassword grant | `wiki/rights.py` (`explain_missing`, `GRANT_OF`, `account_rights`) |
+| A mechanic that finds its own pages, or may not repeat | `tasks/mechanic.py` (`own_pages`, `schedulable`), `tasks/registry.py` (`needs_source`, `schedulable`) |
+| The language a person reads the bot in; `/lang` | `utils.py` (`lang_of`, `user_lang`, `lang_answer`), `db/users.py`, `/lang` in `telegram_bot/commands/user.py` and `discord_bot/commands/admins.py` |
+| An error or a note worded per reader | `utils.py` (`Explained`, `explain`), `tasks/runner.py` (`Context.note`, `render_notes`), `tasks/report.py` (`safe_error`), `tasks/queue.py` (`reader_lang`) |
+| Slash-command descriptions in the language of the Discord app | `discord_bot/client.py` (`slash`, `_Translator`) |
 | Appointing wiki administrators; Telegram's `@name` invitations | `discord_bot/commands/admins.py`, `telegram_bot/commands/admins.py`, `telegram_bot/people.py` (`resolve`, `_claim_invitation`), `db/admins.py` |
 | Planning, chunking, editing | `tasks/runner.py` |
 | The files that come back, and what may go into them | `tasks/report.py` (`safe_error`) |
@@ -121,7 +132,7 @@ Every kind may have `prepare(ctx)` (compile the rules, read the deletion log, wo
 | What the Discord presence says | `discord_bot/status.py` (`text`, `loop`), `scheduler.py` (`job_names`), `db/schedules.py` (`next_schedule`) |
 | How they look, and their page arrows | `discord_bot/pages.py`, `telegram_bot/pages.py`, `utils.py` (`paginate`) |
 | An encrypted, consistent copy of the database | `backup_crypto.py`, `restore_backup.py`, `main.py` (`backup_job`) |
-| The standing jobs and what each reports | `modules/telepedia/__init__.py`, `modules/pokemon/__init__.py` |
+| The standing jobs and what each reports | `modules/teleradiopedia/__init__.py`, `modules/pokemon/__init__.py` |
 | The slash commands and the log channels | `discord_bot/` |
 | Localization runtime; the admin check; service chats | `utils.py` |
 | Tables and migrations | `db/schema.py` |
@@ -149,8 +160,8 @@ Each of these exists exactly once, declared in one module and imported by name e
 |---|---|---|
 | `_source` | `telegram_bot/client.py` | The resolved id and `@name` of the followed channel |
 | `_pending_inputs` | `telegram_bot/dialogs.py` | The futures a dialog is waiting on, keyed by (chat, person) |
-| `_pass_lock`, `_pass_state` | `modules/telepedia/publisher.py` | The lock that keeps two passes from running at once |
-| `_channel` | `modules/telepedia/__init__.py` | Whether the source channel has been resolved yet |
+| `_pass_lock`, `_pass_state` | `modules/teleradiopedia/publisher.py` | The lock that keeps two passes from running at once |
+| `_channel` | `modules/teleradiopedia/__init__.py` | Whether the source channel has been resolved yet |
 | `_session`, `_jars` | `wiki/site.py` | The logged-in Site and the cookie jar, one of each per wiki |
 | `_jobs`, `_queue`, `_state` | `scheduler.py` | The registry, the queue and what is running |
 | `_contexts` | `tasks/runner.py` | The prepared context of each running task, kept between chunks |
@@ -164,10 +175,11 @@ Each of these exists exactly once, declared in one module and imported by name e
 - **`wiki_slots`** — one row per wiki and slot: the post the slot came from and the `file_unique_id` of the picture uploaded into it. Written only after that wiki accepted the change, which is what makes a failed slot retry itself.
 - **`state`** — the bot's own bookkeeping: the resolved channel, the time of the last pass, the last error.
 - **`wiki_admins`** — the people appointed with `/wikiadmin`: platform, numeric id, display name, Fandom account. The appointment; never the standing, which is asked of the wiki.
+- **`user_langs`** — the language a person chose with `/lang`: platform, numeric id, language. A row only for a language other than English, the default.
 - **`wiki_admin_invites`** — a Telegram appointment made by `@name` whose id the bot does not know yet: the `@name`, the Fandom account, who made it and when. The first message from the account holding that `@name` turns it into a `wiki_admins` row; unclaimed, it lapses after seven days.
 - **`tasks`** — one run: the wiki, the mechanics, the parameters, who asked, the state, the cursor and the counters.
 - **`task_pages`** — that run's page list, settled before the first edit. This is the table that makes a long run interruptible, resumable and countable.
-- **`schedules`** — a task that repeats, and when it is next due.
+- **`schedules`** — a task that repeats, when it is next due, and `approval` — `'pending'` while a bot administrator has not said yes.
 
 An older database may still carry `news_slots`, the single-wiki predecessor of `wiki_slots`; nothing reads it, and the additive-only migration policy is why it is left alone rather than dropped.
 
@@ -175,8 +187,8 @@ Migrations are additive only: `CREATE TABLE IF NOT EXISTS`, and new columns thro
 
 ## Where to go for a typical task
 
-- **Change what a news card looks like** → `modules/telepedia/news.py: render_template`, and nothing else.
-- **Change what becomes a news** → `modules/telepedia/news.py: collect_news`.
+- **Change what a news card looks like** → `modules/teleradiopedia/news.py: render_template`, and nothing else.
+- **Change what becomes a news** → `modules/teleradiopedia/news.py: collect_news`.
 - **Add a fourth news** → one more entry in `NEWS_TEMPLATES` and one in `NEWS_FILES`; nothing in the code counts to three.
 - **Add a mechanic** → a module in `scripts/` with a `SPEC`, its name in `tasks/registry.py: _load` (**at the end** — the numbers people are holding must keep meaning the same thing), and its i18n keys in the six files.
 - **Add a page source** → `tasks/pagesets.py` (`SOURCES` and `collect`), plus `pageset_<code>` and `dialog_source_argument_<code>` in the six files.

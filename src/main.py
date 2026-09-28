@@ -4,7 +4,7 @@ Run it from this directory — the database, the .env file and Pywikibot's own
 directory are all opened by relative path: ``python main.py``.
 
 There is very little here on purpose. The standing work belongs to the modules
-(modules/telepedia for the news, modules/pokemon for the species names); what
+(modules/teleradiopedia for the news, modules/pokemon for the species names); what
 somebody asks the bot to do through a command belongs to the task engine
 (tasks/); the clock and the one worker thread belong to scheduler.py. What is
 left here is starting all of it and stopping it properly.

@@ -122,8 +122,10 @@ def schedules(lang, fmt=PLAIN):
             "schedule_line", lang, id=row["id"], wiki=fmt.code(row["wiki"]),
             mechanics=fmt.code(", ".join(db.schedule_mechanics(row))),
             when=fmt.esc(dialog.describe_schedule(row, lang)),
-            state=fmt.esc(localized("schedule_state_on" if row["enabled"]
-                                    else "schedule_state_off", lang))))
+            state=fmt.esc(localized(
+                "schedule_state_pending" if db.is_pending(row)
+                else "schedule_state_on" if row["enabled"]
+                else "schedule_state_off", lang))))
     return localized("schedule_header", lang), lines
 
 
@@ -178,13 +180,16 @@ HELP_SECTIONS = (
     )),
     ("help_news", (
         ("cmd_status", BOTH),
-        ("cmd_update", (TELEGRAM,)),
-        ("cmd_backfill", (TELEGRAM,)),
+        ("cmd_update", (TELEGRAM,), "news"),
+        ("cmd_backfill", (TELEGRAM,), "news"),
     )),
     ("help_access", (
         ("cmd_wikiadmin", BOTH),
         ("cmd_remwikiadmin", BOTH),
         ("cmd_backup", BOTH),
+    )),
+    ("help_you", (
+        ("cmd_lang", BOTH),
     )),
 )
 """Every command `/help` lists: its section, its i18n key, and where it exists.
@@ -199,7 +204,21 @@ it, and got a real run where they had asked for a preview.
 
 So the platform is a column. A command that does not exist on a messenger is
 not listed there (`/update` and `/backfill` are Telegram's), and a command
-spelled differently carries a `_tg` and a `_dc` key beside the shared one."""
+spelled differently carries a `_tg` and a `_dc` key beside the shared one.
+
+A third element names the module a command belongs to. Such a command is left
+out of /help when its module is not configured (`_module_on`): somebody
+running the bot for wiki work alone is not told about a news channel they do
+not have."""
+
+
+def _module_on(name):
+    """Whether the module a /help line belongs to is configured here."""
+    if name == "news":
+        from modules.teleradiopedia import settings
+
+        return settings.enabled()
+    return True
 
 
 def _command_line(key, platform, lang):
@@ -236,8 +255,10 @@ def help_text(lang, fmt=PLAIN, platform=TELEGRAM):
 
     lines = []
     for title_key, commands in HELP_SECTIONS:
-        rows = [_command_line(key, platform, lang)
-                for key, platforms in commands if platform in platforms]
+        rows = [_command_line(entry[0], platform, lang)
+                for entry in commands
+                if platform in entry[1]
+                and (len(entry) < 3 or _module_on(entry[2]))]
         if not rows:
             continue
         if lines:

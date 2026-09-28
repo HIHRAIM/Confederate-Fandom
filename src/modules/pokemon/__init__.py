@@ -39,11 +39,12 @@ from modules.pokemon.rules import find_derived, fix_text, fix_title
 
 async def job():
     """One walk of the species wiki, in the worker thread Pywikibot needs."""
-    from config import (
-        SPECIES_LIMIT, SPECIES_REQUIRE_BOT_FLAG, SPECIES_SUMMARY, SPECIES_WIKI,
-    )
     from utils import send_service_event
 
+    SPECIES_WIKI = setting("SPECIES_WIKI")
+    SPECIES_LIMIT = int(setting("SPECIES_LIMIT", 0) or 0)
+    SPECIES_SUMMARY = setting("SPECIES_SUMMARY", "")
+    SPECIES_REQUIRE_BOT_FLAG = bool(setting("SPECIES_REQUIRE_BOT_FLAG", True))
     if not SPECIES_WIKI:
         return
     try:
@@ -73,11 +74,27 @@ async def job():
             pass
 
 
-def jobs():
-    """The jobs of this module, for main.py to register. -> a list of dicts."""
-    from config import SPECIES_AT, SPECIES_WIKI
+def setting(name, default=None):
+    """One of this module's settings, or its default when config.py does not
+    name it: a deployment that does not walk the species wiki carries none of
+    them, and must start all the same."""
+    import config
 
-    if not SPECIES_WIKI:
+    value = getattr(config, name, default)
+    return default if value is None else value
+
+
+def enabled():
+    """Whether this deployment walks the species wiki at all."""
+    return bool(setting("SPECIES_WIKI"))
+
+
+def jobs():
+    """The jobs of this module, for main.py to register. -> a list of dicts.
+
+    None when config.SPECIES_WIKI is not set: no walk, nothing in the
+    presence line, no load."""
+    if not enabled():
         return []
-    return [{"name": JOB, "run": job, "daily_at": SPECIES_AT,
+    return [{"name": JOB, "run": job, "daily_at": setting("SPECIES_AT", "20:00"),
              "at_start": False}]

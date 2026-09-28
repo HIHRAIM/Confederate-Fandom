@@ -61,7 +61,17 @@ SOURCE_CODES = tuple(code for code, _key, _arg in SOURCES)
 
 NEEDS_ARGUMENT = {code for code, _key, needs in SOURCES if needs}
 
+NAMED = {TITLES, PAIRS}
+"""The sources that name their pages outright. The namespace question is not
+asked for them, because the answer would change nothing: `collect` takes the
+titles as they were sent. Asking it anyway was one more question that made a
+person wonder what they had got wrong."""
+
 DEFAULT_NAMESPACE = 0
+
+EVERY_NAMESPACE = {"*", "all", "все", "усі", "всі", "wszystkie", "todos", "todas"}
+"""The answers that mean every namespace of the wiki, in each of the six
+languages; the question names the one for the reader's language."""
 
 RECENT_DAYS = 7
 
@@ -71,16 +81,27 @@ def needs_argument(source):
     return source in NEEDS_ARGUMENT
 
 
-def _namespaces(params):
+def takes_namespaces(source):
+    """Whether the namespaces a person names narrow this source at all."""
+    return source not in NAMED
+
+
+def _namespaces(params, site=None):
     """The namespaces a task is confined to, as a list of numbers.
 
     A task that names none works in the main namespace: every mechanic here
     was written for articles, and a bot let loose over Template: and
-    MediaWiki: by accident is a bad afternoon.
+    MediaWiki: by accident is a bad afternoon. Every namespace is a choice of
+    its own (EVERY_NAMESPACE): all the wiki has, the virtual ones — Special:
+    and Media:, which hold no pages — left out.
     """
     raw = params.get("namespaces")
     if raw in (None, "", []):
         return [DEFAULT_NAMESPACE]
+    if isinstance(raw, str) and raw.strip().lower() in EVERY_NAMESPACE:
+        if site is None:
+            return [DEFAULT_NAMESPACE]
+        return sorted(int(ns) for ns in site.namespaces if int(ns) >= 0)
     if isinstance(raw, (list, tuple)):
         values = raw
     else:
@@ -140,13 +161,15 @@ def collect(site, params, redirects=False):
     """
     import pywikibot
 
+    from utils import Explained
+
     source = params.get("source") or ALL
     argument = (params.get("argument") or "").strip()
     limit = int(params.get("limit") or 0)
-    namespaces = _namespaces(params)
+    namespaces = _namespaces(params, site)
 
     if source in NEEDS_ARGUMENT and not argument and source != TITLES:
-        raise ValueError("для этого источника нужно указать страницу или запрос")
+        raise Explained("error_source_needs_argument")
 
     if source == ALL:
         pages = []
@@ -227,7 +250,7 @@ def collect(site, params, redirects=False):
                     break
         return seen
 
-    raise ValueError("неизвестный источник страниц: {}".format(source))
+    raise Explained("error_unknown_source", source=source)
 
 
 def _chain(first, second):

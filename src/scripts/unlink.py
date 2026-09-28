@@ -24,6 +24,7 @@ import re
 import sys
 
 from tasks import mechanic as mech
+from utils import Explained
 from tasks.params import FLAGS, TEXT, Param
 
 FLAG_KEEP_BOLD = "keep_bold"
@@ -45,7 +46,7 @@ def prepare(ctx):
     """
     title = _normalise(ctx.params.get("unlink_title"))
     if not title:
-        raise ValueError("не указана страница, ссылки на которую нужно убрать")
+        raise Explained("error_unlink_no_title")
     head = title[0]
     body = re.escape(title[1:]).replace(r"\ ", r"[ _]")
     pattern = "[{}{}]{}".format(head.upper(), head.lower(), body)

@@ -206,6 +206,19 @@ def go_hint(chat_key, task_id, lang):
     return localized(key, lang, id=task_id)
 
 
+def reader_lang(row):
+    """The language of the person who asked for a task (utils.lang_of).
+
+    What the person is sent is written in it; what the service chats are sent
+    is written in config.SERVICE_LANG, and so is the error kept on the row,
+    which is the operator's record. The two used to be one text in the
+    service language, sent to both.
+    """
+    from utils import lang_of
+
+    return lang_of(row["requested_by_platform"], row["requested_by_id"])
+
+
 async def _plan(row):
     """Plan one task and tell the person what it will do."""
     import db
@@ -213,31 +226,34 @@ async def _plan(row):
     from utils import localized, service_lang
 
     task_id = row["id"]
-    lang = service_lang()
+    lang = reader_lang(row)
+    service = service_lang()
     try:
         plan = await asyncio.to_thread(runner.plan, task_id)
     except access.Refusal as refusal:
         if db.get_task(task_id)["state"] == "stopped":
             runner.forget(task_id)
             return
-        db.set_task_state(task_id, "failed", error=refusal.text)
+        db.set_task_state(task_id, "failed", error=refusal.text(service))
         runner.forget(task_id)
-        await notify.send(row["reply_chat"], refusal.text)
-        await notify.announce(localized("task_refused", lang, id=task_id,
-                                        wiki=row["wiki"], reason=refusal.text))
+        await notify.send(row["reply_chat"], refusal.text(lang))
+        await notify.announce(localized("task_refused", service, id=task_id,
+                                        wiki=row["wiki"],
+                                        reason=refusal.text(service)))
         return
     except Exception as e:
         logger.exception("task %s could not be planned", task_id)
         if db.get_task(task_id)["state"] == "stopped":
             runner.forget(task_id)
             return
-        text = report.safe_error(e)
-        db.set_task_state(task_id, "failed", error=text)
+        db.set_task_state(task_id, "failed", error=report.safe_error(e, service))
         runner.forget(task_id)
-        await notify.send(row["reply_chat"],
-                          localized("task_plan_failed", lang, id=task_id, error=text))
-        await notify.announce(
-            localized("task_plan_failed", lang, id=task_id, error=text))
+        await notify.send(row["reply_chat"], localized(
+            "task_plan_failed", lang, id=task_id,
+            error=report.safe_error(e, lang)))
+        await notify.announce(localized(
+            "task_plan_failed", service, id=task_id,
+            error=report.safe_error(e, service)))
         return
 
     fresh = db.get_task(task_id)
@@ -260,7 +276,7 @@ async def _plan(row):
         sample=sample + (("\n" + localized("task_sample_more", lang, count=more))
                          if more > 0 else ""),
         warning=localized("task_destructive", lang) if plan["destructive"] else "",
-        notes="\n".join(plan["notes"]),
+        notes="\n".join(runner.render_notes(plan["notes"], lang)),
         how=go_hint(row["reply_chat"], task_id, lang),
     ))
 
@@ -268,21 +284,17 @@ async def _plan(row):
 async def _chunk(row):
     """Walk one chunk of a running task, and close it when it is done."""
     import db
-    from tasks import notify, report, runner
+    from tasks import notify, runner
     from utils import localized, service_lang
 
     task_id = row["id"]
-    lang = service_lang()
+    lang = reader_lang(row)
+    service = service_lang()
     try:
         more = await asyncio.to_thread(runner.run_chunk, task_id)
     except Exception as e:
         logger.exception("task %s failed while running", task_id)
-        text = report.safe_error(e)
-        db.set_task_state(task_id, "failed", error=text)
-        runner.forget(task_id)
-        await notify.both(row["reply_chat"],
-                          localized("task_failed", lang, id=task_id,
-                                    wiki=row["wiki"], error=text))
+        await _failed(row, e, lang, service)
         return False
 
     fresh = db.get_task(task_id)
@@ -295,7 +307,7 @@ async def _chunk(row):
         total = db.count_pages(task_id)
         if total and fresh["checked"] and fresh["checked"] % 500 == 0:
             await notify.announce(localized(
-                "task_progress", lang, id=task_id, wiki=row["wiki"],
+                "task_progress", service, id=task_id, wiki=row["wiki"],
                 checked=fresh["checked"], total=total, edited=fresh["edited"]))
         return True
 
@@ -303,27 +315,44 @@ async def _chunk(row):
         result = await asyncio.to_thread(runner.finish, task_id)
     except Exception as e:
         logger.exception("task %s failed to finish", task_id)
-        text = report.safe_error(e)
-        db.set_task_state(task_id, "failed", error=text)
-        runner.forget(task_id)
-        await notify.both(row["reply_chat"],
-                          localized("task_failed", lang, id=task_id,
-                                    wiki=row["wiki"], error=text))
+        await _failed(row, e, lang, service)
         return False
 
     if not result:
         runner.forget(task_id)
         return False
     key = "task_done_dry" if result.get("dry_run") else "task_done"
-    text = localized(key, lang, id=task_id, wiki=result.get("wiki"),
-                     checked=result.get("checked", 0),
-                     edited=result.get("edited", 0),
-                     failed=result.get("failed", 0),
-                     notes="\n".join(result.get("notes") or []))
-    await notify.send(row["reply_chat"], text)
-    await notify.send_files(row["reply_chat"], result.get("files"))
-    await notify.announce(text)
+
+    def done(language):
+        """The closing message, in one language."""
+        return localized(key, language, id=task_id, wiki=result.get("wiki"),
+                         checked=result.get("checked", 0),
+                         edited=result.get("edited", 0),
+                         failed=result.get("failed", 0),
+                         notes="\n".join(runner.render_notes(
+                             result.get("notes"), language)))
+
+    await notify.send(row["reply_chat"], done(lang))
+    await notify.send_files(row["reply_chat"], result.get("files"), lang=lang)
+    await notify.announce(done(service))
     return False
+
+
+async def _failed(row, error, lang, service):
+    """A task that broke while running: the row, the person, the service log."""
+    import db
+    from tasks import notify, report, runner
+    from utils import localized
+
+    task_id = row["id"]
+    db.set_task_state(task_id, "failed", error=report.safe_error(error, service))
+    runner.forget(task_id)
+    await notify.send(row["reply_chat"], localized(
+        "task_failed", lang, id=task_id, wiki=row["wiki"],
+        error=report.safe_error(error, lang)))
+    await notify.announce(localized(
+        "task_failed", service, id=task_id, wiki=row["wiki"],
+        error=report.safe_error(error, service)))
 
 
 async def start(task_id, announce_only=False):
@@ -345,21 +374,25 @@ async def start(task_id, announce_only=False):
         return False
     if not db.set_task_state(task_id, "running", expected_state="confirm"):
         return False
-    lang = service_lang()
+    lang = reader_lang(row)
     requester = {"platform": row["requested_by_platform"],
                  "id": row["requested_by_id"],
                  "name": row["requested_by_name"],
                  "wiki_user": row["requested_by_wiki_user"]}
-    text = localized(
-        "task_started", lang, id=task_id, wiki=row["wiki"],
-        mechanics=", ".join(db.task_mechanics(row)),
-        pages=db.count_pages(task_id),
-        who=access.describe(requester),
-        how=localized("task_by_schedule", lang, id=row["schedule_id"])
-        if row["schedule_id"] else "")
-    await notify.announce(text)
+
+    def started(language):
+        """The line saying the task has begun, in one language."""
+        return localized(
+            "task_started", language, id=task_id, wiki=row["wiki"],
+            mechanics=", ".join(db.task_mechanics(row)),
+            pages=db.count_pages(task_id),
+            who=access.describe(requester, language),
+            how=localized("task_by_schedule", language, id=row["schedule_id"])
+            if row["schedule_id"] else "")
+
+    await notify.announce(started(service_lang()))
     if not announce_only:
-        await notify.send(row["reply_chat"], text)
+        await notify.send(row["reply_chat"], started(lang))
         notice = queue_notice(task_id, lang)
         if notice:
             await notify.send(row["reply_chat"], notice)

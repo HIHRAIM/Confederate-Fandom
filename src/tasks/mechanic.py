@@ -32,8 +32,9 @@ class Mechanic:
 
     `code` is what a person may type instead of a number, and what is stored
     in a task row — it never changes. `rights` are the MediaWiki rights the
-    account must hold before the run may start; a missing one is reported as
-    the group that would grant it (wiki/rights.py).
+    session must hold before the run may start; a missing one is reported as
+    the group that would grant it, or as the BotPassword grant that withholds
+    it (wiki/rights.py: explain_missing).
 
     The callables are looked up on the module, not passed in, so that a
     mechanic's module reads as the script it was ported from and not as a
@@ -42,10 +43,11 @@ class Mechanic:
     """
 
     __slots__ = ("code", "kind", "module", "rights", "params", "destructive",
-                 "standalone")
+                 "standalone", "own_pages", "schedulable")
 
     def __init__(self, code, kind, module, rights=(), params=(),
-                 destructive=False, standalone=False):
+                 destructive=False, standalone=False, own_pages=False,
+                 schedulable=True):
         """Declare one mechanic. Nothing here reads a wiki.
 
         `standalone` means the mechanic asks the wiki its own question and
@@ -56,6 +58,15 @@ class Mechanic:
         `destructive` marks the ones that cannot be undone by editing: delete,
         move, protect, revert. It is what makes the confirmation say so out
         loud.
+
+        `own_pages` means the mechanic knows its pages itself and the dialog
+        does not ask where they come from: undoing an account's work walks
+        that account's contributions, not a category somebody has to guess.
+        The module provides `pages(ctx)`.
+
+        `schedulable` False keeps the mechanic out of repeating runs, and the
+        dialog does not ask "once or regularly" at all: undoing one person's
+        edits every night is not a thing anybody means to ask for.
         """
         if kind not in KINDS:
             raise ValueError("unknown mechanic kind: {}".format(kind))
@@ -66,6 +77,8 @@ class Mechanic:
         self.params = tuple(params)
         self.destructive = destructive
         self.standalone = standalone
+        self.own_pages = own_pages
+        self.schedulable = schedulable
 
     def __repr__(self):
         """The code, which is how a mechanic is named everywhere else."""
@@ -115,6 +128,11 @@ class Mechanic:
         """
         hook = getattr(self.module, "finish", None)
         return hook(ctx) if hook else None
+
+    def pages(self, ctx):
+        """The titles an `own_pages` mechanic works on, found by itself."""
+        hook = getattr(self.module, "pages", None)
+        return list(hook(ctx)) if hook else []
 
     def redirects(self, params):
         """Which pages this mechanic can do anything with, for these settings.

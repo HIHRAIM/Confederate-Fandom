@@ -112,6 +112,18 @@ def needs_pages(mechanics):
     return any(not mechanic.standalone for mechanic in mechanics)
 
 
+def needs_source(mechanics):
+    """Whether the dialog must ask where the pages come from: some mechanic
+    walks pages and does not find them itself (`Mechanic.own_pages`)."""
+    return any(not mechanic.standalone and not mechanic.own_pages
+               for mechanic in mechanics)
+
+
+def schedulable(mechanics):
+    """Whether this set of mechanics may repeat on a schedule at all."""
+    return all(mechanic.schedulable for mechanic in mechanics)
+
+
 def redirects_wanted(mechanics, params):
     """Whether the page list should hold redirects. -> True, False or None.
 

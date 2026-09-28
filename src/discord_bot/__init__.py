@@ -10,9 +10,14 @@ are for — and the same commands the Telegram half answers are here as slash
 commands, with the dialogs held in the channel they were started in
 (discord_bot/dialogs.py).
 
+`approvals` registers no command: it puts the two buttons of a repeating
+run's approval request on the client (`add_dynamic_items`), which is what lets
+them be pressed after a restart. It comes after the client it registers on.
+
 The re-exports are the package's public API: `client` for anything that needs
 the connection itself, `main` for the task main.py waits on, `send_log` and
 `send_files` for tasks/notify.py.
 """
 from discord_bot.client import client, main, send_files, send_log, tree
+from discord_bot import approvals
 from discord_bot import commands

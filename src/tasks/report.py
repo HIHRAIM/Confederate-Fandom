@@ -37,18 +37,27 @@ REPORT_KEEP_DAYS = 14
 _PATH_RE = re.compile(r"[A-Za-z]:[\\/][^\s'\"]+|/(?:home|usr|etc|root|var)/[^\s'\"]+")
 
 
-def safe_error(error):
+def safe_error(error, lang=None):
     """One exception as a line a person can read and nothing else.
 
     The type and the message, with anything that looks like a path on this
     machine taken out. The full traceback goes to the log; what leaves the
     machine says what went wrong on the wiki, not where the bot lives.
+
+    An error the bot raised for a person (utils.Explained) is worded in
+    `lang` — the reader's language — and without the type in front, which
+    would only be noise in a sentence written for them. Its values can still
+    carry a library's message, so the paths come out of it all the same.
     """
+    from utils import DEFAULT_LANG, Explained
+
     if isinstance(error, str):
         text = error
+    elif isinstance(error, Explained):
+        text = error.text(lang or DEFAULT_LANG)
     else:
         text = "{}: {}".format(type(error).__name__, error)
-    text = _PATH_RE.sub("<путь>", text)
+    text = _PATH_RE.sub("<path>", text)
     return " ".join(text.split())[:500]
 
 
@@ -73,11 +82,13 @@ class DiffFile:
     empty one to send.
     """
 
-    def __init__(self, task_id, wiki, dry_run=False):
-        """Remember where to write; open nothing yet."""
+    def __init__(self, task_id, wiki, dry_run=False, lang=None):
+        """Remember where to write; open nothing yet. `lang` is the language
+        of the person the file goes to, for its heading."""
         self.task_id = int(task_id)
         self.wiki = wiki
         self.dry_run = dry_run
+        self.lang = lang
         self.path = _path(task_id, "diff.txt")
         self.count = 0
         if os.path.isfile(self.path):
@@ -92,10 +103,14 @@ class DiffFile:
         self._handle = open(self.path, "a", encoding="utf-8")
         if exists:
             return
-        self._handle.write("# {}\n# вики: {}\n# {}\n\n".format(
-            "Предпросмотр правок (ничего не записано)" if self.dry_run
-            else "Сделанные правки",
-            self.wiki, time.strftime("%d.%m.%Y %H:%M")))
+        from utils import DEFAULT_LANG, localized
+
+        lang = self.lang or DEFAULT_LANG
+        self._handle.write("# {}\n# {}\n# {}\n\n".format(
+            localized("report_diff_dry" if self.dry_run else "report_diff_done",
+                      lang),
+            localized("report_diff_wiki", lang, wiki=self.wiki),
+            time.strftime("%d.%m.%Y %H:%M")))
 
     def add(self, title, old, new, summary=None):
         """One page's diff. Nothing is written when the text is unchanged."""

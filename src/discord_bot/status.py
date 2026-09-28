@@ -27,9 +27,15 @@ rate limit that exists precisely for that.
 
 The line goes out as a **custom** activity rather than a "watching" or a
 "playing" one. Those two put a verb of Discord's own in front of whatever they
-are given — «Смотрит …» — and the line here is already a whole sentence with
-a verb of its own, in the operator's language. A status that is a noun phrase
-can afford the prefix; this one cannot.
+are given — "Watching …" — and the line here is already a whole sentence
+with a verb of its own. A status that is a noun phrase can afford the prefix;
+this one cannot.
+
+**The line is English**, the bot's default language. One line is shown to
+everybody who looks at the member list, whatever language each of them chose
+with /lang, so it cannot follow anybody's choice; it used to follow
+config.SERVICE_LANG, which put the operator's language in front of every
+server the bot was in.
 
 Not this module's zone: the connection (`client.py`), and what the jobs are
 (`scheduler.py`, `modules/`, `tasks/`).
@@ -86,8 +92,10 @@ def _running_text(job, lang):
     Everything left — the sweep, the backup, and the task queue between two
     tasks — names itself.
     """
-    from config import SPECIES_WIKI
+    from modules.pokemon import setting
     from utils import job_label, localized, wiki_key
+
+    SPECIES_WIKI = setting("SPECIES_WIKI")
 
     if not job:
         return None
@@ -173,12 +181,12 @@ async def loop():
     again rather than believing a line that never arrived.
     """
     from discord_bot.client import client
-    from utils import service_lang
+    from utils import DEFAULT_LANG
 
     await client.wait_until_ready()
     shown = None
     while not client.is_closed():
-        line = text(service_lang())
+        line = text(DEFAULT_LANG)
         if line != shown:
             try:
                 await client.change_presence(

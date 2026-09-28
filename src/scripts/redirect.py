@@ -135,8 +135,8 @@ def apply(ctx, page, text):
         final, exists, hops = _final_target(ctx, first)
         if mode == BROKEN:
             if exists is False:
-                ctx.note("битое перенаправление: {} -> {}".format(
-                    page.title(), first))
+                ctx.note("note_redirect_broken", title=page.title(),
+                         target=first)
             return text, []
         if hops == 0 or final == first or not exists:
             return text, []

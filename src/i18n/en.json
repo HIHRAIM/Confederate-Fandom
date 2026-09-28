@@ -3,6 +3,10 @@
     "status": "verified",
     "text": "bot"
   },
+  "access_group_bureaucrat": {
+    "status": "verified",
+    "text": "bureaucrat"
+  },
   "access_group_content_moderator": {
     "status": "verified",
     "text": "content moderator"
@@ -14,6 +18,10 @@
   "access_group_sysop": {
     "status": "verified",
     "text": "administrator"
+  },
+  "access_group_threadmoderator": {
+    "status": "verified",
+    "text": "discussions moderator"
   },
   "add_where_before_categories": {
     "status": "verified",
@@ -91,6 +99,14 @@
     "status": "verified",
     "text": "/jobs — what is running and how the last tasks ended"
   },
+  "cmd_lang_dc": {
+    "status": "verified",
+    "text": "/lang code: <language> — the language the bot answers you in; without it, shows the current one"
+  },
+  "cmd_lang_tg": {
+    "status": "verified",
+    "text": "/lang <code> — the language the bot answers you in: en, es, pl, pt, ru, uk; /lang alone shows the current one"
+  },
   "cmd_remwikiadmin_dc": {
     "status": "verified",
     "text": "/remwikiadmin user: <who> — take the appointment away"
@@ -117,7 +133,7 @@
   },
   "cmd_status": {
     "status": "verified",
-    "text": "/status — what the slots hold and when the last pass ran"
+    "text": "/status — the state of the news and of the task queue"
   },
   "cmd_stop_dc": {
     "status": "verified",
@@ -143,6 +159,10 @@
     "status": "verified",
     "text": "/wikiadmin — who is a wiki administrator; /wikiadmin <@name or ID> <Fandom account> appoints one"
   },
+  "command_failed": {
+    "status": "verified",
+    "text": "The command did not work — the details are in the bot's log."
+  },
   "dialog_bad_choice": {
     "status": "verified",
     "text": "There is no such number in the list. Answer with one of them."
@@ -151,6 +171,10 @@
     "status": "verified",
     "text": "Numbers separated by spaces, or «0» for none of them."
   },
+  "dialog_bad_minutes": {
+    "status": "verified",
+    "text": "Minutes are numbers from 0 to 59 separated by commas, for example «0, 30»."
+  },
   "dialog_bad_time": {
     "status": "verified",
     "text": "The time is written «HH:MM», for example «20:00»."
@@ -158,6 +182,10 @@
   "dialog_bad_value": {
     "status": "verified",
     "text": "That answer was not understood. Try again."
+  },
+  "dialog_bad_weekdays": {
+    "status": "verified",
+    "text": "Weekdays are numbers from 1 to 7 separated by commas: 1 is Monday, 7 is Sunday."
   },
   "dialog_failed": {
     "status": "verified",
@@ -173,11 +201,11 @@
   },
   "dialog_limit": {
     "status": "verified",
-    "text": "At most how many pages? «0» or «-» means all of them."
+    "text": "At most how many pages? «0» means all of them."
   },
   "dialog_namespaces": {
     "status": "verified",
-    "text": "In which namespaces? Numbers separated by commas; «0» or «-» means articles only."
+    "text": "Which namespaces should the pages come from? Numbers separated by commas, for example «0, 14»: 0 — articles, 2 — users, 4 — project pages, 6 — files, 10 — templates, 14 — categories, 828 — modules. «all» — every namespace."
   },
   "dialog_opened": {
     "status": "verified",
@@ -229,7 +257,7 @@
   },
   "dialog_summary": {
     "status": "verified",
-    "text": "The edit summary? A single dash «-» and the bot writes what it actually did."
+    "text": "The edit summary? «0» and the bot writes what it actually did."
   },
   "dialog_when": {
     "status": "verified",
@@ -245,7 +273,7 @@
   },
   "dialog_when_weekdays": {
     "status": "verified",
-    "text": "On which weekdays? Numbers separated by commas, 0 is Monday. For example «0,3»."
+    "text": "On which weekdays? Numbers separated by commas: 1 — Monday … 7 — Sunday. For example «1, 4»."
   },
   "dialog_wiki": {
     "status": "verified",
@@ -259,9 +287,125 @@
     "status": "verified",
     "text": "That wiki could not be opened: {error}"
   },
+  "error_addtext_no_text": {
+    "status": "verified",
+    "text": "No text to add was given."
+  },
+  "error_bad_regex": {
+    "status": "verified",
+    "text": "The regular expression «{pattern}» could not be read: {error}"
+  },
+  "error_category_no_name": {
+    "status": "verified",
+    "text": "No category was given."
+  },
+  "error_category_no_target": {
+    "status": "verified",
+    "text": "No category to move the pages to was given."
+  },
+  "error_delete_no_reason": {
+    "status": "verified",
+    "text": "A deletion needs a reason: it goes into the deletion log. Give it as the edit summary."
+  },
+  "error_delinker_log": {
+    "status": "verified",
+    "text": "Could not read the deletion log: {error}"
+  },
+  "error_graph_no_root": {
+    "status": "verified",
+    "text": "No category to start from was given."
+  },
+  "error_image_no_file": {
+    "status": "verified",
+    "text": "No file to replace or take out was given."
+  },
+  "error_interwiki_map": {
+    "status": "verified",
+    "text": "Could not read the wiki's interwiki map: {error}"
+  },
+  "error_move_list_source": {
+    "status": "verified",
+    "text": "Renaming from a list takes both the pages and the new titles from one list — choose the page source «{source}»."
+  },
+  "error_move_no_argument": {
+    "status": "verified",
+    "text": "It was not said what to add, remove or look for in the title."
+  },
+  "error_move_no_pairs": {
+    "status": "verified",
+    "text": "The list holds no «old new» pair: one pair per line, with underscores for the spaces in a title."
+  },
+  "error_no_mechanics": {
+    "status": "verified",
+    "text": "The task has no mechanics left."
+  },
+  "error_replace_no_find": {
+    "status": "verified",
+    "text": "It was not said what to look for."
+  },
+  "error_revert_no_user": {
+    "status": "verified",
+    "text": "It was not said whose edits to undo."
+  },
+  "error_source_needs_argument": {
+    "status": "verified",
+    "text": "This page source needs a page or a query."
+  },
+  "error_task_not_found": {
+    "status": "verified",
+    "text": "The task was not found."
+  },
+  "error_templatecount_none": {
+    "status": "verified",
+    "text": "No template was given."
+  },
+  "error_unknown_mechanics": {
+    "status": "verified",
+    "text": "Unknown mechanics: {codes}"
+  },
+  "error_unknown_source": {
+    "status": "verified",
+    "text": "Unknown page source: {source}"
+  },
+  "error_unlink_no_title": {
+    "status": "verified",
+    "text": "No page whose links to take out was given."
+  },
+  "error_wiki_bad_address": {
+    "status": "verified",
+    "text": "This does not look like a wiki address: {text}"
+  },
+  "error_wiki_bad_domain": {
+    "status": "verified",
+    "text": "This does not look like a domain: {host}"
+  },
+  "error_wiki_empty": {
+    "status": "verified",
+    "text": "No wiki was given."
+  },
+  "error_wiki_no_lang": {
+    "status": "verified",
+    "text": "No language section of the {family} wiki was given."
+  },
+  "error_wiki_no_section": {
+    "status": "verified",
+    "text": "The {family} wiki has no «{lang}» section; it has: {langs}."
+  },
+  "error_wiki_not_mediawiki": {
+    "status": "verified",
+    "text": "{url} does not answer as MediaWiki does."
+  },
+  "error_wiki_unknown_family": {
+    "status": "verified",
+    "text": "The bot does not know the «{family}» wiki — give the whole domain."
+  },
   "family_file_conflict": {
     "status": "verified",
     "text": "The family for {host} could not be prepared safely: existing files belong to another host or were created manually."
+  },
+  "files_not_attached": {
+    "status": "verified",
+    "text": "Could not attach: {files}"
   },
   "flag_add_again": {
     "status": "verified",
@@ -379,6 +523,42 @@
     "status": "verified",
     "text": "How it works: /go <task number> runs it, /go <number> dry previews it without editing."
   },
+  "grant_createeditmovepage": {
+    "status": "verified",
+    "text": "Create, edit, and move pages"
+  },
+  "grant_delete": {
+    "status": "verified",
+    "text": "Delete pages, revisions, and log entries"
+  },
+  "grant_editpage": {
+    "status": "verified",
+    "text": "Edit existing pages"
+  },
+  "grant_editprotected": {
+    "status": "verified",
+    "text": "Edit protected pages"
+  },
+  "grant_highvolume": {
+    "status": "verified",
+    "text": "High-volume (bot) access"
+  },
+  "grant_protect": {
+    "status": "verified",
+    "text": "Protect and unprotect pages"
+  },
+  "grant_rollback": {
+    "status": "verified",
+    "text": "Rollback changes to pages"
+  },
+  "grant_uploadeditmovefile": {
+    "status": "verified",
+    "text": "Upload, replace, and move files"
+  },
+  "grant_uploadfile": {
+    "status": "verified",
+    "text": "Upload new files"
+  },
   "graph_shape_dot": {
     "status": "verified",
     "text": "a .dot file for Graphviz"
@@ -397,7 +577,7 @@
   },
   "help_intro": {
     "status": "verified",
-    "text": "Confederate Fandom — a bot for Fandom wikis: news on the main pages, a nightly standardisation of names, and the tasks run on request."
+    "text": "Confederate Fandom — a bot for automating work on Fandom wikis from Discord and Telegram."
   },
   "help_news": {
     "status": "verified",
@@ -406,6 +586,14 @@
   "help_wiki": {
     "status": "verified",
     "text": "Wiki work"
+  },
+  "help_you": {
+    "status": "verified",
+    "text": "Your settings"
+  },
+  "job_archive": {
+    "status": "verified",
+    "text": "the page archive"
   },
   "job_backup": {
     "status": "verified",
@@ -446,6 +634,18 @@
   "jobs_title": {
     "status": "verified",
     "text": "The queue and the tasks"
+  },
+  "lang_current": {
+    "status": "verified",
+    "text": "Language of the bot's answers to you: {name}. To change it: {how}. Available: {langs}."
+  },
+  "lang_set": {
+    "status": "verified",
+    "text": "Done. Language of the bot's answers: {name}."
+  },
+  "lang_unknown": {
+    "status": "verified",
+    "text": "The bot does not speak «{code}». Available: {langs}."
   },
   "mech_addtext": {
     "status": "verified",
@@ -599,14 +799,6 @@
     "status": "verified",
     "text": "remove the links to a page and leave the words behind"
   },
-  "mechanic_need_move_no_redirect_group": {
-    "status": "verified",
-    "text": "Moving without a redirect requires the content moderator group."
-  },
-  "mechanic_need_rollback_group": {
-    "status": "verified",
-    "text": "Rollback requires the rollbacker group."
-  },
   "move_mode_list": {
     "status": "verified",
     "text": "from a list of «old new» pairs"
@@ -631,9 +823,93 @@
     "status": "verified",
     "text": "remove from the end"
   },
+  "news_off": {
+    "status": "verified",
+    "text": "The news module is not set up on this bot."
+  },
   "not_admin": {
     "status": "verified",
     "text": "This command is for the bot's administrators only."
+  },
+  "note_delinker_count": {
+    "status": "verified",
+    "text": "Files deleted in the period: {count}"
+  },
+  "note_delinker_none": {
+    "status": "verified",
+    "text": "No files were deleted in that period — nothing to take out."
+  },
+  "note_graph_cut": {
+    "status": "verified",
+    "text": "The tree was cut at {count} categories."
+  },
+  "note_graph_size": {
+    "status": "verified",
+    "text": "Categories in the tree: {count}"
+  },
+  "note_interwiki_clash": {
+    "status": "verified",
+    "text": "«{title}» links one language twice — left as it is."
+  },
+  "note_interwiki_elsewhere": {
+    "status": "verified",
+    "text": "On another host: {langs} — their links are kept, but not checked or completed."
+  },
+  "note_interwiki_langs": {
+    "status": "verified",
+    "text": "Language versions: {langs}"
+  },
+  "note_interwiki_none": {
+    "status": "verified",
+    "text": "This wiki declares no language versions — there is nowhere to link to."
+  },
+  "note_interwiki_unreachable": {
+    "status": "verified",
+    "text": "The «{lang}» version is unreachable: {error}"
+  },
+  "note_mechanic_failed": {
+    "status": "verified",
+    "text": "{code}: {error}"
+  },
+  "note_no_pages": {
+    "status": "verified",
+    "text": "This source found no pages."
+  },
+  "note_redirect_broken": {
+    "status": "verified",
+    "text": "Broken redirect: {title} -> {target}"
+  },
+  "note_revert_no_rollback": {
+    "status": "verified",
+    "text": "Rollback is not available, so the edits are undone by ordinary edits. {reason}"
+  },
+  "note_templatecount_total": {
+    "status": "verified",
+    "text": "Pages using these templates: {count}"
+  },
+  "page_delete_gone": {
+    "status": "verified",
+    "text": "the page is already gone"
+  },
+  "page_delete_talk_kept": {
+    "status": "verified",
+    "text": "the page is deleted, its talk page is not: {error}"
+  },
+  "page_delete_will": {
+    "status": "verified",
+    "text": "would be deleted"
+  },
+  "page_move_empty": {
+    "status": "verified",
+    "text": "the new title came out empty"
+  },
+  "page_move_exists": {
+    "status": "verified",
+    "text": "the page «{title}» already exists"
+  },
+  "page_move_will": {
+    "status": "verified",
+    "text": "would be renamed to «{title}»"
   },
   "page_next": {
     "status": "verified",
@@ -651,9 +927,37 @@
     "status": "verified",
     "text": "◀ Back"
   },
+  "page_protect_will": {
+    "status": "verified",
+    "text": "would be: {what}"
+  },
+  "page_revert_all_theirs": {
+    "status": "verified",
+    "text": "every edit in the history is by this account"
+  },
+  "page_revert_done": {
+    "status": "verified",
+    "text": "edits undone: {count}"
+  },
+  "page_revert_no_history": {
+    "status": "verified",
+    "text": "no history"
+  },
+  "page_revert_not_last": {
+    "status": "verified",
+    "text": "the last edit is not by «{user}»"
+  },
+  "page_revert_rolled_back": {
+    "status": "verified",
+    "text": "rolled back, edits: {count}"
+  },
+  "page_revert_will": {
+    "status": "verified",
+    "text": "edits that would be undone: {count}"
+  },
   "pageset_all": {
     "status": "verified",
-    "text": "every page of the wiki"
+    "text": "all pages of the chosen namespace"
   },
   "pageset_backlinks": {
     "status": "verified",
@@ -685,7 +989,7 @@
   },
   "pageset_recent": {
     "status": "verified",
-    "text": "recently changed pages"
+    "text": "pages changed in the last seven days"
   },
   "pageset_search": {
     "status": "verified",
@@ -757,7 +1061,7 @@
   },
   "param_image_to": {
     "status": "verified",
-    "text": "Swap it for which file? A single dash «-» removes it altogether."
+    "text": "Swap it for which file? «0» removes it altogether."
   },
   "param_interwiki_flags": {
     "status": "verified",
@@ -781,7 +1085,7 @@
   },
   "param_move_to": {
     "status": "verified",
-    "text": "Replace what was found in the title with what? \\1, \\2 work."
+    "text": "Replace what was found in the title with what? \\1, \\2 work; «0» removes what was found."
   },
   "param_pravopys_uk_flags": {
     "status": "verified",
@@ -809,7 +1113,7 @@
   },
   "param_replace": {
     "status": "verified",
-    "text": "Replace it with what? A single dash «-» deletes what was found."
+    "text": "Replace it with what? «0» deletes what was found."
   },
   "param_replace_flags": {
     "status": "verified",
@@ -911,9 +1215,113 @@
     "status": "verified",
     "text": "point links that go through a redirect straight at the target"
   },
+  "refusal_bot_no_status": {
+    "status": "verified",
+    "text": "On {wiki} the bot has neither the bot status nor that of a content moderator or an administrator{current}. Without one of them it does not start work: a hundred edits from an account with no status is what gets it blocked."
+  },
+  "refusal_caller_no_standing": {
+    "status": "verified",
+    "text": "{user} holds no special rights on {wiki}{current}. Only somebody with one of these statuses on that wiki may set the bot to work there: {groups}."
+  },
+  "refusal_current_groups": {
+    "status": "verified",
+    "text": " (now: {groups})"
+  },
+  "refusal_no_fandom_account": {
+    "status": "verified",
+    "text": "Your Fandom account is not recorded — ask a bot administrator to appoint you again with your account name."
+  },
+  "refusal_rights_unreadable": {
+    "status": "verified",
+    "text": "Could not check your rights on {wiki}: {error}"
+  },
+  "report_diff_done": {
+    "status": "verified",
+    "text": "Edits made"
+  },
+  "report_diff_dry": {
+    "status": "verified",
+    "text": "Preview of the edits (nothing was written)"
+  },
+  "report_diff_wiki": {
+    "status": "verified",
+    "text": "wiki: {wiki}"
+  },
+  "report_errors_title": {
+    "status": "verified",
+    "text": "Could not be processed — task {id} — {wiki}"
+  },
+  "report_graph_seen": {
+    "status": "verified",
+    "text": "(already higher in the tree)"
+  },
+  "report_line_error": {
+    "status": "verified",
+    "text": "error: {error}"
+  },
+  "report_list_bytes": {
+    "status": "verified",
+    "text": "{size} bytes"
+  },
+  "report_list_no_categories": {
+    "status": "verified",
+    "text": "no categories"
+  },
+  "report_template_failed": {
+    "status": "verified",
+    "text": "could not be counted: {error}"
+  },
+  "report_template_missing": {
+    "status": "verified",
+    "text": "no such template"
+  },
+  "report_title": {
+    "status": "verified",
+    "text": "Report of task {id} — {wiki}"
+  },
+  "report_unreadable": {
+    "status": "verified",
+    "text": "could not be read: {error}"
+  },
+  "requester_with_wiki_user": {
+    "status": "verified",
+    "text": "{name} ({id}, on the wiki {wiki_user})"
+  },
   "run_unknown": {
     "status": "verified",
     "text": "No such mechanic: {what}. The full list is /tasks."
+  },
+  "schedule_already_decided": {
+    "status": "verified",
+    "text": "Schedule {id} has already been decided on, or is gone."
+  },
+  "schedule_approval_request": {
+    "status": "verified",
+    "text": "Request for repeating run {id} from {who} ({platform}).\nWiki: {wiki}\nMechanics: {mechanics}\nWhen: {when}\nEdit summary: {summary}\nLet it run?"
+  },
+  "schedule_approval_unavailable": {
+    "status": "verified",
+    "text": "Repeating runs here start only after a bot administrator approves them, and there is no channel to ask one in. The schedule was not created — contact a bot administrator."
+  },
+  "schedule_approved": {
+    "status": "verified",
+    "text": "Repeating run {id} is approved and will run: {wiki}, {mechanics}, {when}."
+  },
+  "schedule_approved_by": {
+    "status": "verified",
+    "text": "✅ Approved by {who}"
+  },
+  "schedule_awaiting": {
+    "status": "verified",
+    "text": "Schedule {id} is still waiting for a bot administrator's approval — it cannot be switched on yet."
+  },
+  "schedule_button_approve": {
+    "status": "verified",
+    "text": "Approve"
+  },
+  "schedule_button_reject": {
+    "status": "verified",
+    "text": "Reject"
   },
   "schedule_created": {
     "status": "verified",
@@ -951,6 +1359,18 @@
     "status": "verified",
     "text": "Schedule {id} switched on."
   },
+  "schedule_pending": {
+    "status": "verified",
+    "text": "Schedule {id} ({wiki}, {mechanics}, {when}) has been sent to a bot administrator for approval. It will not run until it is approved; the bot will tell you the decision in a private message."
+  },
+  "schedule_rejected": {
+    "status": "verified",
+    "text": "Repeating run {id} ({wiki}, {mechanics}, {when}) was not approved and has been removed."
+  },
+  "schedule_rejected_by": {
+    "status": "verified",
+    "text": "❌ Rejected by {who}"
+  },
   "schedule_state_off": {
     "status": "verified",
     "text": "off"
@@ -958,6 +1378,14 @@
   "schedule_state_on": {
     "status": "verified",
     "text": "on"
+  },
+  "schedule_state_pending": {
+    "status": "verified",
+    "text": "awaiting approval"
+  },
+  "schedule_summary_by_bot": {
+    "status": "verified",
+    "text": "written by the bot"
   },
   "schedule_unknown": {
     "status": "verified",
@@ -974,6 +1402,14 @@
   "schedule_weekly": {
     "status": "verified",
     "text": "on {days} at {time}"
+  },
+  "service_archive_done": {
+    "status": "verified",
+    "text": "Page archive ({repo}): new files — {created}, updated — {updated}. Not found on the wiki: {missing}. Errors: {errors}"
+  },
+  "service_archive_failed": {
+    "status": "verified",
+    "text": "The page archive was not updated: {error}"
   },
   "service_channel_failed": {
     "status": "verified",
@@ -1007,6 +1443,90 @@
     "status": "verified",
     "text": "Confederate Fandom stopped."
   },
+  "slash_backup": {
+    "status": "verified",
+    "text": "send a backup of the database (bot administrators)"
+  },
+  "slash_go": {
+    "status": "verified",
+    "text": "confirm a task and start it"
+  },
+  "slash_go_dry": {
+    "status": "verified",
+    "text": "preview only, no edits"
+  },
+  "slash_help": {
+    "status": "verified",
+    "text": "what the bot can do"
+  },
+  "slash_jobs": {
+    "status": "verified",
+    "text": "what the bot is doing right now"
+  },
+  "slash_lang": {
+    "status": "verified",
+    "text": "the language the bot answers you in"
+  },
+  "slash_lang_code": {
+    "status": "verified",
+    "text": "language"
+  },
+  "slash_remwikiadmin": {
+    "status": "verified",
+    "text": "remove a wiki administrator"
+  },
+  "slash_remwikiadmin_user": {
+    "status": "verified",
+    "text": "whose access to take away"
+  },
+  "slash_run": {
+    "status": "verified",
+    "text": "start work on a wiki"
+  },
+  "slash_run_what": {
+    "status": "verified",
+    "text": "numbers or codes of the mechanics, separated by spaces"
+  },
+  "slash_schedule": {
+    "status": "verified",
+    "text": "repeating runs"
+  },
+  "slash_schedule_action": {
+    "status": "verified",
+    "text": "list, on, off or del"
+  },
+  "slash_schedule_id": {
+    "status": "verified",
+    "text": "schedule number"
+  },
+  "slash_status": {
+    "status": "verified",
+    "text": "the state of the news and the queue"
+  },
+  "slash_stop": {
+    "status": "verified",
+    "text": "stop a task"
+  },
+  "slash_task_id": {
+    "status": "verified",
+    "text": "task number"
+  },
+  "slash_tasks": {
+    "status": "verified",
+    "text": "choose a task for the bot"
+  },
+  "slash_wikiadmin": {
+    "status": "verified",
+    "text": "appoint a wiki administrator"
+  },
+  "slash_wikiadmin_user": {
+    "status": "verified",
+    "text": "who gets access"
+  },
+  "slash_wikiadmin_wiki_user": {
+    "status": "verified",
+    "text": "their account name on Fandom"
+  },
   "status": {
     "status": "verified",
     "text": "Source channel: {channel}\nWiki: {wiki}\nStored posts: {posts}\nThe news are rebuilt at {schedule} past every hour.\nLast pass: {last_pass}{error}\n\n{slots}"
@@ -1018,6 +1538,10 @@
   "status_never": {
     "status": "verified",
     "text": "never yet"
+  },
+  "status_queue": {
+    "status": "verified",
+    "text": "Running now: {running}\nWaiting: {waiting}"
   },
   "status_short": {
     "status": "verified",
@@ -1078,6 +1602,10 @@
   "task_missing_basic_rights": {
     "status": "verified",
     "text": "The current bot session on {wiki} lacks the required ordinary user permissions."
+  },
+  "task_missing_grants": {
+    "status": "verified",
+    "text": "On {wiki} the bot's account holds the rights this needs, but its BotPassword does not pass them on. Tick these grants on Special:BotPasswords: {grants}."
   },
   "task_missing_group_rights": {
     "status": "verified",

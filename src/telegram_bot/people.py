@@ -93,7 +93,7 @@ async def resolve(message):
 async def _claim(user):
     """Turn a waiting invitation for this account's @name into an appointment."""
     import db
-    from utils import localized, service_lang, user_lang
+    from utils import lang_of, localized, user_lang
 
     invite = db.take_wiki_admin_invite(user.username)
     if invite is None:
@@ -113,7 +113,8 @@ async def _claim(user):
     if added_by.isdecimal():
         try:
             await bot.send_message(int(added_by), localized(
-                "wikiadmin_claimed", service_lang(), username=user.username,
+                "wikiadmin_claimed", lang_of("telegram", added_by),
+                username=user.username,
                 user_id=user.id, wiki_user=invite["wiki_user"]))
         except Exception as e:
             logger.info("could not tell %s about the claim: %s", added_by, e)

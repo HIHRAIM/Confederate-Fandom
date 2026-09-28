@@ -3,6 +3,10 @@
     "status": "verified",
     "text": "бот"
   },
+  "access_group_bureaucrat": {
+    "status": "unverified",
+    "text": "бюрократ"
+  },
   "access_group_content_moderator": {
     "status": "verified",
     "text": "модератор вмісту"
@@ -14,6 +18,10 @@
   "access_group_sysop": {
     "status": "verified",
     "text": "адміністратор"
+  },
+  "access_group_threadmoderator": {
+    "status": "unverified",
+    "text": "модератор обговорень"
   },
   "add_where_before_categories": {
     "status": "unverified",
@@ -91,6 +99,14 @@
     "status": "unverified",
     "text": "/jobs — що йде зараз і чим скінчилися останні завдання"
   },
+  "cmd_lang_dc": {
+    "status": "unverified",
+    "text": "/lang code: <мова> — мова, якою бот відповідає особисто вам; без неї — яка зараз"
+  },
+  "cmd_lang_tg": {
+    "status": "unverified",
+    "text": "/lang <код> — мова, якою бот відповідає особисто вам: en, es, pl, pt, ru, uk; /lang без коду — яка зараз"
+  },
   "cmd_remwikiadmin_dc": {
     "status": "unverified",
     "text": "/remwikiadmin user: <хто> — зняти призначення"
@@ -117,7 +133,7 @@
   },
   "cmd_status": {
     "status": "unverified",
-    "text": "/status — що стоїть у слотах і коли був останній прохід"
+    "text": "/status — стан новин і черги задач"
   },
   "cmd_stop_dc": {
     "status": "unverified",
@@ -143,6 +159,10 @@
     "status": "unverified",
     "text": "/wikiadmin — кого призначено адміністратором вікі; /wikiadmin <@нік або ID> <нік на Fandom> — призначити"
   },
+  "command_failed": {
+    "status": "unverified",
+    "text": "Команда не спрацювала — подробиці в журналі бота."
+  },
   "dialog_bad_choice": {
     "status": "unverified",
     "text": "Такого номера в списку немає. Відповідайте одним із номерів."
@@ -151,6 +171,10 @@
     "status": "unverified",
     "text": "Потрібні номери через пробіл, або «0», якщо нічого не треба."
   },
+  "dialog_bad_minutes": {
+    "status": "unverified",
+    "text": "Хвилини — числа від 0 до 59 через кому, наприклад «0, 30»."
+  },
   "dialog_bad_time": {
     "status": "unverified",
     "text": "Час пишеться як «ГГ:ХХ», наприклад «20:00»."
@@ -158,6 +182,10 @@
   "dialog_bad_value": {
     "status": "unverified",
     "text": "Не зрозумів відповідь. Спробуйте ще раз."
+  },
+  "dialog_bad_weekdays": {
+    "status": "unverified",
+    "text": "Дні тижня — числа від 1 до 7 через кому: 1 — понеділок, 7 — неділя."
   },
   "dialog_failed": {
     "status": "unverified",
@@ -173,11 +201,11 @@
   },
   "dialog_limit": {
     "status": "unverified",
-    "text": "Скільки сторінок узяти щонайбільше? «0» або «-» — усі."
+    "text": "Скільки сторінок узяти щонайбільше? «0» — усі."
   },
   "dialog_namespaces": {
     "status": "unverified",
-    "text": "У яких просторах назв? Номери через кому; «0» або «-» — лише статті."
+    "text": "З яких просторів назв брати сторінки? Номери через кому, наприклад «0, 14»: 0 — статті, 2 — користувачі, 4 — сторінки проєкту, 6 — файли, 10 — шаблони, 14 — категорії, 828 — модулі. «усі» — усі простори назв."
   },
   "dialog_opened": {
     "status": "unverified",
@@ -229,7 +257,7 @@
   },
   "dialog_summary": {
     "status": "unverified",
-    "text": "Опис редагування? Дефіс «-» — бот напише сам те, що справді зробив."
+    "text": "Опис редагування? «0» — бот напише сам те, що справді зробив."
   },
   "dialog_when": {
     "status": "unverified",
@@ -245,7 +273,7 @@
   },
   "dialog_when_weekdays": {
     "status": "unverified",
-    "text": "У які дні тижня? Номери через кому, 0 — понеділок. Наприклад «0,3»."
+    "text": "У які дні тижня? Номери через кому: 1 — понеділок … 7 — неділя. Наприклад «1, 4»."
   },
   "dialog_wiki": {
     "status": "unverified",
@@ -259,9 +287,125 @@
     "status": "unverified",
     "text": "Не вдалося відкрити цю вікі: {error}"
   },
+  "error_addtext_no_text": {
+    "status": "unverified",
+    "text": "Не вказано текст, який треба додати."
+  },
+  "error_bad_regex": {
+    "status": "unverified",
+    "text": "Не вдалося розібрати вираз «{pattern}»: {error}"
+  },
+  "error_category_no_name": {
+    "status": "unverified",
+    "text": "Не вказано категорію."
+  },
+  "error_category_no_target": {
+    "status": "unverified",
+    "text": "Не вказано, до якої категорії переносити."
+  },
+  "error_delete_no_reason": {
+    "status": "unverified",
+    "text": "Для вилучення потрібна причина — вона потрапить до журналу вилучень. Вкажіть її в описі редагування."
+  },
+  "error_delinker_log": {
+    "status": "unverified",
+    "text": "Не вдалося прочитати журнал вилучень: {error}"
+  },
+  "error_graph_no_root": {
+    "status": "unverified",
+    "text": "Не вказано категорію, з якої починати."
+  },
+  "error_image_no_file": {
+    "status": "unverified",
+    "text": "Не вказано файл, який треба замінити чи прибрати."
+  },
+  "error_interwiki_map": {
+    "status": "unverified",
+    "text": "Не вдалося прочитати таблицю інтервікі: {error}"
+  },
+  "error_move_list_source": {
+    "status": "unverified",
+    "text": "Перейменування списком бере з одного списку і сторінки, і нові назви — оберіть джерело сторінок «{source}»."
+  },
+  "error_move_no_argument": {
+    "status": "unverified",
+    "text": "Не вказано, що додавати, прибирати чи шукати в назві."
+  },
+  "error_move_no_pairs": {
+    "status": "unverified",
+    "text": "У списку не знайшлося жодної пари «стара нова»: по парі в рядку, пробіл у назві пишеться підкресленням."
+  },
+  "error_no_mechanics": {
+    "status": "unverified",
+    "text": "У задачі не лишилося жодної механіки."
+  },
+  "error_replace_no_find": {
+    "status": "unverified",
+    "text": "Не вказано, що шукати."
+  },
+  "error_revert_no_user": {
+    "status": "unverified",
+    "text": "Не вказано, чиї редагування скасовувати."
+  },
+  "error_source_needs_argument": {
+    "status": "unverified",
+    "text": "Для цього джерела треба вказати сторінку чи запит."
+  },
+  "error_task_not_found": {
+    "status": "unverified",
+    "text": "Задачу не знайдено."
+  },
+  "error_templatecount_none": {
+    "status": "unverified",
+    "text": "Не вказано жодного шаблону."
+  },
+  "error_unknown_mechanics": {
+    "status": "unverified",
+    "text": "Невідомі механіки: {codes}"
+  },
+  "error_unknown_source": {
+    "status": "unverified",
+    "text": "Невідоме джерело сторінок: {source}"
+  },
+  "error_unlink_no_title": {
+    "status": "unverified",
+    "text": "Не вказано сторінку, посилання на яку треба прибрати."
+  },
+  "error_wiki_bad_address": {
+    "status": "unverified",
+    "text": "Незрозуміла адреса вікі: {text}"
+  },
+  "error_wiki_bad_domain": {
+    "status": "unverified",
+    "text": "Незрозумілий домен: {host}"
+  },
+  "error_wiki_empty": {
+    "status": "unverified",
+    "text": "Не вказано вікі."
+  },
+  "error_wiki_no_lang": {
+    "status": "unverified",
+    "text": "Не вказано мовний розділ вікі {family}."
+  },
+  "error_wiki_no_section": {
+    "status": "unverified",
+    "text": "У вікі {family} немає розділу «{lang}»; є: {langs}."
+  },
+  "error_wiki_not_mediawiki": {
+    "status": "unverified",
+    "text": "Вікі {url} не відповідає як MediaWiki."
+  },
+  "error_wiki_unknown_family": {
+    "status": "unverified",
+    "text": "Вікі «{family}» бот не знає — вкажіть домен повністю."
+  },
   "family_file_conflict": {
     "status": "verified",
     "text": "Не вдалося безпечно підготувати сімейство для {host}: наявні файли належать іншому хосту або створені вручну."
+  },
+  "files_not_attached": {
+    "status": "unverified",
+    "text": "Не вдалося додати: {files}"
   },
   "flag_add_again": {
     "status": "unverified",
@@ -379,6 +523,42 @@
     "status": "unverified",
     "text": "Як це працює: /go <номер задачі> — запустити, /go <номер> dry — передперегляд без редагувань."
   },
+  "grant_createeditmovepage": {
+    "status": "verified",
+    "text": "Створювати, редагувати та перейменовувати сторінки"
+  },
+  "grant_delete": {
+    "status": "verified",
+    "text": "Вилучати сторінки, версії і записи журналів"
+  },
+  "grant_editpage": {
+    "status": "verified",
+    "text": "Редагувати наявні сторінки"
+  },
+  "grant_editprotected": {
+    "status": "verified",
+    "text": "Редагувати захищені сторінки"
+  },
+  "grant_highvolume": {
+    "status": "verified",
+    "text": "Доступ (бота) на високому рівні"
+  },
+  "grant_protect": {
+    "status": "verified",
+    "text": "Захищати і знімати захист сторінок"
+  },
+  "grant_rollback": {
+    "status": "verified",
+    "text": "Відкочувати зміни на сторінках"
+  },
+  "grant_uploadeditmovefile": {
+    "status": "verified",
+    "text": "Завантажувати, замінювати та перейменовувати файли"
+  },
+  "grant_uploadfile": {
+    "status": "verified",
+    "text": "Завантажувати нові файли"
+  },
   "graph_shape_dot": {
     "status": "unverified",
     "text": "файлом .dot для Graphviz"
@@ -397,7 +577,7 @@
   },
   "help_intro": {
     "status": "unverified",
-    "text": "Confederate Fandom — бот для вікі Fandom: новини на заголовних, нічна стандартизація назв і запуск завдань по вікі."
+    "text": "Confederate Fandom — бот для автоматизації роботи на вікі Fandom з Discord і Telegram."
   },
   "help_news": {
     "status": "unverified",
@@ -406,6 +586,14 @@
   "help_wiki": {
     "status": "unverified",
     "text": "Роботи по вікі"
+  },
+  "help_you": {
+    "status": "unverified",
+    "text": "Ваші налаштування"
+  },
+  "job_archive": {
+    "status": "unverified",
+    "text": "архів сторінок"
   },
   "job_backup": {
     "status": "unverified",
@@ -446,6 +634,18 @@
   "jobs_title": {
     "status": "unverified",
     "text": "Черга і завдання"
+  },
+  "lang_current": {
+    "status": "unverified",
+    "text": "Мова відповідей бота для вас: {name}. Змінити: {how}. Доступні: {langs}."
+  },
+  "lang_set": {
+    "status": "unverified",
+    "text": "Готово. Мова відповідей бота: {name}."
+  },
+  "lang_unknown": {
+    "status": "unverified",
+    "text": "Такої мови бот не знає: «{code}». Доступні: {langs}."
   },
   "mech_addtext": {
     "status": "unverified",
@@ -599,14 +799,6 @@
     "status": "unverified",
     "text": "прибрати посилання на сторінку, залишивши сам текст"
   },
-  "mechanic_need_move_no_redirect_group": {
-    "status": "verified",
-    "text": "Для перейменування без перенаправлення потрібен статус модератора вмісту."
-  },
-  "mechanic_need_rollback_group": {
-    "status": "verified",
-    "text": "Для відкоту потрібен статус відкочувача."
-  },
   "move_mode_list": {
     "status": "unverified",
     "text": "списком пар «старе нове»"
@@ -631,9 +823,93 @@
     "status": "unverified",
     "text": "прибрати з кінця"
   },
+  "news_off": {
+    "status": "unverified",
+    "text": "Модуль новин у цій установці бота не налаштовано."
+  },
   "not_admin": {
     "status": "unverified",
     "text": "Команда лише для адміністраторів бота."
+  },
+  "note_delinker_count": {
+    "status": "unverified",
+    "text": "Вилучених файлів за період: {count}"
+  },
+  "note_delinker_none": {
+    "status": "unverified",
+    "text": "За обраний період файлів не вилучали — прибирати нічого."
+  },
+  "note_graph_cut": {
+    "status": "unverified",
+    "text": "Дерево обрізано на {count} категоріях."
+  },
+  "note_graph_size": {
+    "status": "unverified",
+    "text": "Категорій у дереві: {count}"
+  },
+  "note_interwiki_clash": {
+    "status": "unverified",
+    "text": "На сторінці «{title}» два посилання на одну мову — залишено як є."
+  },
+  "note_interwiki_elsewhere": {
+    "status": "unverified",
+    "text": "На іншому хості: {langs} — їхні посилання зберігаються, але не перевіряються й не доповнюються."
+  },
+  "note_interwiki_langs": {
+    "status": "unverified",
+    "text": "Мовні версії: {langs}"
+  },
+  "note_interwiki_none": {
+    "status": "unverified",
+    "text": "На цій вікі не оголошено жодної мовної версії — інтервікі ставити нікуди."
+  },
+  "note_interwiki_unreachable": {
+    "status": "unverified",
+    "text": "Мовна версія «{lang}» недоступна: {error}"
+  },
+  "note_mechanic_failed": {
+    "status": "unverified",
+    "text": "{code}: {error}"
+  },
+  "note_no_pages": {
+    "status": "unverified",
+    "text": "За цим джерелом не знайшлося жодної сторінки."
+  },
+  "note_redirect_broken": {
+    "status": "unverified",
+    "text": "Бите перенаправлення: {title} -> {target}"
+  },
+  "note_revert_no_rollback": {
+    "status": "unverified",
+    "text": "Відкіт недоступний, тому редагування скасовуються звичайним редагуванням. {reason}"
+  },
+  "note_templatecount_total": {
+    "status": "unverified",
+    "text": "Усього сторінок із цими шаблонами: {count}"
+  },
+  "page_delete_gone": {
+    "status": "unverified",
+    "text": "сторінки вже немає"
+  },
+  "page_delete_talk_kept": {
+    "status": "unverified",
+    "text": "сторінку вилучено, обговорення — ні: {error}"
+  },
+  "page_delete_will": {
+    "status": "unverified",
+    "text": "буде вилучено"
+  },
+  "page_move_empty": {
+    "status": "unverified",
+    "text": "нова назва вийшла порожньою"
+  },
+  "page_move_exists": {
+    "status": "unverified",
+    "text": "сторінка «{title}» уже існує"
+  },
+  "page_move_will": {
+    "status": "unverified",
+    "text": "буде перейменовано на «{title}»"
   },
   "page_next": {
     "status": "unverified",
@@ -651,9 +927,37 @@
     "status": "unverified",
     "text": "◀ Назад"
   },
+  "page_protect_will": {
+    "status": "unverified",
+    "text": "буде: {what}"
+  },
+  "page_revert_all_theirs": {
+    "status": "unverified",
+    "text": "усі редагування в історії від цього користувача"
+  },
+  "page_revert_done": {
+    "status": "unverified",
+    "text": "скасовано редагувань: {count}"
+  },
+  "page_revert_no_history": {
+    "status": "unverified",
+    "text": "історії немає"
+  },
+  "page_revert_not_last": {
+    "status": "unverified",
+    "text": "останнє редагування не від «{user}»"
+  },
+  "page_revert_rolled_back": {
+    "status": "unverified",
+    "text": "відкочено, редагувань: {count}"
+  },
+  "page_revert_will": {
+    "status": "unverified",
+    "text": "буде скасовано редагувань: {count}"
+  },
   "pageset_all": {
     "status": "unverified",
-    "text": "усі сторінки вікі"
+    "text": "усі сторінки з обраного простору назв"
   },
   "pageset_backlinks": {
     "status": "unverified",
@@ -685,7 +989,7 @@
   },
   "pageset_recent": {
     "status": "unverified",
-    "text": "нещодавно змінені сторінки"
+    "text": "сторінки, змінені за останні 7 днів"
   },
   "pageset_search": {
     "status": "unverified",
@@ -757,7 +1061,7 @@
   },
   "param_image_to": {
     "status": "unverified",
-    "text": "На який файл замінити? Дефіс «-» — прибрати зовсім."
+    "text": "На який файл замінити? «0» — прибрати зовсім."
   },
   "param_interwiki_flags": {
     "status": "unverified",
@@ -781,7 +1085,7 @@
   },
   "param_move_to": {
     "status": "unverified",
-    "text": "Чим замінити знайдене в назві? Працюють \\1, \\2."
+    "text": "Чим замінити знайдене в назві? Працюють \\1, \\2; «0» — прибрати знайдене."
   },
   "param_pravopys_uk_flags": {
     "status": "unverified",
@@ -809,7 +1113,7 @@
   },
   "param_replace": {
     "status": "unverified",
-    "text": "Чим замінити? Дефіс «-» — видалити знайдене."
+    "text": "Чим замінити? «0» — видалити знайдене."
   },
   "param_replace_flags": {
     "status": "unverified",
@@ -911,9 +1215,113 @@
     "status": "unverified",
     "text": "замінити посилання на перенаправлення прямими"
   },
+  "refusal_bot_no_status": {
+    "status": "unverified",
+    "text": "На вікі {wiki} бот не має ні статусу бота, ні модератора контенту, ні адміністратора{current}. Без одного з них він за роботу не береться: сотня редагувань від акаунта без статусу — це те, за що блокують."
+  },
+  "refusal_caller_no_standing": {
+    "status": "unverified",
+    "text": "Користувач {user} не має особливих прав на вікі {wiki}{current}. Запускати роботу бота на цій вікі може лише той, хто має там один зі статусів: {groups}."
+  },
+  "refusal_current_groups": {
+    "status": "unverified",
+    "text": " (зараз: {groups})"
+  },
+  "refusal_no_fandom_account": {
+    "status": "unverified",
+    "text": "У вас не вказано акаунт на Fandom — попросіть адміністратора бота призначити вас заново, вказавши нік."
+  },
+  "refusal_rights_unreadable": {
+    "status": "unverified",
+    "text": "Не вдалося перевірити ваші права на вікі {wiki}: {error}"
+  },
+  "report_diff_done": {
+    "status": "unverified",
+    "text": "Зроблені редагування"
+  },
+  "report_diff_dry": {
+    "status": "unverified",
+    "text": "Попередній перегляд редагувань (нічого не записано)"
+  },
+  "report_diff_wiki": {
+    "status": "unverified",
+    "text": "вікі: {wiki}"
+  },
+  "report_errors_title": {
+    "status": "unverified",
+    "text": "Не вдалося обробити — задача {id} — {wiki}"
+  },
+  "report_graph_seen": {
+    "status": "unverified",
+    "text": "(уже вище в дереві)"
+  },
+  "report_line_error": {
+    "status": "unverified",
+    "text": "помилка: {error}"
+  },
+  "report_list_bytes": {
+    "status": "unverified",
+    "text": "{size} б"
+  },
+  "report_list_no_categories": {
+    "status": "unverified",
+    "text": "без категорій"
+  },
+  "report_template_failed": {
+    "status": "unverified",
+    "text": "не вдалося порахувати: {error}"
+  },
+  "report_template_missing": {
+    "status": "unverified",
+    "text": "шаблону немає"
+  },
+  "report_title": {
+    "status": "unverified",
+    "text": "Звіт задачі {id} — {wiki}"
+  },
+  "report_unreadable": {
+    "status": "unverified",
+    "text": "не вдалося прочитати: {error}"
+  },
+  "requester_with_wiki_user": {
+    "status": "unverified",
+    "text": "{name} ({id}, на вікі — {wiki_user})"
+  },
   "run_unknown": {
     "status": "unverified",
     "text": "Не знаю такої механіки: {what}. Повний список — /tasks."
+  },
+  "schedule_already_decided": {
+    "status": "unverified",
+    "text": "Щодо розкладу {id} уже є рішення (або його більше немає)."
+  },
+  "schedule_approval_request": {
+    "status": "unverified",
+    "text": "Запит на регулярну задачу {id} від {who} ({platform}).\nВікі: {wiki}\nМеханіки: {mechanics}\nКоли: {when}\nОпис редагувань: {summary}\nЗапустити?"
+  },
+  "schedule_approval_unavailable": {
+    "status": "unverified",
+    "text": "Регулярні задачі тут запускаються лише після схвалення адміністратора бота, але каналу, де його спитати, немає. Розклад не створено — напишіть адміністраторові бота."
+  },
+  "schedule_approved": {
+    "status": "unverified",
+    "text": "Регулярну задачу {id} схвалено, вона запускатиметься: {wiki}, {mechanics}, {when}."
+  },
+  "schedule_approved_by": {
+    "status": "unverified",
+    "text": "✅ Схвалено: {who}"
+  },
+  "schedule_awaiting": {
+    "status": "unverified",
+    "text": "Розклад {id} ще чекає на схвалення адміністратора бота — увімкнути його зараз не можна."
+  },
+  "schedule_button_approve": {
+    "status": "unverified",
+    "text": "Схвалити"
+  },
+  "schedule_button_reject": {
+    "status": "unverified",
+    "text": "Відхилити"
   },
   "schedule_created": {
     "status": "unverified",
@@ -951,6 +1359,18 @@
     "status": "unverified",
     "text": "Розклад {id} увімкнено."
   },
+  "schedule_pending": {
+    "status": "unverified",
+    "text": "Розклад {id} ({wiki}, {mechanics}, {when}) надіслано на схвалення адміністраторові бота. Він не запуститься, доки його не схвалять; про рішення бот напише вам в особисті повідомлення."
+  },
+  "schedule_rejected": {
+    "status": "unverified",
+    "text": "Регулярну задачу {id} ({wiki}, {mechanics}, {when}) не схвалено й видалено."
+  },
+  "schedule_rejected_by": {
+    "status": "unverified",
+    "text": "❌ Відхилено: {who}"
+  },
   "schedule_state_off": {
     "status": "unverified",
     "text": "вимкнено"
@@ -958,6 +1378,14 @@
   "schedule_state_on": {
     "status": "unverified",
     "text": "увімкнено"
+  },
+  "schedule_state_pending": {
+    "status": "unverified",
+    "text": "чекає на схвалення"
+  },
+  "schedule_summary_by_bot": {
+    "status": "unverified",
+    "text": "бот пише сам"
   },
   "schedule_unknown": {
     "status": "unverified",
@@ -974,6 +1402,14 @@
   "schedule_weekly": {
     "status": "unverified",
     "text": "у {days} о {time}"
+  },
+  "service_archive_done": {
+    "status": "unverified",
+    "text": "Архів сторінок ({repo}): нових файлів — {created}, оновлено — {updated}. Не знайдено на вікі: {missing}. Помилки: {errors}"
+  },
+  "service_archive_failed": {
+    "status": "unverified",
+    "text": "Архів сторінок не оновлено: {error}"
   },
   "service_channel_failed": {
     "status": "unverified",
@@ -1007,6 +1443,90 @@
     "status": "unverified",
     "text": "Confederate Fandom зупинено."
   },
+  "slash_backup": {
+    "status": "unverified",
+    "text": "надіслати резервну копію бази (адміністраторам бота)"
+  },
+  "slash_go": {
+    "status": "unverified",
+    "text": "підтвердити й запустити задачу"
+  },
+  "slash_go_dry": {
+    "status": "unverified",
+    "text": "лише попередній перегляд, без редагувань"
+  },
+  "slash_help": {
+    "status": "unverified",
+    "text": "що вміє бот"
+  },
+  "slash_jobs": {
+    "status": "unverified",
+    "text": "що бот робить просто зараз"
+  },
+  "slash_lang": {
+    "status": "unverified",
+    "text": "мова, якою бот відповідає вам"
+  },
+  "slash_lang_code": {
+    "status": "unverified",
+    "text": "мова"
+  },
+  "slash_remwikiadmin": {
+    "status": "unverified",
+    "text": "зняти адміністратора вікі"
+  },
+  "slash_remwikiadmin_user": {
+    "status": "unverified",
+    "text": "у кого забрати доступ"
+  },
+  "slash_run": {
+    "status": "unverified",
+    "text": "запустити роботу на вікі"
+  },
+  "slash_run_what": {
+    "status": "unverified",
+    "text": "номери або кодові назви механік через пробіл"
+  },
+  "slash_schedule": {
+    "status": "unverified",
+    "text": "регулярні запуски"
+  },
+  "slash_schedule_action": {
+    "status": "unverified",
+    "text": "list, on, off або del"
+  },
+  "slash_schedule_id": {
+    "status": "unverified",
+    "text": "номер розкладу"
+  },
+  "slash_status": {
+    "status": "unverified",
+    "text": "стан новин і черги"
+  },
+  "slash_stop": {
+    "status": "unverified",
+    "text": "зупинити задачу"
+  },
+  "slash_task_id": {
+    "status": "unverified",
+    "text": "номер задачі"
+  },
+  "slash_tasks": {
+    "status": "unverified",
+    "text": "вибрати задачу для бота"
+  },
+  "slash_wikiadmin": {
+    "status": "unverified",
+    "text": "призначити адміністратора вікі"
+  },
+  "slash_wikiadmin_user": {
+    "status": "unverified",
+    "text": "кому надати доступ"
+  },
+  "slash_wikiadmin_wiki_user": {
+    "status": "unverified",
+    "text": "нік цієї людини на Fandom"
+  },
   "status": {
     "status": "unverified",
     "text": "Канал-джерело: {channel}\nВікі: {wiki}\nЗбережено дописів: {posts}\nНовини оновлюються о {schedule} щогодини.\nОстанній прохід: {last_pass}{error}\n\n{slots}"
@@ -1018,6 +1538,10 @@
   "status_never": {
     "status": "unverified",
     "text": "ще не було"
+  },
+  "status_queue": {
+    "status": "unverified",
+    "text": "Зараз працює: {running}\nУ черзі: {waiting}"
   },
   "status_short": {
     "status": "unverified",
@@ -1078,6 +1602,10 @@
   "task_missing_basic_rights": {
     "status": "verified",
     "text": "На вікі {wiki} поточна сесія бота не має потрібних прав звичайного учасника."
+  },
+  "task_missing_grants": {
+    "status": "unverified",
+    "text": "На вікі {wiki} акаунт бота має потрібні права, але його BotPassword їх не пропускає. Позначте на Special:BotPasswords гранти: {grants}."
   },
   "task_missing_group_rights": {
     "status": "verified",

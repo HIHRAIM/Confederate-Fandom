@@ -1,8 +1,14 @@
-"""Template for src/config.py — this deployment's channel, wiki and pages.
+"""Template for src/config.py — this deployment's administrators and modules.
 
 Copy it to src/config.py and fill in the values; the real file is deliberately
-untracked (it names one particular channel and one particular wiki), so this
-template is the documentation of what the bot expects to find there.
+untracked (it names particular people, chats and wikis), so this template is
+the documentation of what the bot expects to find there.
+
+The wiki work people ask for through /run needs only the first part: the
+accounts, the administrators, the chats. The three modules below it — the
+news, the species names and the page archive — ship switched off, and a
+module that is off registers no job and is not mentioned anywhere; turn on
+only what this deployment is for.
 
 Secrets are never written here: the Telegram token and the wiki bot password
 come from src/.env through env_loader (see .env.example).
@@ -41,9 +47,12 @@ WIKI_PUT_THROTTLE = 0
 # database (db/admins.py). That appointment grants nothing on its own: before
 # every run the bot asks the wiki itself whether that person holds rights
 # there.
+#
+# Lists rather than sets, because the order is used: the first Discord id is
+# the one pinged when a repeating run waits for approval (SCHEDULE_APPROVAL).
 ADMINS = {
-    "telegram": {ADMINISTRATOR_ID, ADMINISTRATOR_ID},
-    "discord": {ADMINISTRATOR_ID, ADMINISTRATOR_ID},
+    "telegram": [ADMINISTRATOR_ID, ADMINISTRATOR_ID],
+    "discord": [ADMINISTRATOR_ID, ADMINISTRATOR_ID],
 }
 
 # Where the bot reports: a failed wiki edit, a failed upload, a start and a
@@ -79,12 +88,25 @@ BACKUP_CHATS = {
 # the person who sent it instead.
 SERVICE_LANG = "ru"
 
+# Whether a repeating run set up by a wiki administrator waits for a bot
+# administrator's yes before it starts. On, it is created switched off and a
+# message with two buttons goes to the Discord channels of SERVICE_CHATS,
+# pinging the first Discord id of ADMINS; yes starts it, no deletes it and
+# tells the person privately. A bot administrator's own schedules never wait.
+# False lets wiki administrators set up repeating runs on their own.
+SCHEDULE_APPROVAL = True
+
+# ---------------------------------------------------------------------------
+# The news module (modules/teleradiopedia): the newest posts of a Telegram
+# channel as news cards on the main pages of one or several wikis. Off while
+# SOURCE_CHANNEL is None or WIKIS is empty.
+
 # SOURCE_CHANNEL — the channel whose posts become the news. '@name' or the
 # numeric id; the bot must be an administrator of it, otherwise Telegram
 # delivers no channel_post updates and the bot collects nothing (see README:
 # What the bot needs). The public link of a post is built from the channel's
 # @name, so a channel without one gets news with no link on the image.
-SOURCE_CHANNEL = "@CHANNEL_NAME"
+SOURCE_CHANNEL = None  # Example: "@CHANNEL_NAME"
 
 # WIKIS — every wiki the news are published to, as Pywikibot families and
 # language codes. All of them get the same three news; each is written to on
@@ -97,11 +119,11 @@ SOURCE_CHANNEL = "@CHANNEL_NAME"
 # differently may carry its own 'css_prefix'. Without them the values below are
 # used.
 WIKIS = (
-    {"family": "FAMILY_NAME", "lang": "ru"},
-    {"family": "OTHER_FAMILY", "lang": "ru",
-     "css_prefix": "other-news",
-     "templates": ("Template:Main/News-1", "Template:Main/News-2", "Template:Main/News-3"),
-     "files": ("Main-News-1.jpg", "Main-News-2.jpg", "Main-News-3.jpg")},
+    # {"family": "FAMILY_NAME", "lang": "ru"},
+    # {"family": "OTHER_FAMILY", "lang": "ru",
+    #  "css_prefix": "other-news",
+    #  "templates": ("Template:Main/News-1", "Template:Main/News-2", "Template:Main/News-3"),
+    #  "files": ("Main-News-1.jpg", "Main-News-2.jpg", "Main-News-3.jpg")},
 )
 
 # The three template pages and the three files every wiki uses unless it says
@@ -178,15 +200,16 @@ FORWARD_FROM_USER = "Переслано от {name}"
 EDIT_SUMMARY = "Обновление новости с {link}"
 UPLOAD_SUMMARY = "Изображение новости с {link}"
 
-# The second job: walking one wiki's articles and bringing the names of
-# Pokemon species to the standard ones (species/). SPECIES_WIKI names the wiki
+# ---------------------------------------------------------------------------
+# The species module (modules/pokemon): walking one wiki's articles and
+# bringing the names of Pokemon species to the standard ones. SPECIES_WIKI names the wiki
 # the way WIKIS does — a Pywikibot family and a language code, with its family
 # file beside the others. SPECIES_AT is the local time it runs at, once a day;
 # a job that comes due while another is running waits its turn rather than
 # starting beside it (scheduler.py). SPECIES_LIMIT stops the walk after that
 # many pages and is meant for trying it out — 0 walks the whole namespace.
-# Set SPECIES_WIKI to None to switch the job off.
-SPECIES_WIKI = {"family": "FAMILY_NAME", "lang": "ru"}
+# Off while SPECIES_WIKI is None.
+SPECIES_WIKI = None  # Example: {"family": "FAMILY_NAME", "lang": "ru"}
 SPECIES_AT = "20:00"
 SPECIES_SUMMARY = "стандартизация названий видов покемонов"
 SPECIES_LIMIT = 0
@@ -196,3 +219,38 @@ SPECIES_LIMIT = 0
 # unflagged, they arrive in Recent changes as a flood. The flag needs both
 # the local bot group and the "High-volume (bot) access" grant on the BotPassword.
 SPECIES_REQUIRE_BOT_FLAG = True
+
+# ---------------------------------------------------------------------------
+# The archive module (modules/myarchive): chosen wiki pages committed to a
+# GitHub repository once a night, one commit per changed page. Off while
+# MYARCHIVE is None or MYARCHIVE_GITHUB_TOKEN is missing from src/.env.
+#
+#   repo       — "owner/name" of the repository.
+#   branch     — optional; the repository's default branch otherwise.
+#   at, timezone — when the pass runs; "00:00" in "Europe/Kyiv" by default.
+#                It waits behind every other job, a person's task included.
+#   pages      — full page addresses: https://<wiki>.fandom.com/<lang>/wiki/<Title>.
+#   main_pages — also archive the main page of every wiki in `pages`
+#                (True by default).
+#   owner      — the Fandom account whose edits alone make a plain "updated".
+#   coauthors  — Fandom account -> GitHub login, added as co-authors of a
+#                commit that archives their edits.
+#   messages   — the commit messages; {editors} is the list of accounts.
+#
+# A page goes to Pages/<lang>/<wiki>/<Title>; a Lua module to
+# Pages/<lang>/<wiki>/Module:<Name>.lua.
+MYARCHIVE = None
+# MYARCHIVE = {
+#     "repo": "OWNER/REPOSITORY",
+#     "pages": [
+#         "https://EXAMPLE.fandom.com/ru/wiki/MediaWiki:Common.css",
+#         "https://EXAMPLE.fandom.com/ru/wiki/Модуль:EXAMPLE",
+#     ],
+#     "owner": "FANDOM_ACCOUNT",
+#     "coauthors": {"FANDOM_ACCOUNT": "GITHUB_LOGIN"},
+#     "messages": {
+#         "created": "сохранён файл",
+#         "updated": "обновление",
+#         "updated_by": "обновление после правок {editors}",
+#     },
+# }

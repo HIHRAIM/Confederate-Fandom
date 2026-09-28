@@ -25,6 +25,8 @@ wording of the answers (i18n/, the commands).
 """
 import logging
 
+from utils import Explained
+
 logger = logging.getLogger("fd.tasks.access")
 
 BOT_ADMIN = "bot_admin"
@@ -63,33 +65,52 @@ def caller(platform, user_id, display_name=None):
             "wiki_user": row["wiki_user"], "role": WIKI_ADMIN}
 
 
-def describe(requester):
-    """How the service log names the person who asked: «Имя (id)».
+def describe(requester, lang):
+    """How the service log names the person who asked: «Name (id)».
 
     Never a mention. A report that pings somebody every quarter of an hour is
     a report people mute, and the log is meant to be read.
     """
+    from utils import localized
+
     if not requester:
         return "—"
     name = requester.get("name") or str(requester.get("id"))
     wiki_user = requester.get("wiki_user")
     if wiki_user and wiki_user != name:
-        return "{} ({}, на вики — {})".format(name, requester.get("id"), wiki_user)
+        return localized("requester_with_wiki_user", lang, name=name,
+                         id=requester.get("id"), wiki_user=wiki_user)
     return "{} ({})".format(name, requester.get("id"))
 
 
-class Refusal(Exception):
-    """A check said no, with a text a person can act on.
+class Refusal(Explained):
+    """A check said no, with a reason a person can act on.
 
     An exception rather than a return value because every caller does the same
     thing with it — send it and stop — and because a check that is forgotten
-    should break loudly rather than quietly allow.
+    should break loudly rather than quietly allow. An `Explained`, so that the
+    person reads the reason in their language and the service chats in
+    theirs: `refusal.text(lang)`.
     """
 
-    def __init__(self, text):
-        """Carry the reason, already worded for the person who asked."""
-        super().__init__(text)
-        self.text = text
+
+def _groups(names):
+    """A list of groups as a value of a refusal, worded per reader."""
+    from wiki import rights
+
+    return lambda lang: ", ".join(rights.group_label(group, lang)
+                                  for group in names)
+
+
+def _current(names):
+    """« (now: …)» after a refusal, or nothing when no group is held."""
+    from utils import localized
+
+    if not names:
+        return ""
+    groups = _groups(names)
+    return lambda lang: localized("refusal_current_groups", lang,
+                                  groups=groups(lang))
 
 
 def check_bot_standing(site, wiki_key):
@@ -103,14 +124,8 @@ def check_bot_standing(site, wiki_key):
 
     ok, held = rights.may_work(site, fresh=True)
     if not ok:
-        current = rights.groups(site)
-        raise Refusal(
-            "На вики {} у бота нет ни статуса бота, ни модератора контента, "
-            "ни администратора{}. Без одного из них он за работу не берётся: "
-            "сотня правок от аккаунта без статуса — это то, за что банят.".format(
-                wiki_key,
-                " (сейчас: {})".format(", ".join(rights.group_label(g) for g in current))
-                if current else ""))
+        raise Refusal("refusal_bot_no_status", wiki=wiki_key,
+                      current=_current(rights.groups(site)))
     return held
 
 
@@ -118,20 +133,13 @@ def check_rights(site, wiki_key, mechanics):
     """The rights this task needs. -> None, or raises Refusal naming a group."""
     from tasks import registry
     from wiki import rights
-    from utils import localized, service_lang
 
     needed = registry.rights_for(mechanics)
     missing = rights.missing_rights(site, needed)
     if not missing:
         return
-    groups = rights.needed_groups(missing)
-    lang = service_lang()
-    if groups:
-        names = [localized("access_group_" + group.replace("-", "_"), lang)
-                 for group in groups]
-        raise Refusal(localized("task_missing_group_rights", lang,
-                                wiki=wiki_key, groups=", ".join(names)))
-    raise Refusal(localized("task_missing_basic_rights", lang, wiki=wiki_key))
+    reason = rights.explain_missing(site, missing, wiki_key)
+    raise Refusal(reason.key, **reason.values)
 
 
 def check_caller_standing(site, wiki_key, requester):
@@ -149,24 +157,16 @@ def check_caller_standing(site, wiki_key, requester):
         return
     wiki_user = requester.get("wiki_user")
     if not wiki_user:
-        raise Refusal(
-            "У вас не указан аккаунт на Fandom — попросите администратора "
-            "бота назначить вас заново, указав ник.")
+        raise Refusal("refusal_no_fandom_account")
     try:
         ok, held = rights.is_wiki_staff(site, wiki_user)
     except Exception as e:
-        raise Refusal("Не удалось проверить ваши права на вики {}: {}".format(
-            wiki_key, e))
+        raise Refusal("refusal_rights_unreadable", wiki=wiki_key, error=str(e))
     if ok:
         return
-    raise Refusal(
-        "У участника {} нет особых прав на вики {}{}. Запускать работы бота "
-        "может только тот, у кого на этой вики есть статус: откатчик, "
-        "модератор контента, модератор обсуждений, администратор, бюрократ "
-        "или бот.".format(
-            wiki_user, wiki_key,
-            " (сейчас: {})".format(", ".join(rights.group_label(g) for g in held))
-            if held else ""))
+    raise Refusal("refusal_caller_no_standing", user=wiki_user, wiki=wiki_key,
+                  current=_current(held),
+                  groups=_groups(rights.STAFF_GROUPS))
 
 
 def check_all(site, wiki_key, mechanics, requester):

@@ -125,6 +125,20 @@ CREATE TABLE IF NOT EXISTS wiki_admin_invites (
     added_at INTEGER
 );
 
+-- user_langs: the language a person chose with /lang, per messenger account.
+-- platform is 'discord' or 'telegram', user_id the numeric id there, lang one
+-- of the six codes. A row exists only for somebody who chose a language other
+-- than English: English is what everybody gets without one, and choosing it
+-- deletes the row, so nothing is kept about a person who never asked for
+-- anything. Written by the /lang commands, read by utils.lang_of.
+CREATE TABLE IF NOT EXISTS user_langs (
+    platform TEXT NOT NULL,
+    user_id INTEGER NOT NULL,
+    lang TEXT NOT NULL,
+    updated_at INTEGER,
+    PRIMARY KEY (platform, user_id)
+);
+
 -- tasks: one run of one or more mechanics over one wiki.
 -- wiki is '<family>:<lang>' as utils.wiki_key spells it. mechanics is a JSON
 -- list of mechanic codes, run in that order over each page; params is a JSON
@@ -185,7 +199,10 @@ CREATE TABLE IF NOT EXISTS task_pages (
 -- comma-separated lists. next_run is the unix timestamp the scheduler is
 -- waiting for and is recomputed after every firing, so a bot that was down
 -- over the hour runs once when it comes back rather than once per missed
--- hour. enabled 0 keeps the row and stops the firing.
+-- hour. enabled 0 keeps the row and stops the firing. approval is NULL for a
+-- schedule that may run, and 'pending' while a bot administrator has not yet
+-- said yes to it (config.SCHEDULE_APPROVAL, discord_bot/approvals.py): a
+-- pending row stays disabled, and /schedule on cannot switch it on.
 CREATE TABLE IF NOT EXISTS schedules (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     wiki TEXT NOT NULL,
@@ -204,7 +221,8 @@ CREATE TABLE IF NOT EXISTS schedules (
     reply_chat TEXT,
     created_at INTEGER,
     last_run INTEGER,
-    next_run INTEGER
+    next_run INTEGER,
+    approval TEXT
 );
 """
 
@@ -232,6 +250,9 @@ def _add_missing_columns(cur, conn):
         "wiki_slots": {
             "image_key": "TEXT",
             "published_at": "INTEGER",
+        },
+        "schedules": {
+            "approval": "TEXT",
         },
     }
     for table, columns in wanted.items():

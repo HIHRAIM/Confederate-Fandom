@@ -16,12 +16,15 @@ has it: one request, one log entry, no diff to compute — but it takes the
 whole top run of edits by the last editor and nothing else, so it is a
 different operation and not an optimisation of the same one.
 
-The page list normally comes from that account's contributions; the dialog's
-`titles` source takes a list pasted from Special:Contributions.
+The pages are the account's own contributions (`pages`): every page where its
+edit is still the latest, in every namespace. The dialog asks no page source,
+and no "once or regularly" either — undoing one person's work is not a thing
+to repeat on a schedule.
 """
 import sys
 
 from tasks import mechanic as mech
+from utils import Explained, localized
 from tasks.params import FLAGS, TEXT, Param
 
 FLAG_ROLLBACK = "rollback"
@@ -30,33 +33,66 @@ HISTORY_DEPTH = 50
 
 
 def prepare(ctx):
-    """Check the account and, for rollback, the right to use it."""
-    user = (ctx.params.get("revert_user") or "").strip()
+    """Check the account, and whether rollback can be used when it is asked.
+
+    Rollback is a way of undoing, not a condition for it: when the session
+    cannot roll back, the run goes on by ordinary edits and says why
+    (`wiki/rights.py: explain_missing` — the group, or the BotPassword grant,
+    that would have allowed it). It used to refuse the whole task, naming the
+    rollbacker group, on a wiki where the bot was a content moderator — a
+    group that holds rollback already; what the session lacked was the grant.
+    """
+    user = (ctx.params.get("revert_user") or "").strip().lstrip("@")
     if not user:
-        raise ValueError("не указано, чьи правки отменять")
-    if FLAG_ROLLBACK in set(ctx.params.get("revert_flags") or []):
+        raise Explained("error_revert_no_user")
+    rollback = FLAG_ROLLBACK in set(ctx.params.get("revert_flags") or [])
+    if rollback:
         from wiki import rights
 
         if not rights.has_right(ctx.site, "rollback"):
-            from utils import localized, service_lang
-            raise ValueError(localized("mechanic_need_rollback_group",
-                                       service_lang()))
-    return user.lstrip("@")
+            rollback = False
+            reason = rights.explain_missing(ctx.site, ["rollback"])
+            ctx.note("note_revert_no_rollback",
+                     reason=reason.text(ctx.reader) if reason else "")
+    return {"user": user, "rollback": rollback}
+
+
+def pages(ctx):
+    """Every page where the account's edit is still the latest one.
+
+    That is the account's whole contribution that can be undone: a page
+    somebody else has edited since is left to a person, because reverting it
+    would throw their work away with the account's — which is also what
+    Pywikibot's revertbot does. Every namespace, newest first. The keyword is
+    `top` from Pywikibot 11.6 on and `top_only` before it; both are tried,
+    since requirements.txt allows either.
+    """
+    user = (ctx.params.get("revert_user") or "").strip().lstrip("@")
+    try:
+        contributions = ctx.site.usercontribs(user=user, top=True)
+    except TypeError:
+        contributions = ctx.site.usercontribs(user=user, top_only=True)
+    titles = []
+    for contribution in contributions:
+        title = contribution.get("title")
+        if title and title not in titles:
+            titles.append(title)
+    return titles
 
 
 def act(ctx, page):
     """Undo the named account's run of edits at the top of one page."""
-    user = ctx.state.get(SPEC.code)
-    flags = set(ctx.params.get("revert_flags") or [])
+    state = ctx.state.get(SPEC.code) or {}
+    user = state.get("user")
 
     try:
         revisions = list(page.revisions(total=HISTORY_DEPTH, content=True))
     except Exception as e:
         return "fail", "{}: {}".format(type(e).__name__, e)
     if not revisions:
-        return "skip", "истории нет"
+        return "skip", localized("page_revert_no_history", ctx.reader)
     if revisions[0].user != user:
-        return "skip", "последняя правка не от «{}»".format(user)
+        return "skip", localized("page_revert_not_last", ctx.reader, user=user)
 
     keep = None
     reverted = 0
@@ -68,7 +104,7 @@ def act(ctx, page):
         break
 
     if keep is None:
-        return "skip", "все правки в истории от этого участника"
+        return "skip", localized("page_revert_all_theirs", ctx.reader)
 
     if revisions[0].text == keep.text:
         """The bot's own restoration remains authored by the same bot.
@@ -79,14 +115,15 @@ def act(ctx, page):
         return "skip", None
 
     if ctx.dry_run:
-        return "skip", "будет откачено правок: {}".format(reverted)
+        return "skip", localized("page_revert_will", ctx.reader, count=reverted)
 
-    if FLAG_ROLLBACK in flags:
+    if state.get("rollback"):
         try:
             ctx.site.rollbackpage(page, user=user, summary=ctx.summary or "")
         except Exception as e:
             return "fail", "{}: {}".format(type(e).__name__, e)
-        return "done", "откат ({} правок)".format(reverted)
+        return "done", localized("page_revert_rolled_back", ctx.reader,
+                                 count=reverted)
 
     try:
         page.text = keep.text
@@ -94,7 +131,7 @@ def act(ctx, page):
                   bot=True, minor=False, apply_cosmetic_changes=False)
     except Exception as e:
         return "fail", "{}: {}".format(type(e).__name__, e)
-    return "done", "отменено правок: {}".format(reverted)
+    return "done", localized("page_revert_done", ctx.reader, count=reverted)
 
 
 SPEC = mech.Mechanic(
@@ -103,6 +140,8 @@ SPEC = mech.Mechanic(
     module=sys.modules[__name__],
     rights=("edit",),
     destructive=True,
+    own_pages=True,
+    schedulable=False,
     params=(
         Param("revert_user", TEXT, "param_revert_user"),
         Param("revert_flags", FLAGS, "param_revert_flags", options=(

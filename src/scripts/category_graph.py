@@ -19,6 +19,7 @@ import json
 import sys
 
 from tasks import mechanic as mech
+from utils import Explained, localized
 from tasks.params import CHOICE, INT, TEXT, Param
 
 TREE = "tree"
@@ -33,7 +34,7 @@ def prepare(ctx):
     """Check that there is a category to start from."""
     root = (ctx.params.get("graph_root") or "").strip().lstrip(":")
     if not root:
-        raise ValueError("не указана категория, с которой начинать")
+        raise Explained("error_graph_no_root")
     return root
 
 
@@ -59,8 +60,8 @@ def _walk(ctx, root, depth):
             children = sorted(category.subcategories(),
                               key=lambda c: c.title(), reverse=True)
         except Exception as e:
-            out.append((level + 1, "не удалось прочитать: {}".format(
-                type(e).__name__), True))
+            out.append((level + 1, localized("report_unreadable", ctx.reader,
+                                             error=type(e).__name__), True))
             continue
         for child in children:
             stack.append((level + 1, child))
@@ -74,9 +75,9 @@ def finish(ctx):
     shape = ctx.params.get("graph_shape") or TREE
     nodes = _walk(ctx, root, depth)
 
-    ctx.note("категорий в дереве: {}".format(len(nodes)))
+    ctx.note("note_graph_size", count=len(nodes))
     if len(nodes) >= MAX_NODES:
-        ctx.note("дерево обрезано на {} категориях".format(MAX_NODES))
+        ctx.note("note_graph_cut", count=MAX_NODES)
 
     if shape == DOT:
         lines = ["digraph categories {", '  rankdir="LR";']
@@ -99,8 +100,8 @@ def finish(ctx):
         lines.append("}")
         return lines
 
-    return ["{}{}{}".format("  " * level, title,
-                            "  (уже выше в дереве)" if already else "")
+    seen = "  " + localized("report_graph_seen", ctx.reader)
+    return ["{}{}{}".format("  " * level, title, seen if already else "")
             for level, title, already in nodes]
 
 

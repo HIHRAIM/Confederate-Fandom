@@ -35,11 +35,17 @@ PAGES = "pages"
 
 KINDS = (TEXT, LONGTEXT, INT, CHOICE, FLAGS, PAGES)
 
-EMPTY_ANSWERS = ("-", "—", "–")
+BLANK = ("0",)
 """What a person writes when the answer is "nothing". A replacement may
 legitimately be the empty string — that is how a mechanic deletes rather than
 replaces — and an empty message cannot be sent on either messenger, so a lone
-dash stands for it. The prompts say so."""
+«0» stands for it, the same «0» every other question of the dialog takes for
+"none". It used to be a dash here and a «0» or a dash elsewhere, and people
+asked why there were two.
+
+Only a parameter that declares `blank` reads it that way. Everywhere else a
+«0» is what was typed: a search for the digit zero is a search, not a
+mistake, and neither is a hyphen as a replacement."""
 
 
 class Param:
@@ -52,16 +58,19 @@ class Param:
     """
 
     __slots__ = ("name", "kind", "label", "options", "default", "minimum",
-                 "maximum", "placeholder", "depends")
+                 "maximum", "blank", "depends")
 
     def __init__(self, name, kind, label, options=(), default=None,
-                 minimum=None, maximum=None, placeholder=None, depends=None):
+                 minimum=None, maximum=None, blank=(), depends=None):
         """Declare one parameter. Nothing here talks to anybody.
 
         `depends` is (the name of another parameter, the value or values that
         make this one relevant). It is what keeps the dialogs short: the
         category mechanic asks where to move a category to only when the
         person chose to move one, and never otherwise.
+
+        `blank` is the answers that mean "nothing" for a TEXT parameter that
+        may be empty — `BLANK`, usually — and the question says so.
         """
         if kind not in KINDS:
             raise ValueError("unknown parameter kind: {}".format(kind))
@@ -72,7 +81,7 @@ class Param:
         self.default = default
         self.minimum = minimum
         self.maximum = maximum
-        self.placeholder = placeholder
+        self.blank = tuple(blank)
         self.depends = depends
 
     def wanted(self, values):
@@ -108,7 +117,7 @@ class Param:
         """
         raw = (text or "").strip()
         if self.kind in (TEXT, LONGTEXT):
-            if raw in EMPTY_ANSWERS:
+            if raw in self.blank:
                 return ""
             if not raw:
                 raise ValueError("empty")

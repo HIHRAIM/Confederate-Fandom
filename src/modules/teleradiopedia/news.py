@@ -36,7 +36,7 @@ import re
 from datetime import datetime, timezone
 
 import richtext
-from config import (
+from modules.teleradiopedia.settings import (
     FORWARD_FROM_CHAT,
     FORWARD_FROM_USER,
     NEWS_CSS_PREFIX,

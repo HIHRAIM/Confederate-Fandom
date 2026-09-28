@@ -42,6 +42,12 @@ MODULE_PRIORITY = 0
 
 TASK_PRIORITY = 10
 
+BACKGROUND_PRIORITY = 20
+"""Work nobody is waiting for, such as the nightly archive of wiki pages: it
+goes after everything else in the queue, a person's task included, and the
+task queue does not step aside for it (`waiting_ahead` looks only at what is
+more important than the asker)."""
+
 _jobs = {}
 
 _queue = []
@@ -67,15 +73,38 @@ def _daily_times(daily_at):
     return tuple(str(item) for item in daily_at if item)
 
 
-def register(name, run, minutes=None, daily_at=None, priority=MODULE_PRIORITY):
+def register(name, run, minutes=None, daily_at=None, priority=MODULE_PRIORITY,
+             tz=None):
     """Add one job to the schedule.
 
-    `minutes` is a list of minutes past the hour; `daily_at` is "HH:MM" local
-    time, or several of them. A job with neither runs only when something asks
-    for it by name. `priority` decides who waits for whom: lower goes first.
+    `minutes` is a list of minutes past the hour; `daily_at` is "HH:MM", or
+    several of them, in the server's own time — or in `tz`, an IANA zone
+    name, for a job whose hour belongs to somebody else's clock (midnight in
+    Kyiv is not midnight on a server in Frankfurt). A job with neither runs
+    only when something asks for it by name. `priority` decides who waits for
+    whom: lower goes first.
     """
     _jobs[name] = {"run": run, "minutes": tuple(minutes or ()),
-                   "daily_at": _daily_times(daily_at), "priority": int(priority)}
+                   "daily_at": _daily_times(daily_at), "priority": int(priority),
+                   "tz": tz}
+
+
+def _zone(name):
+    """An IANA zone, or None when the name is unknown (logged once per ask).
+
+    Europe/Kyiv is tried as Europe/Kiev too: the spelling changed in 2022, and
+    an older zone database knows only the old one."""
+    from zoneinfo import ZoneInfo
+
+    for candidate in (name, {"Europe/Kyiv": "Europe/Kiev"}.get(name)):
+        if not candidate:
+            continue
+        try:
+            return ZoneInfo(candidate)
+        except Exception:
+            continue
+    logger.warning("unknown time zone %r — using the server's own time", name)
+    return None
 
 
 def enqueue(name, reason="asked for"):
@@ -140,6 +169,23 @@ def next_due(name, now=None):
     if not job:
         return None
     now = now or datetime.now()
+    zone = _zone(job["tz"]) if job.get("tz") else None
+    if zone is not None and job["daily_at"]:
+        local = now.astimezone(zone)
+        candidates = []
+        for moment in job["daily_at"]:
+            hour, _, minute = str(moment).partition(":")
+            try:
+                target = local.replace(hour=int(hour), minute=int(minute or 0),
+                                       second=0, microsecond=0)
+            except ValueError:
+                logger.warning("job %s has an unreadable time %r — ignoring it",
+                               name, moment)
+                continue
+            if target <= local:
+                target = target + timedelta(days=1)
+            candidates.append(target.astimezone().replace(tzinfo=None))
+        return min(candidates) if candidates else None
     if job["daily_at"]:
         candidates = []
         for moment in job["daily_at"]:

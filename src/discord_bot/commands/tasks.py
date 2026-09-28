@@ -24,14 +24,19 @@ from discord import app_commands
 
 import db
 from discord_bot import pages
-from discord_bot.client import tree
+from discord_bot.client import slash, tree
 from discord_bot.dialogs import DiscordConversation
 from tasks import access, dialog, lists, queue as task_queue
-from utils import localized, service_lang
+from utils import lang_of, localized
 
 logger = logging.getLogger("fd.discord.tasks")
 
 MESSAGE_LIMIT = 1900
+
+
+def _lang(interaction):
+    """The language this person chose with /lang, or English."""
+    return lang_of("discord", interaction.user.id)
 
 
 def _caller(interaction):
@@ -58,13 +63,13 @@ async def _reply(interaction, text, ephemeral=False):
         body = body[MESSAGE_LIMIT:]
 
 
-@tree.command(name="tasks", description="выбрать задачу для бота")
+@tree.command(name="tasks", description=slash("slash_tasks"))
 async def tasks_cmd(interaction: discord.Interaction):
     """The catalogue: what the bot can be told to do, numbered.
 
     A paginated embed rather than a wall of text: one line per mechanic, the
     name in bold, the code in monospace after it (discord_bot/pages.py)."""
-    lang = service_lang()
+    lang = _lang(interaction)
     if _caller(interaction) is None:
         await _deny(interaction, lang)
         return
@@ -72,11 +77,11 @@ async def tasks_cmd(interaction: discord.Interaction):
     await pages.send(interaction, title, lines, lang)
 
 
-@tree.command(name="run", description="запустить работу по вики")
-@app_commands.describe(what="номера или кодовые названия механик через пробел")
+@tree.command(name="run", description=slash("slash_run"))
+@app_commands.describe(what=slash("slash_run_what"))
 async def run_cmd(interaction: discord.Interaction, what: str = ""):
     """Build a task, in a dialog. `/run 1 4` skips the first question."""
-    lang = service_lang()
+    lang = _lang(interaction)
     if _caller(interaction) is None:
         await _deny(interaction, lang)
         return
@@ -89,11 +94,11 @@ async def run_cmd(interaction: discord.Interaction, what: str = ""):
         await conversation.say(localized("dialog_failed", lang, error=e))
 
 
-@tree.command(name="go", description="подтвердить и запустить задачу")
-@app_commands.describe(task_id="номер задачи", dry="только предпросмотр, без правок")
+@tree.command(name="go", description=slash("slash_go"))
+@app_commands.describe(task_id=slash("slash_task_id"), dry=slash("slash_go_dry"))
 async def go_cmd(interaction: discord.Interaction, task_id: int, dry: bool = False):
     """Confirm a planned task and set it going."""
-    lang = service_lang()
+    lang = _lang(interaction)
     if _caller(interaction) is None:
         await _deny(interaction, lang)
         return
@@ -113,10 +118,10 @@ async def go_cmd(interaction: discord.Interaction, task_id: int, dry: bool = Fal
     await task_queue.start(task_id)
 
 
-@tree.command(name="jobs", description="что бот делает прямо сейчас")
+@tree.command(name="jobs", description=slash("slash_jobs"))
 async def jobs_cmd(interaction: discord.Interaction):
     """What the bot is doing, what is queued, and how the last runs ended."""
-    lang = service_lang()
+    lang = _lang(interaction)
     if _caller(interaction) is None:
         await _deny(interaction, lang)
         return
@@ -125,11 +130,11 @@ async def jobs_cmd(interaction: discord.Interaction):
     await pages.send(interaction, title, lines, lang)
 
 
-@tree.command(name="stop", description="остановить задачу")
-@app_commands.describe(task_id="номер задачи")
+@tree.command(name="stop", description=slash("slash_stop"))
+@app_commands.describe(task_id=slash("slash_task_id"))
 async def stop_cmd(interaction: discord.Interaction, task_id: int):
     """Stop a task. What it has already written stays written."""
-    lang = service_lang()
+    lang = _lang(interaction)
     if _caller(interaction) is None:
         await _deny(interaction, lang)
         return
@@ -139,12 +144,13 @@ async def stop_cmd(interaction: discord.Interaction, task_id: int):
         await _reply(interaction, localized("task_unknown", lang, id=task_id))
 
 
-@tree.command(name="schedule", description="регулярные запуски")
-@app_commands.describe(action="list, on, off или del", schedule_id="номер расписания")
+@tree.command(name="schedule", description=slash("slash_schedule"))
+@app_commands.describe(action=slash("slash_schedule_action"),
+                       schedule_id=slash("slash_schedule_id"))
 async def schedule_cmd(interaction: discord.Interaction, action: str = "list",
                        schedule_id: int = 0):
     """The repeating runs, and switching one on or off."""
-    lang = service_lang()
+    lang = _lang(interaction)
     if _caller(interaction) is None:
         await _deny(interaction, lang)
         return
@@ -154,9 +160,12 @@ async def schedule_cmd(interaction: discord.Interaction, action: str = "list",
         if not schedule_id:
             await _reply(interaction, localized("schedule_usage_discord", lang))
             return
+        row = db.get_schedule(schedule_id)
         if action in ("del", "delete"):
             ok = db.delete_schedule(schedule_id)
             key = "schedule_deleted" if ok else "schedule_unknown"
+        elif row is not None and db.is_pending(row):
+            key = "schedule_awaiting"
         else:
             ok = db.set_enabled(schedule_id, action == "on")
             key = ("schedule_on" if action == "on" else "schedule_off") \

@@ -26,9 +26,9 @@ nothing, four times an hour, for ever.
 """
 import logging
 
-logger = logging.getLogger("fd.modules.telepedia")
+logger = logging.getLogger("fd.modules.teleradiopedia")
 
-CODE = "telepedia"
+CODE = "teleradiopedia"
 
 JOB = "news"
 
@@ -44,7 +44,7 @@ async def _ensure_channel():
     — is_source_chat falls back to the configured name — but nothing is
     published, since the news would have no links.
     """
-    from config import SOURCE_CHANNEL
+    from modules.teleradiopedia.settings import SOURCE_CHANNEL
     from telegram_bot import resolve_source_channel, source_chat_id
     from utils import send_service_event
 
@@ -73,7 +73,7 @@ async def _sync_from_preview():
     A preview that cannot be read is reported and let go: it is a way of
     catching up, not a condition for publishing what is already stored.
     """
-    from config import PREVIEW_SYNC
+    from modules.teleradiopedia.settings import PREVIEW_SYNC
     from telegram_bot import source_chat_id, source_username
     from utils import send_service_event
 
@@ -87,7 +87,7 @@ async def _sync_from_preview():
         logger.info("the source channel has no public @name — its preview cannot be read")
         return
 
-    from modules.telepedia.backfill import sync
+    from modules.teleradiopedia.backfill import sync
 
     try:
         seen, added, updated = await sync(chat_id, username)
@@ -113,7 +113,7 @@ async def job():
     try:
         if not await _ensure_channel():
             return
-        from modules.telepedia import publisher
+        from modules.teleradiopedia import publisher
 
         await _sync_from_preview()
         result = await publisher.run_pass()
@@ -135,8 +135,15 @@ async def job():
 
 
 def jobs():
-    """The jobs of this module, for main.py to register. -> a list of dicts."""
+    """The jobs of this module, for main.py to register. -> a list of dicts.
+
+    None at all when the deployment publishes no news (settings.enabled):
+    no pass four times an hour, no channel resolved at start-up, nothing in
+    the Discord presence."""
+    from modules.teleradiopedia import settings
     from utils import publish_marks
 
+    if not settings.enabled():
+        return []
     return [{"name": JOB, "run": job, "minutes": publish_marks(),
              "at_start": True}]

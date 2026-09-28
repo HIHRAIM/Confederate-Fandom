@@ -102,6 +102,10 @@ from db.admins import (
     touch_display_name,
     wiki_admins_named,
 )
+from db.users import (
+    get_user_lang,
+    set_user_lang,
+)
 from db.tasks import (
     active_tasks,
     bump,
@@ -125,14 +129,17 @@ from db.tasks import (
     task_report,
 )
 from db.schedules import (
+    approve_schedule,
     create_schedule,
     delete_schedule,
     due_schedules,
     get_schedule,
+    is_pending,
     list_schedules,
     mark_fired,
     next_due,
     next_schedule,
+    reject_schedule,
     schedule_mechanics,
     schedule_params,
     set_enabled,
@@ -160,7 +167,7 @@ def _check_for_shadowed_names():
 
     owners = {}
     clashes = []
-    for name in ("posts", "slots", "admins", "tasks", "schedules"):
+    for name in ("posts", "slots", "admins", "users", "tasks", "schedules"):
         module = importlib.import_module("db." + name)
         for attr in vars(module):
             if attr.startswith("_"):

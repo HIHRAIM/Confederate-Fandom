@@ -18,7 +18,9 @@ import logging
 from aiogram import Bot, Dispatcher, Router
 
 import db
-from config import SOURCE_CHANNEL, TELEGRAM_TOKEN
+from config import TELEGRAM_TOKEN
+from modules.teleradiopedia import settings as news_settings
+from modules.teleradiopedia.settings import SOURCE_CHANNEL
 
 logger = logging.getLogger("fd.telegram")
 
@@ -78,7 +80,7 @@ def is_source_chat(chat):
     Falls back to matching config.SOURCE_CHANNEL itself while the channel is
     unresolved — the first posts must not be lost because the resolving call
     failed once at start-up."""
-    if chat is None:
+    if chat is None or not news_settings.enabled():
         return False
     known = source_chat_id()
     if known is not None:

@@ -12,13 +12,14 @@ The shape of the dialog, and why it is this short:
    already put in the command (`/run 1 4 7`, `/run replace typos-ru`);
 2. **which wiki** — a domain. Anything a person is likely to paste is
    accepted, including an article URL;
-3. **where the pages come from** — one numbered list, and its argument;
+3. **where the pages come from** — one numbered list, its argument, and the
+   namespaces for the sources that take any;
 4. **what each mechanic needs** — only what has no sensible default;
 5. **the switches, all of them, in one message** — every optional flag of
    every chosen mechanic, numbered once through, answered with the numbers
    separated by spaces or with `0` for none. This is the step that keeps a
    task of four mechanics from being twenty questions;
-6. **the edit summary** — or a dash, and the bot writes what it actually did;
+6. **the edit summary** — or `0`, and the bot writes what it actually did;
 7. **once or regularly**, and when.
 
 Then the task is created and the queue takes over: it plans, says how many
@@ -36,7 +37,7 @@ logger = logging.getLogger("fd.tasks.dialog")
 from tasks import access, mechanic as mech_kinds, pagesets, registry
 from tasks.params import CHOICE, FLAGS
 from tasks.params import fill_defaults, parse_flags
-from utils import localized
+from utils import explain, localized
 
 ONCE = "once"
 HOURLY = "hourly"
@@ -47,6 +48,12 @@ WHEN_OPTIONS = ((ONCE, "when_once"), (HOURLY, "when_hourly"),
                 (DAILY, "when_daily"), (WEEKLY, "when_weekly"))
 
 MAX_ATTEMPTS = 3
+
+SUMMARY_BY_BOT = ("0", "-", "—")
+"""The answers that leave the edit summary to the bot. The question offers
+«0», like every other question that can be answered with "nothing"; the
+dashes are what it used to offer, still taken because a summary made of one
+dash is never what somebody meant."""
 
 
 class Conversation:
@@ -228,13 +235,13 @@ async def _ask_pageset(conv):
         else:
             return None
 
-    namespaces = await conv.ask(localized("dialog_namespaces", conv.lang))
-    if namespaces is None:
-        return None
-    if namespaces.strip() and namespaces.strip() not in ("-", "0"):
-        params["namespaces"] = namespaces.strip()
-    else:
-        params["namespaces"] = "0"
+    params["namespaces"] = "0"
+    if pagesets.takes_namespaces(source):
+        namespaces = await conv.ask(localized("dialog_namespaces", conv.lang))
+        if namespaces is None:
+            return None
+        if namespaces.strip():
+            params["namespaces"] = namespaces.strip()
 
     limit = await conv.ask(localized("dialog_limit", conv.lang))
     if limit is None:
@@ -257,10 +264,16 @@ async def _ask_when(conv):
         return {"kind": ONCE}
 
     if kind == HOURLY:
-        answer = await conv.ask(localized("dialog_when_minutes", conv.lang))
-        if answer is None:
-            return None
-        return {"kind": HOURLY, "minutes": answer.strip() or "0"}
+        for _attempt in range(MAX_ATTEMPTS):
+            answer = await conv.ask(localized("dialog_when_minutes", conv.lang))
+            if answer is None:
+                return None
+            minutes = _minutes(answer)
+            if minutes:
+                return {"kind": HOURLY,
+                        "minutes": ",".join(str(minute) for minute in minutes)}
+            await conv.say(localized("dialog_bad_minutes", conv.lang))
+        return None
 
     answer = await conv.ask(localized("dialog_when_time", conv.lang))
     if answer is None:
@@ -276,11 +289,52 @@ async def _ask_when(conv):
     if kind == DAILY:
         return {"kind": DAILY, "hour": hour, "minute": minute}
 
-    days = await conv.ask(localized("dialog_when_weekdays", conv.lang))
-    if days is None:
+    for _attempt in range(MAX_ATTEMPTS):
+        answer = await conv.ask(localized("dialog_when_weekdays", conv.lang))
+        if answer is None:
+            return None
+        days = _weekdays(answer)
+        if days:
+            break
+        await conv.say(localized("dialog_bad_weekdays", conv.lang))
+    else:
         return None
     return {"kind": WEEKLY, "hour": hour, "minute": minute,
-            "weekdays": days.strip() or "0"}
+            "weekdays": ",".join(str(day) for day in days)}
+
+
+def _minutes(text):
+    """«0, 30» -> [0, 30]; None when anything is not a minute of the hour.
+
+    It used to be stored as typed, so «06:00» — a time, where minutes were
+    asked for — made a schedule that could never come due, and nothing said
+    so."""
+    minutes = []
+    for token in str(text or "").replace(",", " ").split():
+        token = token.rstrip(".")
+        if not (token.isascii() and token.isdecimal()) or not 0 <= int(token) <= 59:
+            return None
+        if int(token) not in minutes:
+            minutes.append(int(token))
+    return minutes or None
+
+
+def _weekdays(text):
+    """«1, 4» -> [0, 3]: the days as a person numbers them, Monday first and
+    from one, into the days as the schedule keeps them (0 = Monday).
+
+    The question used to ask for 0 as Monday, which is how Python counts and
+    how nobody else does; a person who wrote «1» for Monday got Tuesday.
+    -> the days, in the order given, or None when anything is not 1–7.
+    """
+    days = []
+    for token in str(text or "").replace(",", " ").split():
+        token = token.rstrip(".")
+        if not (token.isascii() and token.isdecimal()) or not 1 <= int(token) <= 7:
+            return None
+        if int(token) - 1 not in days:
+            days.append(int(token) - 1)
+    return days or None
 
 
 async def build(conv, tokens=()):
@@ -325,7 +379,7 @@ async def build(conv, tokens=()):
             target = families.parse_target(answer)
             break
         except ValueError as e:
-            await conv.say(str(e))
+            await conv.say(explain(e, conv.lang))
     if target is None:
         return None
 
@@ -337,12 +391,13 @@ async def build(conv, tokens=()):
 
         family, lang = await asyncio.to_thread(families.ensure_family, target)
     except Exception as e:
-        await conv.say(localized("dialog_wiki_failed", conv.lang, error=e))
+        await conv.say(localized("dialog_wiki_failed", conv.lang,
+                                 error=explain(e, conv.lang)))
         return None
     wiki_key = "{}:{}".format(family, lang)
 
     params = {}
-    if registry.needs_pages(mechanics):
+    if registry.needs_source(mechanics):
         pageset = await _ask_pageset(conv)
         if pageset is None:
             return None
@@ -369,27 +424,45 @@ async def build(conv, tokens=()):
         summary = await conv.ask(localized("dialog_summary", conv.lang))
         if summary is None:
             return None
-        params["summary"] = "" if summary.strip() in ("-", "—") else summary.strip()
+        params["summary"] = ("" if summary.strip() in SUMMARY_BY_BOT
+                             else summary.strip())
     else:
         params["summary"] = ""
 
-    when = await _ask_when(conv)
-    if when is None:
-        return None
+    when = {"kind": ONCE}
+    if registry.schedulable(mechanics):
+        when = await _ask_when(conv)
+        if when is None:
+            return None
 
     codes = [mechanic.code for mechanic in mechanics]
     if when["kind"] != ONCE:
+        from utils import schedule_approval
+
+        pending = (schedule_approval()
+                   and requester.get("role") != access.BOT_ADMIN)
         schedule_id = db.create_schedule(
             wiki=wiki_key, mechanics=codes, params=params,
             kind=when["kind"], requester=requester,
             minutes=when.get("minutes"), hour=when.get("hour"),
             minute=when.get("minute"), weekdays=when.get("weekdays"),
-            reply_chat=conv.chat_key)
+            reply_chat=conv.chat_key, pending=pending)
+        described = describe_schedule(db.get_schedule(schedule_id), conv.lang)
+        if pending:
+            from tasks import notify
+
+            if not await notify.request_approval(schedule_id):
+                db.delete_schedule(schedule_id)
+                await conv.say(localized("schedule_approval_unavailable",
+                                         conv.lang))
+                return None
+            await conv.say(localized("schedule_pending", conv.lang,
+                                     id=schedule_id, wiki=wiki_key,
+                                     mechanics=", ".join(codes), when=described))
+            return None
         await conv.say(localized("schedule_created", conv.lang, id=schedule_id,
                                  wiki=wiki_key,
-                                 mechanics=", ".join(codes),
-                                 when=describe_schedule(
-                                     db.get_schedule(schedule_id), conv.lang)))
+                                 mechanics=", ".join(codes), when=described))
         return None
 
     task_id = db.create_task(wiki=wiki_key, mechanics=codes, params=params,

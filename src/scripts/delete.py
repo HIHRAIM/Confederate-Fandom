@@ -23,6 +23,7 @@ where that belongs.
 import sys
 
 from tasks import mechanic as mech
+from utils import Explained, localized
 from tasks.params import FLAGS, Param
 
 FLAG_TALK = "talk"
@@ -31,8 +32,7 @@ FLAG_TALK = "talk"
 def prepare(ctx):
     """Nothing to build; the check is that there is a reason to record."""
     if not (ctx.summary or "").strip():
-        raise ValueError("для удаления нужно указать причину — она попадёт "
-                         "в журнал удалений")
+        raise Explained("error_delete_no_reason")
     return None
 
 
@@ -40,12 +40,12 @@ def act(ctx, page):
     """Delete one page. -> (state, note)."""
     try:
         if not page.exists():
-            return "skip", "страницы уже нет"
+            return "skip", localized("page_delete_gone", ctx.reader)
     except Exception as e:
         return "fail", "{}: {}".format(type(e).__name__, e)
 
     if ctx.dry_run:
-        return "skip", "будет удалена"
+        return "skip", localized("page_delete_will", ctx.reader)
 
     try:
         page.delete(reason=ctx.summary, prompt=False, mark=False)
@@ -58,7 +58,8 @@ def act(ctx, page):
             if talk is not None and talk.exists():
                 talk.delete(reason=ctx.summary, prompt=False, mark=False)
         except Exception as e:
-            return "done", "страница удалена, обсуждение — нет: {}".format(e)
+            return "done", localized("page_delete_talk_kept", ctx.reader,
+                                     error=e)
     return "done", None
 
 

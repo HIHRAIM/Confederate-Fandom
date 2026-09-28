@@ -18,6 +18,7 @@ import re
 import sys
 
 from tasks import mechanic as mech
+from utils import Explained
 from tasks.params import CHOICE, FLAGS, LONGTEXT, Param
 
 TOP = "top"
@@ -39,7 +40,7 @@ _TAIL_RE = re.compile(
 def prepare(ctx):
     """Nothing to compile; the check is that there is something to add."""
     if not (ctx.params.get("add_text") or "").strip():
-        raise ValueError("не указан текст, который нужно добавить")
+        raise Explained("error_addtext_no_text")
     return None
 
 

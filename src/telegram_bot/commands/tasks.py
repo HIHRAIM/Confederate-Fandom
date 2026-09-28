@@ -169,9 +169,12 @@ async def schedule_cmd(message: Message):
             await message.answer(localized("schedule_usage_telegram", lang))
             return
         action = parts[0].lower()
+        row = db.get_schedule(schedule_id)
         if action in ("del", "delete"):
             ok = db.delete_schedule(schedule_id)
             key = "schedule_deleted" if ok else "schedule_unknown"
+        elif row is not None and db.is_pending(row):
+            key = "schedule_awaiting"
         else:
             ok = db.set_enabled(schedule_id, action == "on")
             key = ("schedule_on" if action == "on" else "schedule_off") \

@@ -1,6 +1,6 @@
 # Confederate Fandom
 
-Confederate Fandom is a bot for automating work on the wikis of the Fandom farm from Discord and Telegram. The people its operator appoints set it to work with a command and a short dialog: nineteen mechanics — find and replace, Russian and Ukrainian spelling and punctuation, markup cleanup, categories, interlanguage links, redirects, files, renames, protection, deletion, undoing a run of edits, page lists, template counts and category trees — over any Fandom wiki named by its address, once or on a schedule. Every run is planned before it writes anything: the pages are counted and the first twenty shown, a preview returns every diff as a file without touching the wiki, the rights of both the bot and the person who asked are checked on that very wiki, and the run ends with a report. Everything goes through one queue, so a walk of nine thousand articles and the work that cannot wait never stand in each other's way. Beside the work it is asked for, the bot runs standing modules on schedules of their own: it keeps the news block on the main pages of Telepedia and Radiopedia in step with a Telegram channel, and once a night it standardises the Russian names of Pokémon species on the Pokémon Wiki.
+Confederate Fandom is a bot for automating work on the wikis of the Fandom farm from Discord and Telegram. The people its operator appoints set it to work with a command and a short dialog: nineteen mechanics — find and replace, Russian and Ukrainian spelling and punctuation, markup cleanup, categories, interlanguage links, redirects, files, renames, protection, deletion, undoing a run of edits, page lists, template counts and category trees — over any Fandom wiki named by its address, once or on a schedule. Every run is planned before it writes anything: the pages are counted and the first twenty shown, a preview returns every diff as a file without touching the wiki, the rights of both the bot and the person who asked are checked on that very wiki, and the run ends with a report. Everything goes through one queue, so a walk of nine thousand articles and the work that cannot wait never stand in each other's way. The bot speaks six languages, and each person chooses their own with `/lang`; English until they do. Beside the work it is asked for, the bot can run standing modules on schedules of their own: it keeps the news block on the main pages of Telepedia and Radiopedia in step with a Telegram channel, standardises the Russian names of Pokémon species on the Pokémon Wiki once a night, and commits chosen wiki pages to a GitHub repository every midnight. The modules ship switched off: a bot set up for wiki work alone never mentions them and spends nothing on them.
 
 ## Requirements
 
@@ -15,7 +15,8 @@ Confederate Fandom is a bot for automating work on the wikis of the Fandom farm 
   - `pywikibot`
   - `regex` — the spelling rules come from AWB lists that use variable-length lookbehind, which the built-in `re` will not compile. Without it seven of the 607 Russian rules are lost and the bot says so once at start-up
   - `requests` and `aiohttp` — the first request to a wiki the bot has never seen, and the channel's public web preview
-  - `tzdata` — the time-zone database for `NEWS_TIMEZONE` on a system that ships none
+  - `tzdata` — the time-zone database for `NEWS_TIMEZONE` and the archive's midnight in Kyiv, on a system that ships none
+- For the archive module only, a GitHub token — see [The archive module](#the-archive-module)
 
 ## Setup
 
@@ -44,18 +45,22 @@ Confederate Fandom is a bot for automating work on the wikis of the Fandom farm 
    - `WIKI_USERNAME` — the wiki account, without any suffix (`Example Bot`).
    - `WIKI_BOT_PASSWORD_SUFFIX` — the *name* of the BotPassword from `Special:BotPasswords` (`ExampleBot`), not the account name. The bot logs in as `<WIKI_USERNAME>@<WIKI_BOT_PASSWORD_SUFFIX>`.
    - `WIKI_BOT_PASSWORD` — the password that page generated.
+   - `MYARCHIVE_GITHUB_TOKEN` — for the archive module only; see [The archive module](#the-archive-module). Without it the module stays off.
    - `BACKUP_KEY` — any long random string, this project's own and not another bot's, used to encrypt the database backups. Optional: without it the bot runs exactly as before and simply makes none. Keep a copy somewhere other than this server — lose the key and every backup already made is unreadable for good.
 
    Environment variables that are already set take precedence over the file. `src/.env` must never be committed; neither must `src/botconfig/user-password.cfg`, which the bot writes from these values for Pywikibot to read (see [The wiki login](#the-wiki-login)).
 
 6. **Fill in the configuration.** Copy `src/config.example.py` to `src/config.py` and edit. The bot itself:
-   - `ADMINS["telegram"]` and `ADMINS["discord"]` — the numeric user IDs of the bot's own administrators, on each messenger. They are not stored in the database on purpose: no mishap there can hand out or take away control of the bot. Everybody else who is to run wiki work is appointed at runtime with `/wikiadmin`.
+   - `ADMINS["telegram"]` and `ADMINS["discord"]` — the numeric user IDs of the bot's own administrators, on each messenger, as lists: the first Discord id is the one pinged when a repeating run waits for approval. They are not stored in the database on purpose: no mishap there can hand out or take away control of the bot. Everybody else who is to run wiki work is appointed at runtime with `/wikiadmin`.
    - `SERVICE_CHATS["telegram"]` and `SERVICE_CHATS["discord"]` — where the bot reports what it did and what failed: Telegram chats as `"<chat_id>:<thread_id>"` (thread `0` is the plain group), Discord channels as numeric ids. Every report goes to both. Empty sets leave the log as the only record.
    - `BACKUP_CHATS["telegram"]` and `BACKUP_CHATS["discord"]` — where the encrypted database copies go, in the same shape as `SERVICE_CHATS`. Deliberately a separate setting rather than a default to it: the file is the whole database, and the chat that reads status lines is rarely the chat that should keep one. Empty sets (the default) mean no automatic backups.
-   - `SERVICE_LANG` — the language those reports and the Discord presence line are written in.
+   - `SERVICE_LANG` — the language those reports are written in. It is the service chats' language and nobody else's: every person reads the bot in the language they chose with `/lang`, English until they choose.
+   - `SCHEDULE_APPROVAL` — whether a repeating run set up by a wiki administrator waits for a bot administrator's yes (see [Once, or on a schedule](#once-or-on-a-schedule)). `True` by default; `False` lets wiki administrators set up repeating runs on their own.
    - `WIKI_PUT_THROTTLE` — seconds Pywikibot waits between two edits. `0`, and deliberately so: an account with the bot flag is expected to edit at speed and the wiki throttles it on its own. Raise it for a wiki that asks.
 
-   The news module (see [The news module](#the-news-module)):
+   The three modules follow, each off until it is set up: `config.example.py` ships them switched off, and a `config.py` that does not name their settings at all starts just the same.
+
+   The news module (see [The news module](#the-news-module)) — on when `SOURCE_CHANNEL` and `WIKIS` are both set:
    - `SOURCE_CHANNEL` — the channel to follow, as `@name` or as the numeric id.
    - `WIKIS` — every wiki the news go to, each as a Pywikibot family and language code; a wiki that keeps its news under other titles may carry its own `templates` and `files` tuples, and one whose stylesheet names the card's classes differently its own `css_prefix`.
    - `NEWS_TEMPLATES` / `NEWS_FILES` — the template pages and the file names, newest news first. Both tuples must be the same length, and that length is how many news the bot keeps.
@@ -66,9 +71,12 @@ Confederate Fandom is a bot for automating work on the wikis of the Fandom farm 
    - `PREVIEW_SYNC` / `PREVIEW_LIMIT` — whether to read the channel's public preview before every pass (which is how older posts and missed edits are picked up), and how many of its posts to consider.
    - `EDIT_SUMMARY` / `UPLOAD_SUMMARY` — the edit summaries, in the wikis' own language; `{link}` is the post the news came from.
 
-   The species module (see [The species module](#the-species-module)):
+   The species module (see [The species module](#the-species-module)) — on when `SPECIES_WIKI` is set:
    - `SPECIES_WIKI` / `SPECIES_AT` / `SPECIES_SUMMARY` / `SPECIES_LIMIT` — the wiki the walk goes over, the time of day it runs at, the summary its edits carry, and a page cap for trying it out. `SPECIES_WIKI = None` switches the module off.
    - `SPECIES_REQUIRE_BOT_FLAG` — whether the walk refuses to start on a wiki where the account has no bot flag. On by default: hundreds of unflagged edits at once flood Recent changes.
+
+   The archive module (see [The archive module](#the-archive-module)) — on when `MYARCHIVE` is set and `MYARCHIVE_GITHUB_TOKEN` is in `.env`:
+   - `MYARCHIVE` — a dict: `repo`, the `pages` to archive, the Fandom `owner` whose lone edits make a plain update, `coauthors` (Fandom account → GitHub login), the commit `messages`, and optionally `branch`, `at`, `timezone` and `main_pages`. `config.example.py` shows its shape.
 
 7. **Set up the Discord application.** In the Developer Portal, on the *Bot* page, switch on the **Message Content Intent**: the dialogs are answered with ordinary messages, and without it every answer arrives empty. Invite the application with both `bot` and `applications.commands`, or the slash commands never appear. The tree is synced once when the gateway comes up, so a new command shows after a restart.
 
@@ -150,8 +158,9 @@ src/
     pages.py             writing the news templates and files
 
   modules/             the standing work
-    telepedia/           the news: news, publisher, preview, backfill
+    teleradiopedia/      the news: settings, news, publisher, preview, backfill
     pokemon/             the species names: names, rules, walk, data/
+    myarchive/           the page archive: fandom, github, archive
 
   db/                  SQLite layer: one connection, one module per domain
     __init__.py          connection (conn/cur), init(), the whole public API
@@ -171,6 +180,7 @@ src/
     client.py            the client, the command tree, the log channels
     dialogs.py  pages.py
     status.py            the presence line
+    approvals.py         the buttons that approve a repeating run
     commands/            tasks, admins
 
   i18n/                the six localization files
@@ -196,7 +206,7 @@ Permission roles used below:
 > - `/backup` answers privately — ephemeral on Discord, where it is also allowed in a DM, and in private chats only on Telegram.
 > - `/help` and `/status` are open to more people on Discord than on Telegram; the tables below say which.
 > - Anything long — the task list, the queue, the repeating runs, `/help` — comes back as a page with arrows under it when it does not fit on one: an embed with buttons on Discord, a message with an inline keyboard on Telegram.
-> - Replies come in the language of the person who asked, when it is one of the six the project speaks.
+> - Replies come in the language each person chose for themselves with `/lang` — English until they choose one. See [Localization](#localization).
 
 ### Discord commands
 
@@ -207,12 +217,13 @@ Permission roles used below:
 | `/go <task_id> [dry]` | Confirm a prepared task and start it. With `dry` it writes nothing: every diff is computed and sent back as a file, the wiki untouched | ❌ | ✅ | ✅ |
 | `/jobs` | What is running, what is queued, and how the last few tasks ended | ❌ | ✅ | ✅ |
 | `/stop <task_id>` | Stop a task. What it has already written stays written | ❌ | ✅ | ✅ |
-| `/schedule [action] [schedule_id]` | The repeating runs; `action` is `list`, `on`, `off` or `del` | ❌ | ✅ | ✅ |
+| `/schedule [action] [schedule_id]` | The repeating runs; `action` is `list`, `on`, `off` or `del`. A run waiting for approval cannot be switched on | ❌ | ✅ | ✅ |
 | `/status` | The followed channel, the news wikis and their schedule, what is running and waiting, and the last error | ❌ | ✅ | ✅ |
 | `/help` | What the bot does and which commands it takes | ✅ | ✅ | ✅ |
 | `/wikiadmin [user] [wiki_user]` | Appoint a Wiki Admin by Discord user and Fandom account; with no arguments, list who is appointed and which Telegram invitations are still waiting | ❌ | ❌ | ✅ |
 | `/remwikiadmin <user>` | Take the appointment away | ❌ | ❌ | ✅ |
 | `/backup` | Send an encrypted copy of the database, right now, to the person who asked and nobody else | ❌ | ❌ | ✅ |
+| `/lang [code]` | The language the bot answers you in, picked from a list; without a choice, which one it is now | ✅ | ✅ | ✅ |
 
 ### Telegram commands
 
@@ -223,7 +234,7 @@ Permission roles used below:
 | `/go <id> [dry]` | Confirm a prepared task and start it. With `dry` it writes nothing: every diff is computed and sent back as a file, the wiki untouched | ❌ | ✅ | ✅ |
 | `/jobs` | What is running, what is queued, and how the last few tasks ended | ❌ | ✅ | ✅ |
 | `/stop <id>` | Stop a task. What it has already written stays written | ❌ | ✅ | ✅ |
-| `/schedule [on\|off\|del <id>]` | The repeating runs; with no arguments, list them | ❌ | ✅ | ✅ |
+| `/schedule [on\|off\|del <id>]` | The repeating runs; with no arguments, list them. A run waiting for approval cannot be switched on | ❌ | ✅ | ✅ |
 | `/status` | The channel, the news wikis, how many posts are stored, when the last pass ran and what it left behind, and what each slot holds | ❌ | ❌ | ✅ |
 | `/update [force]` | Run a news pass now instead of waiting for the next one. With `force`, ignore which picture each slot already holds and upload every file again — the answer to a file changed or deleted on a wiki behind the bot's back | ❌ | ❌ | ✅ |
 | `/backfill [all]` | Read the channel's public web preview now: recover the posts published before the bot was added and pick up their edits. With `all`, also refresh the posts the bot heard from Telegram itself, for one edited while the bot was down | ❌ | ❌ | ✅ |
@@ -231,6 +242,7 @@ Permission roles used below:
 | `/wikiadmin [<who> <Fandom account>]` | Appoint a Wiki Admin; *who* is an `@name` or a numeric id. An `@name` the bot has not heard from yet waits as an invitation until that account first writes to the bot. With no arguments, list who is appointed and who is invited | ❌ | ❌ | ✅ |
 | `/remwikiadmin <who>` | Take the appointment away, or withdraw a waiting invitation | ❌ | ❌ | ✅ |
 | `/backup` | Send an encrypted copy of the database, right now. Private chats only | ❌ | ❌ | ✅ |
+| `/lang [en\|es\|pl\|pt\|ru\|uk]` | The language the bot answers you in; with no code, which one it is now | ✅ | ✅ | ✅ |
 
 ---
 
@@ -259,7 +271,7 @@ Nineteen mechanics, each a Pywikibot script (or one of the operator's own) with 
 | 13 | `movepages` | Rename from a list of pairs, or by a prefix, a suffix or a regular expression | move |
 | 14 | `protect` | Set or lift protection on editing, moving, re-uploading | protect |
 | 15 | `delete` | Delete a list of pages | delete |
-| 16 | `revertbot` | Undo one account's run of edits at the top of a page's history | edit |
+| 16 | `revertbot` | Undo an account's contribution: every page where its edit is still the latest | edit |
 | 17 | `listpages` | Write the page list to a file | — |
 | 18 | `templatecount` | How many pages use the templates, and which | — |
 | 19 | `category-graph` | The tree of subcategories, as text or as a `.dot` file | — |
@@ -268,13 +280,15 @@ Nineteen mechanics, each a Pywikibot script (or one of the operator's own) with 
 
 **Any Fandom wiki, by domain.** The dialog asks for the wiki and takes anything a person is likely to paste — `telepedia.fandom.com/ru`, a link to an article, or the `family:lang` shorthand the bot prints. A wiki the bot has never seen is looked up once (`meta=siteinfo`) and a Pywikibot family file is generated for it; from then on it costs nothing.
 
-**A rename leaves redirects behind, and the redirects that pointed at the old title become double.** MediaWiki on Fandom does not repoint them on its own. A `redirect` run with «двойные» after a batch of renames is what closes that gap.
+**A rename leaves redirects behind, and the redirects that pointed at the old title become double.** MediaWiki on Fandom does not repoint them on its own. A `redirect` run that fixes the double ones, after a batch of renames, is what closes that gap.
 
 ### The dialog
 
-Short on purpose. Which mechanics, which wiki, where the pages come from, what each mechanic must be told — and then **every optional switch of every chosen mechanic in one numbered message**, answered with the numbers you want separated by spaces, or `0` for none. Four mechanics with five switches each is one question, not twenty. Then the edit summary — or a dash, and the bot writes what it actually did — and whether the run happens once or regularly.
+Short on purpose. Which mechanics, which wiki, where the pages come from, what each mechanic must be told — and then **every optional switch of every chosen mechanic in one numbered message**, answered with the numbers you want separated by spaces, or `0` for none. Four mechanics with five switches each is one question, not twenty. Then the edit summary — or `0`, and the bot writes what it actually did — and whether the run happens once or regularly.
 
-**Renaming can be a list rather than a rule.** A rule — add this prefix, strip that suffix, rewrite by a regular expression — is the right shape for a hundred pages named alike and the wrong shape for nine pages named nothing alike. So `movepages` also takes the renames themselves: page source «список переименований», then one rename per line,
+**`0` is the one answer for "nothing".** No limit on the pages, no summary of your own, no switches, a replacement that deletes what was found, a file taken out rather than swapped: every question that can be answered with nothing takes `0` and says so. Some of them used to take a dash and some a dash or a zero, and people rightly asked why there were two. Where `0` could be a real answer — a search for the digit zero — it is exactly that.
+
+**Renaming can be a list rather than a rule.** A rule — add this prefix, strip that suffix, rewrite by a regular expression — is the right shape for a hundred pages named alike and the wrong shape for nine pages named nothing alike. So `movepages` also takes the renames themselves: page source “a list of renames I will send”, then one rename per line,
 
 ```
 Список_серий Список_эпизодов
@@ -285,22 +299,26 @@ and the pages of the run are the left-hand column. A space in a title is written
 
 ### Where the pages come from
 
-One numbered question, one argument where the source needs it, then the namespaces (the articles alone unless told otherwise) and how many pages to take at most (all of them unless told otherwise).
+One numbered question, one argument where the source needs it, then the namespaces and how many pages to take at most (`0` — all of them).
+
+**The namespaces narrow every source except the two lists.** The question names the common ones by number — 0 articles, 2 users, 4 project pages, 6 files, 10 templates, 14 categories, 828 modules — so nobody has to know them by heart, and “all” (in the reader's language) takes every namespace the wiki has. A list of titles or of renames is not asked it at all, since the titles are taken as sent. The first source is called “all pages of the chosen namespace”: it used to read “every page of the wiki”, and several people chose it expecting exactly that and were then asked which namespaces, which was confusing.
+
+**A mechanic may bring its own pages.** `revertbot` walks the contributions of the account it is told to undo, so a task of it alone asks no page source at all.
 
 | # | Source | What it lists |
 |---|---|---|
-| 1 | все страницы вики | Every page of the chosen namespaces |
-| 2 | страницы категории | The pages of one category |
-| 3 | страницы с шаблоном | The pages that include one template |
-| 4 | результаты поиска | What the wiki's own search finds |
-| 5 | страницы, которые ссылаются на указанную | The pages that link to one page |
-| 6 | страницы, на которые ссылается указанная | The pages one page links to |
-| 7 | страницы, где используется файл | The pages that show one file |
-| 8 | страницы с началом названия | The pages whose title starts with the given text |
-| 9 | список названий, который я пришлю | Exactly the titles sent, one per line |
-| 10 | недавно созданные страницы | The newest pages, 200 unless a limit says otherwise |
-| 11 | недавно изменённые страницы | The pages changed in the last seven days, from the newest 500 changes |
-| 12 | список переименований, который я пришлю | The left-hand column of a list of renames (see above) |
+| 1 | all pages of the chosen namespace | Every page of the chosen namespaces |
+| 2 | the pages of a category | The pages of one category |
+| 3 | the pages that use a template | The pages that include one template |
+| 4 | search results | What the wiki's own search finds |
+| 5 | the pages that link to one page | The pages that link to the page given |
+| 6 | the pages one page links to | The pages the page given links to |
+| 7 | the pages that use a file | The pages that show the file given |
+| 8 | the pages whose title starts with | The pages whose title starts with the text given |
+| 9 | a list of titles I will send | Exactly the titles sent, one per line |
+| 10 | recently created pages | The newest pages, 200 unless a limit says otherwise |
+| 11 | pages changed in the last seven days | The pages changed in the last seven days, from the newest 500 changes |
+| 12 | a list of renames I will send | The left-hand column of a list of renames (see above) |
 
 **The sources that walk the wiki list what the mechanics can work on.** All pages, a title prefix, new pages and recent changes list ordinary pages for almost every mechanic — and redirects for `redirect` fixing double or broken redirects, which has nothing to do on an article. That was once missing: every walk listed articles alone, so a run fixing double redirects on a wiki with thirteen of them was handed 212 articles, found none of them a redirect, and finished with 0 edits and no error. A task that mixes the two kinds — double redirects and a spelling pass in one run — is handed both. The other sources are not filtered: a category, a template or a list names its pages itself, and whoever named them meant them.
 
@@ -318,7 +336,9 @@ The page list is settled once, into the database. That is what makes a run count
 
 **Wiki administrators** are appointed with `/wikiadmin` (see below). The appointment is global and deliberately cheap to give, because it is not what grants anything — before every run the bot asks *that wiki* whether that person holds rollback, content moderator, discussions moderator, administrator, bureaucrat or bot there. Somebody with no standing on a wiki cannot borrow the bot's.
 
-**And the bot checks itself.** Before a task starts it must hold one of three statuses on that wiki — bot, content moderator or administrator — or it refuses and says so: a hundred edits from an account with no standing is what a wiki blocks. Then the rights each mechanic needs are checked against what the wiki says the session holds, and a missing one is reported as the *group* that would grant it, because «нужен статус модератора контента» is something a person can act on and «нужно право editprotected» is not.
+**And the bot checks itself.** Before a task starts it must hold one of three statuses on that wiki — bot, content moderator or administrator — or it refuses and says so: a hundred edits from an account with no standing is what a wiki blocks. Then the rights each mechanic needs are checked against what the wiki says the session holds, and a missing one is reported as the *group* that would grant it, because “available to the following group: content moderator” is something a person can act on and a bare right such as `editprotected` is not.
+
+**A right can be missing for two reasons, and the answer says which.** The bot logs in with a BotPassword, and its session gets only the rights that are both the account's and allowed by the password's grants. When the account holds the right and the session does not, the missing thing is a grant, and the answer names it as Special:BotPasswords shows it — “Rollback changes to pages”. It used to name a group every time, and told a content moderator — a group that holds rollback — that rollback needed the rollbacker group.
 
 ### Wiki administrators
 
@@ -326,15 +346,19 @@ A Bot Admin appoints one with `/wikiadmin`, naming the person on the messenger a
 
 **On Discord** the person is picked from the member list — `/wikiadmin user: @someone wiki_user: Their Fandom name` — and Discord hands the id over with them.
 
-**On Telegram** the person is typed in: `/wikiadmin @someone Their Fandom name`. Telegram does not tell a bot whose an `@name` is — it resolves the `@name` of a public group or channel and answers «chat not found» for a person — so an `@name` the bot has not heard from is kept as an **invitation**. Nothing is granted yet. The first message or button press the bot receives from an account holding that `@name` turns the invitation into an appointment keyed by that account's id, before the message itself is answered — so a person told «напишите боту /tasks» gets the list, not a refusal. The bot tells them they have been appointed and what to try first, and tells the Bot Admin who appointed them that the invitation was taken. From then on the `@name` does not matter: the person may change it, and whoever takes it up afterwards gets nothing.
+**On Telegram** the person is typed in: `/wikiadmin @someone Their Fandom name`. Telegram does not tell a bot whose an `@name` is — it resolves the `@name` of a public group or channel and answers “chat not found” for a person — so an `@name` the bot has not heard from is kept as an **invitation**. Nothing is granted yet. The first message or button press the bot receives from an account holding that `@name` turns the invitation into an appointment keyed by that account's id, before the message itself is answered — so a person told to send the bot `/tasks` gets the list, not a refusal. The bot tells them they have been appointed and what to try first, and tells the Bot Admin who appointed them that the invitation was taken. From then on the `@name` does not matter: the person may change it, and whoever takes it up afterwards gets nothing.
 
 An invitation nobody claims lapses after seven days, because the longer it waits the likelier the `@name` is to have changed hands. `/wikiadmin` with no arguments lists the waiting invitations under the appointments, on both messengers, and `/remwikiadmin @someone` withdraws one. A numeric id is appointed at once, and so is a person with no `@name` picked from Telegram's own mention list, which carries the account itself. Replying to somebody's message is deliberately not a way to name them: a reply used to win over whatever was typed, which appointed the person replied to when the administrator had typed somebody else.
 
 ### Once, or on a schedule
 
-The last question of the dialog. A repeating run stores the same three things a task does — the wiki, the mechanics, the parameters — plus when it is due, in one of three shapes: at given minutes of every hour, at a time every day, or at a time on named weekdays. Each firing opens an ordinary task, so a scheduled run is watched, reported and stopped exactly like one asked for by hand.
+The last question of the dialog. A repeating run stores the same three things a task does — the wiki, the mechanics, the parameters — plus when it is due, in one of three shapes: at given minutes of every hour, at a time every day, or at a time on named weekdays — numbered from 1 for Monday to 7 for Sunday, the way people count them. Each firing opens an ordinary task, so a scheduled run is watched, reported and stopped exactly like one asked for by hand.
 
-The next moment is recomputed forward from *now* after every firing, so a bot that was down over its hour runs once when it comes back rather than once for every hour it missed.
+The next moment is recomputed forward from *now* after every firing, so a bot that was down over its hour runs once when it comes back rather than once for every hour it missed. An answer the schedule cannot keep — «06:00» where minutes of the hour were asked for, «8» for a weekday — is asked again rather than stored.
+
+**A repeating run set up by a wiki administrator waits for a bot administrator.** It works on somebody's wiki every hour or every night for as long as nobody stops it, so it is created switched off and a message goes to the Discord channels of `SERVICE_CHATS`, pinging the first Discord id of `config.ADMINS`, with two buttons. *Approve* starts it; *Reject* deletes it and tells the person privately, in their language — or in the chat they asked from, when a private message cannot reach them. Until then `/schedule on` cannot switch it on. The buttons keep working after a restart, and only the ids in `config.ADMINS` may press them. A bot administrator's own schedules never wait, and `SCHEDULE_APPROVAL = False` switches the step off for everybody. This is the one message in the log channels that pings anybody, because it is a question waiting for one person's answer.
+
+**Some work is never repeated.** `revertbot` is not offered on a schedule, and the dialog does not ask “once or regularly” when it is in the task: undoing one person's edits every night is not something anybody means to ask for.
 
 ### What comes back
 
@@ -363,6 +387,9 @@ Every task also reports to the service chats — the Discord channel and the Tel
 | `species` | module | Once a day at `SPECIES_AT` | Walks the articles of `SPECIES_WIKI` and standardises the names of Pokémon species |
 | `sweep` | task | Once a day at 04:00 | Throws away the page lists and report files of runs that are long over |
 | `backup` | task | Twice a day, at 04:30 and 16:30 | Sends an encrypted copy of the database to `BACKUP_CHATS` |
+| `archive` | background | Once a day, at midnight in Kyiv | Commits the pages of `MYARCHIVE` that changed to its GitHub repository |
+
+A module that is not set up has no row here at all: its job is not registered, and nothing about it appears in the queue or the presence line. **Background** is below everything: the archive waits until the queue is empty, a person's task included.
 
 **One at a time, always.** Not because the logins would clash — each wiki has a session and a cookie file of its own, and the bot is signed in to all of them at once — but because Pywikibot is synchronous: every job goes through the same worker thread. A job that comes due while another is running waits its turn, and a job already waiting is not queued twice.
 
@@ -370,7 +397,7 @@ Every task also reports to the service chats — the Discord channel and the Tel
 
 **And a long run gives the worker back.** A walk of nine thousand articles could not be allowed to hold the quarter-hourly news pass for an hour, so it is not one job: the task queue walks a *chunk* — fifty pages, or a minute, or until something more important arrives — and then puts itself back in the queue. A walk of a whole wiki is a hundred short jobs with the news slipping in between them, and it survives a restart, because the position is a row in the database and not a variable.
 
-**A task that has to wait is told so, and only then.** A run that the bot picks up at once says nothing about queues — being told you are first of one is noise. A run that lands behind something gets one line: which place it is in, and roughly how long until the bot reaches it, in whichever of hours, minutes and seconds are not zero (`2 ч 15 мин`, `8 с`). Both moments a task can be queued are covered: when `/run` creates it and when `/go` starts it while another run is still going.
+**A task that has to wait is told so, and only then.** A run that the bot picks up at once says nothing about queues — being told you are first of one is noise. A run that lands behind something gets one line: which place it is in, and roughly how long until the bot reaches it, in whichever of hours, minutes and seconds are not zero (`2 h 15 min`, `8 s`). Both moments a task can be queued are covered: when `/run` creates it and when `/go` starts it while another run is still going.
 
 The estimate is exactly as good as it claims to be. It is the pages still to do in front of you divided by the rate the running task is *actually* going at — its own elapsed time over its own pages checked, which already includes every quarter of an hour it stood aside for a news pass. A task merely waiting ahead of you counts as the few seconds its planning takes, because planning is all it will do before it stops and waits for somebody to type `/go`.
 
@@ -378,13 +405,13 @@ What each job reports differs on purpose. A task reports when it starts, every f
 
 ### Presence
 
-The line under the bot's name on Discord is the one place a person sees what it is doing without asking. Something running names the wiki where there is one to name — `Правит telepedia:ru` for a task, the same for the nightly species walk. The news pass has a line of its own, `Обновляет новости ТелеРадиопедии`: it writes to every wiki of `WIKIS` at once, so there is no one wiki to point at, and the name of the group they form lives in the `presence_news` string of the six i18n files — which is what to change when the news go somewhere else. The sweep, the backup and the queue between two tasks name themselves (`Работает: ночная уборка`).
+The line under the bot's name on Discord is the one place a person sees what it is doing without asking. Something running names the wiki where there is one to name — `Editing telepedia:ru` for a task, the same for the nightly species walk. The news pass has a line of its own, `Updating the TeleRadiopedia news`: it writes to every wiki of `WIKIS` at once, so there is no one wiki to point at, and the name of the group they form lives in the `presence_news` string of the six i18n files — which is what to change when the news go somewhere else. The sweep, the backup and the queue between two tasks name themselves (`Working: the nightly sweep`).
 
-Nothing running, and the line says what is next and how long until it: `Дальше: новости, через 10 мин.`, or `Дальше: запуск по pokemon:ru, через 2 ч 15 мин.` when a repeating run of somebody's comes sooner than any of the bot's own jobs. The task queue is never what it names as next — it is due every minute and would be the answer for ever — and the countdown is rounded to whole minutes, so that Discord is not sent a new line every thirty seconds. The language is `SERVICE_LANG`.
+Nothing running, and the line says what is next and how long until it: `Next: the news, in 10 min.`, or `Next: a run on pokemon:ru, in 2 h 15 min.` when a repeating run of somebody's comes sooner than any of the bot's own jobs. The task queue is never what it names as next — it is due every minute and would be the answer for ever — and the countdown is rounded to whole minutes, so that Discord is not sent a new line every thirty seconds. The line is always in English: one line is shown to everybody who looks at the member list, whatever language each of them chose, so it cannot follow anybody's choice.
 
 ### No invented limits
 
-There is no ceiling on how many pages a run may touch and no delay between edits (`WIKI_PUT_THROTTLE` is 0). An account carrying the bot flag is expected to edit at speed, the wiki throttles it on its own if it wants to, and a limit invented here would only make a walk of a whole wiki take three hours instead of one. The dialog's own «сколько страниц взять максимум» is there so a run can be tried on twenty pages before it is let loose on nine thousand.
+There is no ceiling on how many pages a run may touch and no delay between edits (`WIKI_PUT_THROTTLE` is 0). An account carrying the bot flag is expected to edit at speed, the wiki throttles it on its own if it wants to, and a limit invented here would only make a walk of a whole wiki take three hours instead of one. The dialog's own “At most how many pages?” is there so a run can be tried on twenty pages before it is let loose on nine thousand.
 
 ### The news module
 
@@ -412,7 +439,7 @@ The link lives on the picture and points at the post the news came from. A chann
 
 #### What becomes a news
 
-Three rules, and they are all in `modules/telepedia/news.py`:
+Three rules, and they are all in `modules/teleradiopedia/news.py`:
 
 - **An album is one news.** Telegram delivers a post with several pictures as several messages sharing a `media_group_id`; to a reader it is one post, so the bot folds them together, takes the text from whichever message carries it and the picture from the first one that has any.
 - **Only posts with text count.** A picture with no words says nothing on a main page. A post without text is skipped and the next one down moves into its place.
@@ -528,11 +555,29 @@ The replacement is careful in ways that matter on a wiki:
 
 It does not rename pages and does not touch redirects: a title that moves drags redirects, links and categories behind it, and that is a different job with a different cost of error. Nor does it start on a wiki where the account has no bot flag, unless `SPECIES_REQUIRE_BOT_FLAG` is turned off: hundreds of unflagged edits at once are a flood in Recent changes, and the service chats are told why the night was skipped.
 
+### The archive module
+
+Every midnight in Kyiv the bot reads a list of wiki pages — site stylesheets and scripts, Lua modules, the main pages — and commits every one that changed to a GitHub repository, so that a wiki's interface has a history outside the wiki and survives a vandal or a careless edit. It runs behind everything else and reads the pages anonymously through `api.php`: no login, so it never touches the sessions the other jobs use.
+
+**Where a page goes.** `Pages/<language>/<wiki>/<title>` — `https://pokemon.fandom.com/ru/wiki/MediaWiki:Common.css` becomes `Pages/ru/pokemon/MediaWiki:Common.css`. A page of the Module namespace is filed under its canonical name, `Module:`, whatever the wiki calls the namespace, and a Lua module gets `.lua` unless its title already ends so: `Модуль:PokemonData/data` becomes `Module:PokemonData/data.lua`. A module's `/doc` page is wikitext and keeps its title as it is. A slash in a title is a directory. With `main_pages` (on by default) the main page of every wiki in the list is archived too, under the title the wiki itself gives it (`meta=siteinfo`, which is what `MediaWiki:Mainpage` sets).
+
+**What a commit says.** One commit per changed page, with the message from `MYARCHIVE["messages"]`: `created` for a new file, `updated` when only the `owner` edited the page since the file's last commit, and `updated_by` — with `{editors}`, the accounts in the order they first edited — when somebody else did. The editors `MYARCHIVE["coauthors"]` links to a GitHub login are added as `Co-authored-by:`, so the commit shows on their profile too. A page equal to its file, or to its file with a final newline, is not committed; that is decided by comparing hashes, so an unchanged night costs one request to GitHub for the whole tree.
+
+**What it needs, and what stays private.** The repository, the page list and the account links are `config.MYARCHIVE` in the untracked `config.py`; the token is `MYARCHIVE_GITHUB_TOKEN` in the untracked `src/.env`. Without both the module is off. To make the token: GitHub → *Settings* → *Developer settings* → *Personal access tokens* → *Fine-grained tokens* → *Generate new token*; *Resource owner* the owner of the repository, *Repository access* → *Only select repositories* and that one repository, *Permissions* → *Repository permissions* → *Contents: Read and write* (GitHub adds *Metadata: Read-only* by itself), and an expiry date you will remember to renew. The commits are authored by the account the token belongs to.
+
+It reports to the service chats only when it committed something, could not reach a wiki or GitHub, or found a listed page missing — the last once per start of the bot, not every night.
+
 ### Localization
 
-Every string the bot says is a key in the six files `i18n/en.json`, `es`, `pl`, `pt`, `ru` and `uk`, each entry carrying its text and its translation status. English is the reference: a key missing from a language falls back to it, and a key missing everywhere falls back to itself and to a line in the log. Replies follow the language of the person who typed the command; the service chats follow `SERVICE_LANG`. The files are read once at start-up, so an edit to them takes effect on the next restart.
+Every string the bot says is a key in the six files `i18n/en.json`, `es`, `pl`, `pt`, `ru` and `uk`, each entry carrying its text and its translation status. English is the reference: a key missing from a language falls back to it, and a key missing everywhere falls back to itself and to a line in the log. The files are read once at start-up, so an edit to them takes effect on the next restart.
 
-Any message that spells out a command spells it the way the messenger it goes to takes it. `/help` is built from one table that lists every command with the messengers it exists on, and a hint such as «посмотреть, что получится, ничего не записывая» reads `/go 2 dry` on Telegram and `/go task_id: 2 dry: true` on Discord. It once did not, and a person on Discord, told to type something Discord's command picker cannot take, left `dry` unset and got a real run where they had asked for a preview.
+**Each person chooses their language, and English is the default.** `/lang ru` on Telegram, `/lang code:` with a list to pick from on Discord, `/lang` alone to see which one is in use. The choice belongs to the account on that messenger and to nothing else — two people in one channel may read the bot in two languages — and choosing English deletes the stored choice, since English is what everybody gets without one. It used to be guessed: Telegram answered in the language of the person's app, Discord in `SERVICE_LANG`, so the same person read the bot in two languages and could choose neither.
+
+**Everything a person is told follows their choice**, not only the replies to their commands: the dialog, the plan of a task, why it was refused, the notes it made along the way, how it ended, and the headings of the files it sends back. A refusal or a note is kept as a key rather than as text, because the same one is read twice — by the person, in their language, and by the service chats, in `SERVICE_LANG`.
+
+**Two things cannot follow a person's choice**, because they are shown before the bot knows who is looking. The descriptions of the slash commands in Discord's command picker follow the language of the Discord app — English at base, the other five handed to Discord from the same i18n files. The presence line under the bot's name is English. The edit summaries on a wiki are the wiki's text, not the bot's messages, and stay as they are.
+
+Any message that spells out a command spells it the way the messenger it goes to takes it. `/help` is built from one table that lists every command with the messengers it exists on, and a hint such as “See first what it would do, writing nothing” reads `/go 2 dry` on Telegram and `/go task_id: 2 dry: true` on Discord. It once did not, and a person on Discord, told to type something Discord's command picker cannot take, left `dry` unset and got a real run where they had asked for a preview.
 
 ### Service events and automatic backups
 
@@ -580,7 +625,9 @@ The bot stores operational data in local SQLite (`src/fd.db`) to decide who may 
 - **Tasks and schedules**
   - What was asked for, on which wiki, with which parameters, by whom (messenger, id, display name, Fandom account), when it ran and what it changed.
   - The page list of each run and what happened to each page.
-  - For a repeating run, the same, plus when it is due.
+  - For a repeating run, the same, plus when it is due and whether it still waits for approval.
+- **Language choices**
+  - For each person who chose a language other than English with `/lang`: the messenger, their numeric id there, the language, and when it was chosen.
 - **The news module**
   - The posts of the followed channel: the text and its formatting, the timestamp, the message and album ids, the identifiers of the picture, the channel or person a repost came from, and whether the row came from Telegram or from the channel's web preview. A channel post carries no author: it is published under the channel's name, not a person's.
   - What each slot of each wiki holds: the message it came from and the identifier of the picture uploaded into it.
@@ -597,11 +644,12 @@ Beside the database, a finished run leaves up to three files in `src/reports/` �
 - **Report files**: deleted after **14 days**.
 - **Channel posts**: the newest **60** are kept; older rows are deleted as new ones arrive, since only the head of the channel can become a news.
 - **Slot state and bookkeeping**: overwritten at every pass.
+- **Language choices**: until the person chooses English, which deletes the row.
 
 ### Data usage boundaries
 
 - The bot uses stored data only to decide who may ask it for work, to do that work and report on it, and to run its modules.
-- Nothing is stored about anybody who is not appointed or invited: a message from anyone else is answered and forgotten.
+- Nothing is stored about anybody who is not appointed or invited, except the language they chose themselves: a message from anyone else is answered and forgotten.
 - It does not implement analytics or tracking pipelines in this repository.
 - Database backups are encrypted (authenticated BLAKE2 keystream + tag, standard library only) before leaving the process; the chats that keep them only ever hold ciphertext. The key lives in `BACKUP_KEY` and must be kept out of the repository.
 
