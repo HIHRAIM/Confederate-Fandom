@@ -46,22 +46,18 @@ def esc(text):
     of the line as a tag it did not recognise."""
     return html.escape(str(text), quote=False)
 
-
 def code(text):
     """One technical name, as monospace."""
     return "<code>{}</code>".format(esc(text))
-
 
 def bold(text):
     """One name, as the eye's first stop on the line."""
     return "<b>{}</b>".format(esc(text))
 
-
 MARKUP = types.SimpleNamespace(code=code, bold=bold, esc=esc)
 """This half's three formatters, in the shape `tasks/lists.py` takes."""
 
-
-def build(kind, lang):
+def build(kind, lang, owner=None):
     """Title and lines for one pageable list. -> (title, lines) or None.
 
     The catalogue of what may be paged. A kind that is not named here comes
@@ -72,13 +68,12 @@ def build(kind, lang):
     if kind == "tasks":
         return lists.catalogue(lang, MARKUP)
     if kind == "jobs":
-        return lists.jobs(lang, MARKUP)
+        return lists.jobs(lang, MARKUP, owner=owner)
     if kind == "sched":
-        return lists.schedules(lang, MARKUP)
+        return lists.schedules(lang, MARKUP, owner=owner)
     if kind == "help":
         return lists.help_text(lang, MARKUP, lists.TELEGRAM)
     return None
-
 
 def _allowed(kind, query):
     """Whether the person pressing may see this list at all.
@@ -98,7 +93,6 @@ def _allowed(kind, query):
 
     name = ("@" + user.username) if user.username else user.full_name
     return access.caller("telegram", user.id, name) is not None
-
 
 def _clip_html(text, budget):
     """Shorten this module's HTML without cutting a tag or an entity.
@@ -132,11 +126,9 @@ def _clip_html(text, budget):
     return "".join(parts) + "…" + "".join(
         "</{}>".format(tag) for tag in reversed(opened))
 
-
 def _pages(lines):
     """Keep the shared pagination and make its long lines safe HTML first."""
     return paginate([_clip_html(line, PAGE_CHARS) for line in lines])
-
 
 def render(title, pages, index, lang):
     """One page as the text of a message."""
@@ -146,7 +138,6 @@ def render(title, pages, index, lang):
         body.append(esc(localized("page_of", lang, page=index + 1,
                                   total=len(pages))))
     return _clip_html("\n".join(body), MESSAGE_LIMIT)
-
 
 def keyboard(kind, index, total, lang):
     """The arrows under a paged message, or None when there is one page.
@@ -167,10 +158,9 @@ def keyboard(kind, index, total, lang):
             callback_data="{}{}:{}".format(CALLBACK_PREFIX, kind, index + 1)))
     return InlineKeyboardMarkup(inline_keyboard=[row])
 
-
-async def send(message, kind, lang, index=0):
+async def send(message, kind, lang, index=0, owner=None):
     """Answer with one page of a list, and the arrows to reach the rest."""
-    built = build(kind, lang)
+    built = build(kind, lang, owner=owner)
     if built is None:
         logger.warning("no such pageable list: %s", kind)
         return
@@ -180,7 +170,6 @@ async def send(message, kind, lang, index=0):
     await message.answer(render(title, pages, index, lang),
                          parse_mode="HTML",
                          reply_markup=keyboard(kind, index, len(pages), lang))
-
 
 @router.callback_query(lambda query: query.data
                        and query.data.startswith(CALLBACK_PREFIX))
@@ -213,7 +202,11 @@ async def turn_page(query: CallbackQuery):
         await query.answer(localized("not_admin", lang), show_alert=True)
         return
 
-    built = build(kind, lang)
+    from tasks import access
+    requester = access.caller("telegram", query.from_user.id)
+    owner = (("telegram", query.from_user.id) if requester and
+             requester.get("role") == access.SPONSOR else None)
+    built = build(kind, lang, owner=owner)
     if built is None or query.message is None:
         await query.answer()
         return

@@ -5,7 +5,6 @@
 """
 from pywikibot import family
 
-
 class Family(family.Family):
 
     """Вики-полигон HIHRAIM на Fandom."""

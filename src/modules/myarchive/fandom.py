@@ -26,7 +26,6 @@ _URL_RE = re.compile(
     r"^https?://(?P<host>[^/\s]+)/(?:(?P<lang>[a-z][a-z0-9-]*)/)?wiki/(?P<title>[^?#]+)",
     re.I)
 
-
 def parse_url(url):
     """A page address -> (host, language path or None, title). Raises
     ValueError for anything that is not ``https://host[/lang]/wiki/Title``."""
@@ -36,7 +35,6 @@ def parse_url(url):
     title = urllib.parse.unquote(match.group("title")).replace("_", " ").strip()
     return (match.group("host").lower(),
             (match.group("lang") or "").lower() or None, title)
-
 
 class Wiki:
     """One wiki of the farm, read without logging in."""

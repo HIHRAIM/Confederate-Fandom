@@ -34,7 +34,6 @@ logger = logging.getLogger("fd.discord.approvals")
 APPROVE = "approve"
 REJECT = "reject"
 
-
 class Decision(discord.ui.DynamicItem[discord.ui.Button],
                template=r"sched:(?P<action>approve|reject):(?P<id>[0-9]+)"):
     """One of the two buttons under an approval request."""
@@ -61,9 +60,7 @@ class Decision(discord.ui.DynamicItem[discord.ui.Button],
         """A bot administrator pressed it: decide, and say so everywhere."""
         await decide(interaction, self.action, self.schedule_id)
 
-
 client.add_dynamic_items(Decision)
-
 
 def _log_channels():
     """The Discord channels of config.SERVICE_CHATS, as numbers."""
@@ -76,7 +73,6 @@ def _log_channels():
         if target and target[0] == "discord":
             out.append(target[1])
     return out
-
 
 def _describe(row, lang):
     """The request, as the log channel reads it."""
@@ -93,7 +89,6 @@ def _describe(row, lang):
         wiki=row["wiki"], mechanics=", ".join(db.schedule_mechanics(row)),
         when=dialog.describe_schedule(row, lang),
         summary=summary or localized("schedule_summary_by_bot", lang))
-
 
 async def request(schedule_id):
     """Post the question with its buttons. -> whether any channel took it."""
@@ -128,7 +123,6 @@ async def request(schedule_id):
         except Exception as e:
             logger.warning("could not ask for approval in %s: %s", channel_id, e)
     return sent
-
 
 async def decide(interaction, action, schedule_id):
     """Approve or reject one schedule, for a bot administrator only.

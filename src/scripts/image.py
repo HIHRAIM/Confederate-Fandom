@@ -34,7 +34,6 @@ FILE_PREFIX = r"(?:[Фф]айл|[Ff]ile|[Ии]зображение|[Зз]обр�
 IMAGE_PARAM = (r"(?:изображение|изображения|image|img|файл|file|фото|photo|"
                r"логотип|logo|обложка|обкладинка|cover|картинка|зображення)")
 
-
 def normalise(name):
     """A file name without its namespace, with spaces, first letter capital."""
     text = str(name or "").strip().lstrip(":")
@@ -42,13 +41,11 @@ def normalise(name):
     text = re.sub(r"\s+", " ", text.replace("_", " ")).strip()
     return text[:1].upper() + text[1:] if text else text
 
-
 def name_pattern(name):
     """A pattern matching one file name however it is spelt in wikitext."""
     head = name[0]
     body = re.escape(name[1:]).replace(r"\ ", r"[ _]")
     return r"(?:" + re.escape(head.upper()) + "|" + re.escape(head.lower()) + r")" + body
-
 
 def usage_patterns(name):
     """The three shaped patterns that find one file's usages. -> a tuple.
@@ -69,7 +66,6 @@ def usage_patterns(name):
         r"(?<![\w/.-])(?P<prefix>" + FILE_PREFIX + r"\s*:\s*)?" + core + r"(?![\w/.-])",
         re.UNICODE)
     return construct, parameter, bare
-
 
 def remove_usages(text, name):
     """Take every usage of one file out of a page. -> (text, how many).
@@ -111,7 +107,6 @@ def remove_usages(text, name):
         total += changed
     return text, total
 
-
 def replace_usages(text, name, target):
     """Replace the filename while retaining its namespace spelling.
 
@@ -121,14 +116,12 @@ def replace_usages(text, name, target):
     _construct, _parameter, bare = usage_patterns(name)
     return bare.subn(lambda m: (m.group("prefix") or "") + target, text)
 
-
 def prepare(ctx):
     """Check the arguments before a single page is read."""
     name = normalise(ctx.params.get("image_from"))
     if not name:
         raise Explained("error_image_no_file")
     return {"name": name, "to": normalise(ctx.params.get("image_to"))}
-
 
 def apply(ctx, page, text):
     """One page with the file swapped or taken out. -> (text, change labels)."""
@@ -144,7 +137,6 @@ def apply(ctx, page, text):
         return text, []
     return new, [label.format(count)]
 
-
 def summary_part(ctx, labels):
     """What this mechanic contributes to the edit summary."""
     if not labels:
@@ -153,7 +145,6 @@ def summary_part(ctx, labels):
     if state.get("to"):
         return "файл «{}» заменён на «{}»".format(state["name"], state["to"])
     return "убран файл «{}»".format(state.get("name"))
-
 
 SPEC = mech.Mechanic(
     code="image",

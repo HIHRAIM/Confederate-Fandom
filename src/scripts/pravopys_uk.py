@@ -71,12 +71,10 @@ UA_LOWER = "а-щьюяєіїґ’'ʼ"
 UA_UPPER = "А-ЩЬЮЯЄІЇҐ"
 UA_LETTER = UA_LOWER + UA_UPPER
 
-
 def load_data(path: str = None) -> dict:
     """The editable rule lists of правопис-2019, as they are on disk."""
     with open(path or RULES_PATH, encoding="utf-8") as fh:
         return json.load(fh)
-
 
 def build_pravopys_rules(data: dict, extra_components: bool = False,
                          piv_solid: bool = False) -> list:
@@ -142,7 +140,6 @@ def build_pravopys_rules(data: dict, extra_components: bool = False,
                                  rf"\1 {word}"))
     return rules
 
-
 def build_rules(pravopys: bool = True, typos: bool = True,
                 extra_components: bool = False, piv_solid: bool = False):
     """The whole rule set of one pass: правопис-2019 plus the typo list."""
@@ -153,13 +150,11 @@ def build_rules(pravopys: bool = True, typos: bool = True,
         rules += wt.load_typos(TYPOS_PATH, warn=False)
     return rules
 
-
 def make_summary(changes) -> str:
     """The edit summary in Ukrainian, from what the edit actually contains."""
     return wt.make_summary(changes, SUMMARY_PARTS, conj=SUMMARY_CONJ)
 
 SELF_TEST = [
-    # (что подаём, что должно получиться, пояснение)
     ("Це проект нової редакції.", "Це проєкт нової редакції.", "§126"),
     ("Спроектували проекцію.", "Спроєктували проєкцію.", "§126 всередині"),
     ("Зайшов у фойє.", "Зайшов у фоє.", "§126 фоє"),
@@ -174,7 +169,6 @@ SELF_TEST = [
     ("Це пів-острів.", "Це півострів.", "§36 лексикалізоване"),
     ("Це масштабна организація.", "Це масштабна організація.", "typos.txt"),
     ("Наступний слідуючий крок.", "Наступний наступний крок.", "typos.txt"),
-    # --- защита ---
     ("[[Категорія:Проект Х]]", "[[Категорія:Проект Х]]", "категорія"),
     ("[[Файл:Веб-сайт проект.jpg|міні|Це проект]]",
      "[[Файл:Веб-сайт проект.jpg|міні|Це проект]]", "файл"),
@@ -202,9 +196,6 @@ SELF_TEST = [
      '<div class="веб-сайт">проєкт</div>', "атрибут тега"),
     ('{| class="wikitable"\n|-\n| проект\n|}',
      '{| class="wikitable"\n|-\n| проєкт\n|}', "таблиця"),
-    # Реальний випадок зі статті «Нью-Йорк»: назва джерела — цитата,
-    # її не можна «виправляти», інакше посилання перестане відповідати
-    # виданню, на яке посилаються.
     ("{{УЗЕ|том=2|сторінки=888|стаття=Ню Йорк}}",
      "{{УЗЕ|том=2|сторінки=888|стаття=Ню Йорк}}", "назва джерела"),
     ("{{Cite book|title=Проект веб-сайт|author=Ню Йорк}}",
@@ -213,7 +204,6 @@ SELF_TEST = [
      "{{ТС_Буд|частина=Проект|сторінки =162}}", "частина джерела"),
 ]
 
-# Перевіряються окремо: результат залежить від прапорця.
 SELF_TEST_FLAGS = [
     ("Застаріла назва — ''Ню Йорк''.", "Застаріла назва — ''Ню Йорк''.",
      "курсив із --skip-italics", {"skip_italics": True}),
@@ -226,7 +216,6 @@ SELF_TEST_FLAGS = [
      "{{{параметр}}} навіть із --template-values all",
      {"template_values": "all"}),
 
-    # --- косметика ---
     ("==Заголовок==", "== Заголовок ==", "косметика: заголовок",
      {"cosmetic": True}),
     ("===Підрозділ===", "=== Підрозділ ===", "косметика: рівень 3",
@@ -260,7 +249,6 @@ SELF_TEST_FLAGS = [
     ("<pre>\nа  б\n</pre>", "<pre>\nа  б\n</pre>",
      "косметика: пробіли в <pre> значимі", {"cosmetic": True}),
 
-    # --- назви в лапках (реальні випадки з telepedia) ---
     ("Ток-шоу «Прес-клуб» виходило щотижня.",
      "Ток-шоу «Прес-клуб» виходило щотижня.",
      "«Прес-клуб» — назва передачі", {"skip_quotes": True}),
@@ -275,8 +263,6 @@ SELF_TEST_FLAGS = [
      "поза лапками правимо, в лапках — ні", {"skip_quotes": True}),
 ]
 
-# Удвоение основы — § 35, п. 6, підп. 1: дефис сохраняется.
-# Реальные случаи с theloudhouse (кличка діда Поп-Поп).
 SELF_TEST += [
     ("Поп-Поп прийшов.", "Поп-Поп прийшов.", "§35 повтор: Поп-Поп"),
     ("Відмовити Поп-попа від нападу.", "Відмовити Поп-попа від нападу.",
@@ -285,13 +271,10 @@ SELF_TEST += [
      "§35 повтор з малої літери"),
     ("Команда Поп-поп прибула.", "Команда Поп-поп прибула.",
      "§35 повтор: Поп-поп"),
-    # ...но обычные составные части по-прежнему склеиваются
     ("Слухає поп-музику.", "Слухає попмузику.", "§35 поп- працює як раніше"),
     ("Це поп-гурт.", "Це попгурт.", "§35 поп-гурт -> попгурт"),
 ]
 
-
-# (текст, ожидаемое описание правки) — описание собирается по факту правок.
 SUMMARY_TEST = [
     ("==Розділ==", SUMMARY_COSMETIC, "лише косметика"),
     ("Слово , інше", SUMMARY_COSMETIC, "лише косметика (пунктуація)"),
@@ -300,7 +283,6 @@ SUMMARY_TEST = [
     ("==Проект==", SUMMARY_BOTH, "заголовок + правопис"),
     ("Це проект , ага.", SUMMARY_BOTH, "правопис + пунктуація"),
 ]
-
 
 def self_test(rules=None, typos=True):
     """Run every rule's own tests. -> the list of failures, empty when sound.
@@ -347,14 +329,12 @@ def self_test(rules=None, typos=True):
 
     return failures
 
-
 FLAG_COSMETIC = "cosmetic"
 FLAG_NO_TYPOS = "no_typos"
 FLAG_EXTRA = "extra_components"
 FLAG_PIV_SOLID = "piv_solid"
 FLAG_LABELS = "labels"
 FLAG_SKIP_REFS = "skip_refs"
-
 
 def prepare(ctx):
     """Build the Ukrainian rule set, and check it before the first edit."""
@@ -370,7 +350,6 @@ def prepare(ctx):
                                fix_labels=FLAG_LABELS in flags,
                                skip_refs=FLAG_SKIP_REFS in flags)}
 
-
 def apply(ctx, page, text):
     """One page's text brought to правопис-2019. -> (text, change names)."""
     state = ctx.state.get(SPEC.code) or {}
@@ -379,13 +358,11 @@ def apply(ctx, page, text):
         return text, []
     return new, [name for name, _was, _now in changes]
 
-
 def summary_part(ctx, labels):
     """The summary this run earned, in Ukrainian and by what it did."""
     if not labels:
         return None
     return make_summary([(name, "", "") for name in labels])
-
 
 SPEC = mech.Mechanic(
     code="pravopys-uk",

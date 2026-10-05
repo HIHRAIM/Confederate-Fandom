@@ -15,7 +15,7 @@ never gets its answer must let go rather than sit on a task row for ever.
 """
 import logging
 
-from tasks.dialog import Conversation
+from tasks.dialog import Conversation, MAX_LIST_BYTES, decode_list_document
 from tasks.notify import chat_key
 from utils import lang_of
 
@@ -24,7 +24,6 @@ logger = logging.getLogger("fd.discord.dialogs")
 DIALOG_TIMEOUT = 15 * 60
 
 MESSAGE_LIMIT = 1900
-
 
 class DiscordConversation(Conversation):
     """The dialog driver for Discord: send in the channel, wait for a reply.
@@ -45,6 +44,7 @@ class DiscordConversation(Conversation):
             lang=lang or lang_of("discord", user.id))
         self.interaction = interaction
         self.channel = interaction.channel
+        self.community_id = interaction.guild_id
 
     async def say(self, text):
         """Send something that needs no answer, in chunks Discord accepts."""
@@ -53,8 +53,8 @@ class DiscordConversation(Conversation):
             await self.channel.send(body[:MESSAGE_LIMIT])
             body = body[MESSAGE_LIMIT:]
 
-    async def ask(self, text):
-        """Send a question and wait for this person's next message here."""
+    async def _reply(self, text):
+        """Wait for a matching message, retaining its attachments if present."""
         from discord_bot.client import client
 
         await self.say(text)
@@ -66,8 +66,30 @@ class DiscordConversation(Conversation):
                     and not message.content.startswith("/"))
 
         try:
-            message = await client.wait_for("message", check=_mine,
-                                            timeout=DIALOG_TIMEOUT)
+            return await client.wait_for("message", check=_mine,
+                                         timeout=DIALOG_TIMEOUT)
         except Exception:
             return None
-        return message.content
+
+    async def ask(self, text):
+        """Send a question and wait for this person's next text message."""
+        message = await self._reply(text)
+        return message.content if message is not None else None
+
+    async def ask_text_or_file(self, text):
+        """Accept a pasted list or one bounded UTF-8 .txt attachment."""
+        message = await self._reply(text)
+        if message is None:
+            return None
+        if not message.attachments:
+            return message.content
+        if len(message.attachments) != 1:
+            raise ValueError("exactly one text file is required")
+        attachment = message.attachments[0]
+        if attachment.size > MAX_LIST_BYTES:
+            raise ValueError("text file is too large")
+        try:
+            contents = await attachment.read()
+        except Exception as error:
+            raise ValueError("could not read the text attachment") from error
+        return decode_list_document(attachment.filename, contents)

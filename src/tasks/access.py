@@ -31,7 +31,7 @@ logger = logging.getLogger("fd.tasks.access")
 
 BOT_ADMIN = "bot_admin"
 WIKI_ADMIN = "wiki_admin"
-
+SPONSOR = "sponsor"
 
 def caller(platform, user_id, display_name=None):
     """Who is asking. -> a mapping, or None when they may not ask at all.
@@ -57,13 +57,18 @@ def caller(platform, user_id, display_name=None):
 
     row = db.get_wiki_admin(platform, uid)
     if row is None:
+        import sponsors
+        sponsor_id = sponsors.canonical_id(platform, uid)
+        if sponsor_id and db.sponsor_tier(sponsor_id) != 0:
+            return {"platform": str(platform), "id": uid,
+                    "name": display_name or str(uid), "wiki_user": None,
+                    "role": SPONSOR}
         return None
     if display_name and display_name != row["display_name"]:
         db.touch_display_name(platform, uid, display_name)
     return {"platform": str(platform), "id": uid,
             "name": display_name or row["display_name"] or str(uid),
             "wiki_user": row["wiki_user"], "role": WIKI_ADMIN}
-
 
 def describe(requester, lang):
     """How the service log names the person who asked: «Name (id)».
@@ -82,7 +87,6 @@ def describe(requester, lang):
                          id=requester.get("id"), wiki_user=wiki_user)
     return "{} ({})".format(name, requester.get("id"))
 
-
 class Refusal(Explained):
     """A check said no, with a reason a person can act on.
 
@@ -93,14 +97,12 @@ class Refusal(Explained):
     theirs: `refusal.text(lang)`.
     """
 
-
 def _groups(names):
     """A list of groups as a value of a refusal, worded per reader."""
     from wiki import rights
 
     return lambda lang: ", ".join(rights.group_label(group, lang)
                                   for group in names)
-
 
 def _current(names):
     """« (now: …)» after a refusal, or nothing when no group is held."""
@@ -111,7 +113,6 @@ def _current(names):
     groups = _groups(names)
     return lambda lang: localized("refusal_current_groups", lang,
                                   groups=groups(lang))
-
 
 def check_bot_standing(site, wiki_key):
     """The bot's own right to work on one wiki. -> the statuses it holds.
@@ -128,7 +129,6 @@ def check_bot_standing(site, wiki_key):
                       current=_current(rights.groups(site)))
     return held
 
-
 def check_rights(site, wiki_key, mechanics):
     """The rights this task needs. -> None, or raises Refusal naming a group."""
     from tasks import registry
@@ -140,7 +140,6 @@ def check_rights(site, wiki_key, mechanics):
         return
     reason = rights.explain_missing(site, missing, wiki_key)
     raise Refusal(reason.key, **reason.values)
-
 
 def check_caller_standing(site, wiki_key, requester):
     """A wiki administrator's own standing on the wiki they chose.
@@ -168,9 +167,17 @@ def check_caller_standing(site, wiki_key, requester):
                   current=_current(held),
                   groups=_groups(rights.STAFF_GROUPS))
 
-
 def check_all(site, wiki_key, mechanics, requester):
     """Every check, in the order that costs the least. -> the bot's statuses."""
+    if requester and requester.get("role") == SPONSOR:
+        import db
+        import sponsors
+        if any(mechanic.standalone for mechanic in mechanics):
+            raise Refusal("sponsor_standalone_disabled")
+        owner = sponsors.canonical_id(requester["platform"], requester["id"])
+        if not sponsors.can_use_wiki(owner, wiki_key):
+            raise Refusal("sponsor_wiki_required", wiki=wiki_key)
+        requester["wiki_user"] = db.wiki_claim(wiki_key)["wiki_user"]
     held = check_bot_standing(site, wiki_key)
     check_caller_standing(site, wiki_key, requester)
     check_rights(site, wiki_key, mechanics)

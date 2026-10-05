@@ -59,7 +59,6 @@ FLAG_NO_REDIRECT = "no_redirect"
 FLAG_MOVE_TALK = "move_talk"
 FLAG_MOVE_SUBPAGES = "move_subpages"
 
-
 def _pair_map(pairs):
     """The renames by title, under every spelling the wiki might answer with.
 
@@ -74,7 +73,6 @@ def _pair_map(pairs):
         if old[:1].islower():
             table[old[:1].upper() + old[1:]] = new
     return table
-
 
 def prepare(ctx):
     """Check the rule and the rights before the first page is moved."""
@@ -114,7 +112,6 @@ def prepare(ctx):
     return {"mode": mode, "argument": argument, "pattern": pattern,
             "pairs": {}, "to": ctx.params.get("move_to") or ""}
 
-
 def _new_title(state, title):
     """The title under this rule, or None when it already satisfies it.
 
@@ -136,7 +133,6 @@ def _new_title(state, title):
     if mode == LIST:
         return state["pairs"].get(title)
     return None
-
 
 def act(ctx, page):
     """Move one page. -> (state, note)."""
@@ -168,7 +164,6 @@ def act(ctx, page):
     except Exception as e:
         return "fail", "{}: {}".format(type(e).__name__, e)
     return "done", "-> «{}»".format(target)
-
 
 SPEC = mech.Mechanic(
     code="movepages",

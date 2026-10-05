@@ -13,7 +13,6 @@ import time
 
 from db import conn, cur
 
-
 def get_user_lang(platform, user_id):
     """The language one person chose, or None when they chose none."""
     try:
@@ -25,7 +24,6 @@ def get_user_lang(platform, user_id):
         (str(platform), uid),
     ).fetchone()
     return row["lang"] if row else None
-
 
 def set_user_lang(platform, user_id, lang, default=None):
     """Remember one person's language; `default` removes the row instead.

@@ -14,12 +14,10 @@ config.example.py ships with the module switched off.
 """
 import config
 
-
 def _get(name, default):
     """One setting, or its default when config.py does not name it."""
     value = getattr(config, name, default)
     return default if value is None and default is not None else value
-
 
 SOURCE_CHANNEL = _get("SOURCE_CHANNEL", None)
 WIKIS = tuple(_get("WIKIS", ()) or ())
@@ -39,7 +37,6 @@ FORWARD_FROM_CHAT = str(_get("FORWARD_FROM_CHAT", "") or "")
 FORWARD_FROM_USER = str(_get("FORWARD_FROM_USER", "") or "")
 EDIT_SUMMARY = str(_get("EDIT_SUMMARY", "{link}"))
 UPLOAD_SUMMARY = str(_get("UPLOAD_SUMMARY", "{link}"))
-
 
 def enabled():
     """Whether this deployment publishes news at all."""

@@ -26,7 +26,6 @@ REPORT = "report"
 
 KINDS = (TEXT, ACTION, REPORT)
 
-
 class Mechanic:
     """One thing the bot can be told to do, declared rather than described.
 

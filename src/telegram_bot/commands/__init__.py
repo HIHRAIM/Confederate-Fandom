@@ -12,3 +12,4 @@ package's job and not this one's.
 from telegram_bot.commands import user
 from telegram_bot.commands import tasks
 from telegram_bot.commands import admins
+from telegram_bot.commands import sponsors

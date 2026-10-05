@@ -56,7 +56,6 @@ _state = {"running": None, "started_at": None}
 
 _wakeup = asyncio.Event()
 
-
 def _daily_times(daily_at):
     """`daily_at` as a tuple of "HH:MM" strings: one time, or several.
 
@@ -72,7 +71,6 @@ def _daily_times(daily_at):
         return (daily_at,)
     return tuple(str(item) for item in daily_at if item)
 
-
 def register(name, run, minutes=None, daily_at=None, priority=MODULE_PRIORITY,
              tz=None):
     """Add one job to the schedule.
@@ -87,7 +85,6 @@ def register(name, run, minutes=None, daily_at=None, priority=MODULE_PRIORITY,
     _jobs[name] = {"run": run, "minutes": tuple(minutes or ()),
                    "daily_at": _daily_times(daily_at), "priority": int(priority),
                    "tz": tz}
-
 
 def _zone(name):
     """An IANA zone, or None when the name is unknown (logged once per ask).
@@ -105,7 +102,6 @@ def _zone(name):
             continue
     logger.warning("unknown time zone %r — using the server's own time", name)
     return None
-
 
 def enqueue(name, reason="asked for"):
     """Put a job in the queue unless it is already there or already running.
@@ -133,7 +129,6 @@ def enqueue(name, reason="asked for"):
     logger.info("job %s queued (%s); waiting: %s", name, reason, len(_queue))
     return True
 
-
 def waiting_ahead(priority):
     """Whether anything more important than `priority` is waiting its turn.
 
@@ -143,11 +138,9 @@ def waiting_ahead(priority):
     """
     return any(_jobs[name]["priority"] < priority for name in _queue)
 
-
 def running():
     """The job under way, or None."""
     return _state["running"]
-
 
 def job_names():
     """Every registered job, by name.
@@ -157,11 +150,9 @@ def job_names():
     caller that could change one."""
     return list(_jobs)
 
-
 def waiting():
     """The jobs waiting their turn, in order."""
     return list(_queue)
-
 
 def next_due(name, now=None):
     """When a job is next due, or None when it is not on the clock."""
@@ -210,7 +201,6 @@ def next_due(name, now=None):
     return (now + timedelta(hours=1)).replace(minute=marks[0], second=0,
                                               microsecond=0)
 
-
 async def clock():
     """Sleep until the next job is due, queue it, sleep again.
 
@@ -230,7 +220,6 @@ async def clock():
         for other, other_name in due:
             if other <= datetime.now():
                 enqueue(other_name, reason="on the clock")
-
 
 async def worker():
     """Run the queued jobs, one at a time, for as long as the bot lives.
@@ -261,7 +250,6 @@ async def worker():
                             int((datetime.now() - started).total_seconds()))
                 _state["running"] = None
                 _state["started_at"] = None
-
 
 async def run():
     """The scheduler as one task: the clock and the worker together."""

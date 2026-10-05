@@ -25,7 +25,6 @@ logger = logging.getLogger("fd.tasks.notify")
 
 MESSAGE_LIMIT = 3500
 
-
 def parse_chat(key):
     """'<platform>:<chat>[:<thread>]' -> (platform, chat, thread) or None."""
     parts = str(key or "").split(":")
@@ -44,13 +43,11 @@ def parse_chat(key):
         thread = None
     return platform, chat, thread
 
-
 def chat_key(platform, chat_id, thread=None):
     """The stored form of one chat, as `parse_chat` reads it back."""
     if thread:
         return "{}:{}:{}".format(platform, chat_id, thread)
     return "{}:{}".format(platform, chat_id)
-
 
 async def send(key, text):
     """One message to the chat a task was asked from. Never raises."""
@@ -70,7 +67,6 @@ async def send(key, text):
             await send_log(chat, body)
     except Exception as e:
         logger.warning("could not answer %s: %s", key, e)
-
 
 async def send_files(key, paths, caption=None, lang=None):
     """The files a task produced, to the chat it was asked from.
@@ -105,7 +101,6 @@ async def send_files(key, paths, caption=None, lang=None):
     except Exception as e:
         logger.warning("could not send the files of a task to %s: %s", key, e)
 
-
 async def to_person(platform, user_id, text, fallback=None):
     """A private message to one person; `fallback` is a chat key to use when
     the messenger will not deliver it (a Telegram user who never opened a
@@ -130,7 +125,6 @@ async def to_person(platform, user_id, text, fallback=None):
         return True
     return False
 
-
 async def request_approval(schedule_id):
     """Ask a bot administrator whether a repeating run may start.
     -> whether the question reached a channel. The asking is Discord's
@@ -138,7 +132,6 @@ async def request_approval(schedule_id):
     from discord_bot import approvals
 
     return await approvals.request(schedule_id)
-
 
 async def announce(text, files=None):
     """One line into every service chat, on both messengers.
@@ -151,7 +144,4 @@ async def announce(text, files=None):
         await send(key, text)
         if files:
             await send_files(key, files)
-
-
-
 

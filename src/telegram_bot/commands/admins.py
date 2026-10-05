@@ -1,10 +1,11 @@
 """Appointing wiki administrators on Telegram, and the database backup.
 
-Three commands, and only a bot administrator may use them: control of the bot
-lives in config.ADMINS and nothing stored can hand it out.
+Four commands live here. Appointment and backup commands require a bot
+administrator; the person holding an invitation can use /claimwikiadmin.
 
     /wikiadmin                          — who is appointed, and who is invited
     /wikiadmin <@ник или ID> <ник на Fandom>
+    /claimwikiadmin                     — confirm an invitation in a private chat
     /remwikiadmin <@ник или ID>
     /backup                             — the database, encrypted
 
@@ -34,7 +35,6 @@ from telegram_bot.client import router
 from utils import is_admin, localized, user_lang
 
 logger = logging.getLogger("fd.telegram.admins")
-
 
 @router.message(Command("wikiadmin"))
 async def wikiadmin_cmd(message: Message):
@@ -76,6 +76,34 @@ async def wikiadmin_cmd(message: Message):
         "wikiadmin_updated" if existed else "wikiadmin_added", lang,
         name=display or user_id, user_id=user_id, wiki_user=wiki_user))
 
+@router.message(Command("claimwikiadmin"))
+async def claimwikiadmin_cmd(message: Message):
+    """Show the sender whether their invitation became an ID appointment.
+
+    The outer middleware tries to claim before this handler. A direct retry
+    also covers a missed middleware pass; when there is no match, the sender
+    receives their numeric ID so a Bot Admin can appoint them explicitly.
+    """
+    user = message.from_user
+    if user is None:
+        return
+    lang = user_lang(user)
+    if message.chat.type != "private":
+        await message.answer(localized("wikiadmin_claim_private", lang))
+        return
+    if user.username and db.get_wiki_admin("telegram", user.id) is None:
+        await people.claim_invitation(user)
+    appointment = db.get_wiki_admin("telegram", user.id)
+    if appointment is not None:
+        await message.answer(localized("wikiadmin_claim_confirmed", lang,
+                                       wiki_user=appointment["wiki_user"],
+                                       user_id=user.id))
+    elif user.username:
+        await message.answer(localized("wikiadmin_claim_missing", lang,
+                                       username=user.username, user_id=user.id))
+    else:
+        await message.answer(localized("wikiadmin_claim_no_username", lang,
+                                       user_id=user.id))
 
 @router.message(Command("remwikiadmin"))
 async def remwikiadmin_cmd(message: Message):
@@ -105,7 +133,6 @@ async def remwikiadmin_cmd(message: Message):
         await message.answer(localized("wikiadmin_removed", lang, user_id=user_id))
     else:
         await message.answer(localized("wikiadmin_not_found", lang, user_id=user_id))
-
 
 @router.message(Command("backup"))
 async def backup_cmd(message: Message):

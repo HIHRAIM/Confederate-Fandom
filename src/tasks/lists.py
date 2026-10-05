@@ -25,14 +25,12 @@ Not this module's zone: paging and buttons (`discord_bot/pages.py`,
 first question with (`tasks/dialog.py: mechanics_list`).
 """
 
-
 class _Plain:
     """Markup for a place that has none, such as a dialog's own message."""
 
     code = staticmethod(str)
     bold = staticmethod(str)
     esc = staticmethod(str)
-
 
 PLAIN = _Plain()
 """The `fmt` to pass when the answer is plain text and must stay plain."""
@@ -43,7 +41,6 @@ RECENT_TASKS = 5
 Here rather than in each half's commands module, where it used to be twice:
 how much history a person is shown is part of what the list *says*, and two
 copies of it is how the two messengers start answering differently."""
-
 
 def catalogue(lang, fmt=PLAIN):
     """The mechanics, numbered. -> (title, lines)
@@ -68,8 +65,14 @@ def catalogue(lang, fmt=PLAIN):
             mark))
     return localized("tasks_title", lang), lines
 
+def _belongs_to(row, owner, platform_column, id_column):
+    """Limit sponsor listings to tasks created by this platform account."""
+    if owner is None:
+        return True
+    platform, user_id = owner if isinstance(owner, tuple) else ("discord", owner)
+    return row[platform_column] == platform and str(row[id_column]) == str(user_id)
 
-def jobs(lang, fmt=PLAIN, recent=RECENT_TASKS):
+def jobs(lang, fmt=PLAIN, recent=RECENT_TASKS, owner=None):
     """What is running, what is queued and how the last runs ended.
 
     The first line is the scheduler's own state rather than a task's, which is
@@ -85,7 +88,8 @@ def jobs(lang, fmt=PLAIN, recent=RECENT_TASKS):
         "jobs_header", lang,
         running=fmt.code(job_label(scheduler.running(), lang)),
         waiting=fmt.esc(", ".join(waiting) or "—"))]
-    active = db.active_tasks()
+    active = [row for row in db.active_tasks() if
+              _belongs_to(row, owner, "requested_by_platform", "requested_by_id")]
     if active:
         lines.append(localized("jobs_active", lang))
         for row in active:
@@ -96,6 +100,8 @@ def jobs(lang, fmt=PLAIN, recent=RECENT_TASKS):
                 checked=row["checked"], total=db.count_pages(row["id"]),
                 edited=row["edited"], failed=row["failed"]))
     for row in db.recent_tasks(recent):
+        if not _belongs_to(row, owner, "requested_by_platform", "requested_by_id"):
+            continue
         if row["state"] in ("pending", "confirm", "running"):
             continue
         lines.append(localized(
@@ -104,8 +110,7 @@ def jobs(lang, fmt=PLAIN, recent=RECENT_TASKS):
             failed=row["failed"], error=fmt.esc(row["error"] or "")))
     return localized("jobs_title", lang), lines
 
-
-def schedules(lang, fmt=PLAIN):
+def schedules(lang, fmt=PLAIN, owner=None):
     """The repeating runs. -> (title, lines); the lines are empty when none.
 
     An empty list is the caller's to report, not this module's: `/schedule`
@@ -118,6 +123,8 @@ def schedules(lang, fmt=PLAIN):
 
     lines = []
     for row in db.list_schedules():
+        if not _belongs_to(row, owner, "created_by_platform", "created_by_id"):
+            continue
         lines.append(localized(
             "schedule_line", lang, id=row["id"], wiki=fmt.code(row["wiki"]),
             mechanics=fmt.code(", ".join(db.schedule_mechanics(row))),
@@ -128,7 +135,6 @@ def schedules(lang, fmt=PLAIN):
                 else "schedule_state_off", lang))))
     return localized("schedule_header", lang), lines
 
-
 def invite_until(added_at):
     """The day an invitation made at `added_at` lapses, as people read it."""
     import time
@@ -137,7 +143,6 @@ def invite_until(added_at):
 
     return time.strftime("%d.%m.%Y", time.localtime(
         int(added_at or 0) + db.INVITE_DAYS * 86400))
-
 
 def wiki_admins(lang, fmt=PLAIN):
     """Who is appointed, then who is invited. -> (title, lines); the lines are
@@ -162,7 +167,6 @@ def wiki_admins(lang, fmt=PLAIN):
             until=invite_until(row["added_at"])))
     return localized("wikiadmin_header", lang), lines
 
-
 TELEGRAM = "telegram"
 
 DISCORD = "discord"
@@ -170,6 +174,15 @@ DISCORD = "discord"
 BOTH = (TELEGRAM, DISCORD)
 
 HELP_SECTIONS = (
+    ("help_sponsors", (
+        ("cmd_sponsor", BOTH),
+        ("cmd_sponsor_wiki", (DISCORD,)),
+        ("cmd_sponsor_unwiki", (DISCORD,)),
+        ("cmd_sponsor_community", BOTH),
+        ("cmd_sponsor_uncommunity", BOTH),
+        ("cmd_sponsor_link", BOTH),
+        ("cmd_sponsor_unlink", BOTH),
+    )),
     ("help_wiki", (
         ("cmd_tasks", BOTH),
         ("cmd_run", BOTH),
@@ -185,6 +198,7 @@ HELP_SECTIONS = (
     )),
     ("help_access", (
         ("cmd_wikiadmin", BOTH),
+        ("cmd_claimwikiadmin_tg", (TELEGRAM,)),
         ("cmd_remwikiadmin", BOTH),
         ("cmd_backup", BOTH),
     )),
@@ -211,7 +225,6 @@ out of /help when its module is not configured (`_module_on`): somebody
 running the bot for wiki work alone is not told about a news channel they do
 not have."""
 
-
 def _module_on(name):
     """Whether the module a /help line belongs to is configured here."""
     if name == "news":
@@ -219,7 +232,6 @@ def _module_on(name):
 
         return settings.enabled()
     return True
-
 
 def _command_line(key, platform, lang):
     """One command's line, in that messenger's spelling.
@@ -238,7 +250,6 @@ def _command_line(key, platform, lang):
 
     specific = "{}_{}".format(key, "dc" if platform == DISCORD else "tg")
     return localized(specific if has_translation(specific) else key, lang)
-
 
 def help_text(lang, fmt=PLAIN, platform=TELEGRAM):
     """The `/help` answer for one messenger. -> (title, lines)

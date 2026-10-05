@@ -22,8 +22,9 @@ worse than none.
 """
 import asyncio
 import logging
+from io import BytesIO
 
-from tasks.dialog import Conversation
+from tasks.dialog import Conversation, MAX_LIST_BYTES, decode_list_document
 from tasks.notify import chat_key
 from utils import user_lang
 
@@ -33,9 +34,8 @@ DIALOG_TIMEOUT = 15 * 60
 
 _pending_inputs = {}
 
-
 async def wait_for_message(chat_id, user_id, timeout=DIALOG_TIMEOUT):
-    """Wait for one person's next message in one chat. -> the text, or None.
+    """Wait for one person's next Message in one chat, or None.
 
     A second dialog with the same person in the same chat cancels the first:
     somebody who starts over with a fresh command means it, and two futures on
@@ -56,8 +56,7 @@ async def wait_for_message(chat_id, user_id, timeout=DIALOG_TIMEOUT):
         if _pending_inputs.get(key) is future:
             _pending_inputs.pop(key, None)
 
-
-def deliver(chat_id, user_id, text):
+def deliver(chat_id, user_id, message):
     """Hand one message to whoever is waiting for it. -> whether anyone was.
 
     Called by the catchall for every message that is not a command. A False
@@ -67,9 +66,8 @@ def deliver(chat_id, user_id, text):
     future = _pending_inputs.get((chat_id, user_id))
     if future is None or future.done():
         return False
-    future.set_result(text)
+    future.set_result(message)
     return True
-
 
 class TelegramConversation(Conversation):
     """The dialog driver for Telegram: send, then park a future.
@@ -91,6 +89,8 @@ class TelegramConversation(Conversation):
                               message.message_thread_id),
             lang=user_lang(user))
         self.message = message
+        self.community_id = (message.chat.id if message.chat.type in
+                             ("group", "supergroup") else None)
 
     async def say(self, text):
         """Send something that needs no answer."""
@@ -99,4 +99,25 @@ class TelegramConversation(Conversation):
     async def ask(self, text):
         """Send a question and wait for this person's next message here."""
         await self.message.answer(str(text))
-        return await wait_for_message(self.message.chat.id, self.user_id)
+        answer = await wait_for_message(self.message.chat.id, self.user_id)
+        return (answer.text or answer.caption or "") if answer is not None else None
+
+    async def ask_text_or_file(self, text):
+        """Accept a pasted list or one bounded UTF-8 .txt document."""
+        from telegram_bot.client import bot
+
+        await self.message.answer(str(text))
+        answer = await wait_for_message(self.message.chat.id, self.user_id)
+        if answer is None:
+            return None
+        document = answer.document
+        if document is None:
+            return answer.text or answer.caption or ""
+        if document.file_size is None or document.file_size > MAX_LIST_BYTES:
+            raise ValueError("text file is too large or has unknown size")
+        buffer = BytesIO()
+        try:
+            await bot.download(document, destination=buffer)
+        except Exception as error:
+            raise ValueError("could not read the text document") from error
+        return decode_list_document(document.file_name, buffer.getvalue())

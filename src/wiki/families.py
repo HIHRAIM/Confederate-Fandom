@@ -56,7 +56,6 @@ _TEMPLATE = '''"""Generated from {host} by wiki/families.py.
 """
 from pywikibot import family
 
-
 class Family(family.Family):
 
     """One wiki of the Fandom farm, addressed by its language code."""
@@ -72,7 +71,6 @@ class Family(family.Family):
         """Fandom is https only."""
         return 'https'
 '''
-
 
 def family_name(host):
     """The preferred legacy Pywikibot family name of one host.
@@ -91,7 +89,6 @@ def family_name(host):
     if cleaned[0].isdigit():
         cleaned = "w" + cleaned
     return cleaned
-
 
 def parse_target(text):
     """What wiki a person meant. -> {'host', 'path', 'family', 'lang'}.
@@ -138,7 +135,6 @@ def parse_target(text):
     return {"host": host, "path": path, "family": family_name(host),
             "lang": lang}
 
-
 def _probe(host, path):
     """Ask one wiki what it is. -> siteinfo's `general` block.
 
@@ -157,11 +153,9 @@ def _probe(host, path):
         raise Explained("error_wiki_not_mediawiki", url=url)
     return general
 
-
 def _family_path(family):
     """Where the file of one family lives."""
     return os.path.join(FAMILIES_DIR, "{}_family.py".format(family))
-
 
 def _read_family(family):
     """Read a family's actual hosts and paths through Pywikibot.
@@ -197,12 +191,10 @@ def _read_family(family):
         return None
     return {"paths": paths, "hosts": hosts}
 
-
 def _read_langs(family):
     """The known language paths, for the stored ``family:language`` spelling."""
     known = _read_family(family)
     return known["paths"] if known is not None else None
-
 
 def _generated_for(family, host):
     """Only this module's generated files may be extended in place.
@@ -218,11 +210,9 @@ def _generated_for(family, host):
         return False
     return heading == '\"\"\"Generated from {} by wiki/families.py.'.format(host)
 
-
 def _family_conflict(host):
     """Explain a protected family-file conflict without exposing local paths."""
     return Explained("family_file_conflict", host=host)
-
 
 def _family_for_host(preferred, host, lang):
     """Choose a family that cannot silently redirect this host to another.
@@ -248,7 +238,6 @@ def _family_for_host(preferred, host, lang):
             return candidate, {}
     raise _family_conflict(host)
 
-
 def _forget(family):
     """Make Pywikibot read the family file again after it was rewritten.
 
@@ -263,7 +252,6 @@ def _forget(family):
         Family._families.pop(family, None)
     except Exception as e:
         logger.debug("could not drop the cached family %s: %s", family, e)
-
 
 def _write(family, host, langs):
     """Write a new family or extend this generator's file for the same host.
@@ -289,7 +277,6 @@ def _write(family, host, langs):
         f.write(source)
     _forget(family)
     logger.info("family %s now covers %s", family, ", ".join(sorted(langs)))
-
 
 def ensure_family(target):
     """Make sure Pywikibot can address the wiki `target` names.
@@ -348,7 +335,6 @@ def ensure_family(target):
         found = root_lang
     _write(family, canonical_host, langs)
     return family, found
-
 
 def known_families():
     """Every family the bot can address without asking a wiki anything."""

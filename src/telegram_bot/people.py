@@ -31,11 +31,9 @@ _USERNAME_RE = re.compile(r"^@?([A-Za-z][A-Za-z0-9_]{3,31})$")
 thirty-two characters in all; four are let through for the short collectible
 names."""
 
-
 def display_name(user):
     """How a person is named in the list and in the log: @name, or their name."""
     return ("@" + user.username) if user.username else user.full_name
-
 
 def _utf16_tail(text, units):
     """What follows the first `units` UTF-16 code units of `text`.
@@ -44,7 +42,6 @@ def _utf16_tail(text, units):
     shifts every offset after it by two; slicing the Python string by the
     offset would cut the Fandom account in the wrong place."""
     return text.encode("utf-16-le")[units * 2:].decode("utf-16-le", "ignore")
-
 
 async def resolve(message):
     """Who an administrator named after the command, and what follows.
@@ -89,18 +86,15 @@ async def resolve(message):
         return None, "@" + match.group(1), match.group(1), rest
     return None, None, None, rest
 
-
-async def _claim(user):
+async def claim_invitation(user):
     """Turn a waiting invitation for this account's @name into an appointment."""
     import db
     from utils import lang_of, localized, user_lang
 
-    invite = db.take_wiki_admin_invite(user.username)
+    name = display_name(user)
+    invite = db.claim_wiki_admin_invite(user.username, user.id, name)
     if invite is None:
         return
-    name = display_name(user)
-    db.add_wiki_admin("telegram", user.id, invite["wiki_user"], name,
-                      added_by=invite["added_by"])
     logger.info("the invitation for @%s is claimed by %s", user.username, user.id)
 
     try:
@@ -119,7 +113,6 @@ async def _claim(user):
         except Exception as e:
             logger.info("could not tell %s about the claim: %s", added_by, e)
 
-
 async def _claim_invitation(handler, event, data):
     """Outer middleware: claim an invitation, then let the update through.
 
@@ -129,12 +122,11 @@ async def _claim_invitation(handler, event, data):
     user = getattr(event, "from_user", None)
     if user is not None and user.username and not user.is_bot:
         try:
-            await _claim(user)
+            await claim_invitation(user)
         except Exception:
             logger.exception("could not check the invitations for @%s",
                              user.username)
     return await handler(event, data)
-
 
 router.message.outer_middleware(_claim_invitation)
 router.callback_query.outer_middleware(_claim_invitation)

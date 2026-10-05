@@ -31,7 +31,6 @@ FLAG_ROLLBACK = "rollback"
 
 HISTORY_DEPTH = 50
 
-
 def prepare(ctx):
     """Check the account, and whether rollback can be used when it is asked.
 
@@ -56,7 +55,6 @@ def prepare(ctx):
                      reason=reason.text(ctx.reader) if reason else "")
     return {"user": user, "rollback": rollback}
 
-
 def pages(ctx):
     """Every page where the account's edit is still the latest one.
 
@@ -78,7 +76,6 @@ def pages(ctx):
         if title and title not in titles:
             titles.append(title)
     return titles
-
 
 def act(ctx, page):
     """Undo the named account's run of edits at the top of one page."""
@@ -132,7 +129,6 @@ def act(ctx, page):
     except Exception as e:
         return "fail", "{}: {}".format(type(e).__name__, e)
     return "done", localized("page_revert_done", ctx.reader, count=reverted)
-
 
 SPEC = mech.Mechanic(
     code="revertbot",

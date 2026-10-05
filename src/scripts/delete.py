@@ -28,13 +28,11 @@ from tasks.params import FLAGS, Param
 
 FLAG_TALK = "talk"
 
-
 def prepare(ctx):
     """Nothing to build; the check is that there is a reason to record."""
     if not (ctx.summary or "").strip():
         raise Explained("error_delete_no_reason")
     return None
-
 
 def act(ctx, page):
     """Delete one page. -> (state, note)."""
@@ -61,7 +59,6 @@ def act(ctx, page):
             return "done", localized("page_delete_talk_kept", ctx.reader,
                                      error=e)
     return "done", None
-
 
 SPEC = mech.Mechanic(
     code="delete",

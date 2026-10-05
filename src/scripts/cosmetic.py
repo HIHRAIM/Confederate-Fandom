@@ -31,11 +31,9 @@ from scripts import wikitools as wt
 FLAG_LABELS = "labels"
 FLAG_SKIP_REFS = "skip_refs"
 
-
 def prepare(ctx):
     """Nothing to compile: the rules are the module's own."""
     return None
-
 
 def apply(ctx, page, text):
     """One page's text, tidied. -> (text, change labels)."""
@@ -49,11 +47,9 @@ def apply(ctx, page, text):
         return text, []
     return new, [name for name, _was, _now in changes]
 
-
 def summary_part(ctx, labels):
     """What this mechanic contributes to the edit summary."""
     return "косметические изменения" if labels else None
-
 
 SPEC = mech.Mechanic(
     code="cosmetic",

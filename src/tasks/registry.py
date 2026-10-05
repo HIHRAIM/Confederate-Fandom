@@ -20,7 +20,6 @@ from tasks.mechanic import ACTION, KINDS, REPORT, TEXT, Mechanic
 
 logger = logging.getLogger("fd.tasks.registry")
 
-
 def _load():
     """Import every mechanic module and read its SPEC.
 
@@ -32,7 +31,7 @@ def _load():
         "replace", "add_text", "unlink", "typos_ru", "punct_ru",
         "pravopys_uk", "cosmetic", "category", "interwiki", "redirect",
         "image", "delinker", "movepages", "protect", "delete", "revertbot",
-        "listpages", "templatecount", "category_graph",
+        "listpages", "templatecount", "category_graph", "importfiles",
     )
     catalogue = []
     for name in names:
@@ -48,16 +47,13 @@ def _load():
         catalogue.append(spec)
     return tuple(catalogue)
 
-
 MECHANICS = _load()
 
 BY_CODE = {mechanic.code: mechanic for mechanic in MECHANICS}
 
-
 def numbered():
     """The catalogue as (number, mechanic) pairs, 1-based."""
     return list(enumerate(MECHANICS, 1))
-
 
 def find(token):
     """One mechanic by its number or by its code. -> the Mechanic or None.
@@ -75,7 +71,6 @@ def find(token):
         return None
     return BY_CODE.get(key)
 
-
 def find_all(tokens):
     """Several mechanics at once. -> (found, the tokens nothing matched).
 
@@ -91,7 +86,6 @@ def find_all(tokens):
             found.append(mechanic)
     return found, unknown
 
-
 def rights_for(mechanics):
     """Every right a set of mechanics needs between them, in a stable order."""
     needed = []
@@ -101,16 +95,13 @@ def rights_for(mechanics):
                 needed.append(right)
     return needed
 
-
 def of_kind(mechanics, kind):
     """The mechanics of one kind, in the order the caller gave them."""
     return [mechanic for mechanic in mechanics if mechanic.kind == kind]
 
-
 def needs_pages(mechanics):
     """Whether this set of mechanics has to be given a page list at all."""
     return any(not mechanic.standalone for mechanic in mechanics)
-
 
 def needs_source(mechanics):
     """Whether the dialog must ask where the pages come from: some mechanic
@@ -118,11 +109,9 @@ def needs_source(mechanics):
     return any(not mechanic.standalone and not mechanic.own_pages
                for mechanic in mechanics)
 
-
 def schedulable(mechanics):
     """Whether this set of mechanics may repeat on a schedule at all."""
     return all(mechanic.schedulable for mechanic in mechanics)
-
 
 def redirects_wanted(mechanics, params):
     """Whether the page list should hold redirects. -> True, False or None.
@@ -140,11 +129,9 @@ def redirects_wanted(mechanics, params):
         return wanted.pop()
     return None
 
-
 def is_destructive(mechanics):
     """Whether any of them does something an edit cannot undo."""
     return any(mechanic.destructive for mechanic in mechanics)
-
 
 def all_params(mechanics):
     """Every parameter a set of mechanics needs, without asking twice.

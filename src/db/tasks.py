@@ -29,9 +29,9 @@ STATES = ("pending", "running", "done", "failed", "stopped")
 
 PAGE_STATES = ("todo", "done", "skip", "fail")
 
-
 def create_task(wiki, mechanics, params, requester, dry_run=False,
-                schedule_id=None, reply_chat=None):
+                schedule_id=None, reply_chat=None, community_platform=None,
+                community_id=None):
     """Open a task in the 'pending' state. -> its id.
 
     `mechanics` is the list of codes to run over each page, in order;
@@ -44,24 +44,24 @@ def create_task(wiki, mechanics, params, requester, dry_run=False,
         INSERT INTO tasks
             (wiki, mechanics, params, state, dry_run,
              requested_by_platform, requested_by_id, requested_by_name,
-             requested_by_wiki_user, reply_chat, schedule_id, created_at)
-        VALUES (?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?)
+             requested_by_wiki_user, reply_chat, community_platform,
+             community_id, schedule_id, created_at)
+        VALUES (?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (str(wiki), json.dumps(list(mechanics), ensure_ascii=False),
          json.dumps(dict(params or {}), ensure_ascii=False),
          1 if dry_run else 0,
          (requester or {}).get("platform"), (requester or {}).get("id"),
          (requester or {}).get("name"), (requester or {}).get("wiki_user"),
-         reply_chat, schedule_id, now),
+         reply_chat, community_platform, str(community_id) if community_id is not None
+         else None, schedule_id, now),
     )
     conn.commit()
     return row.lastrowid
 
-
 def get_task(task_id):
     """One task's row, or None."""
     return cur.execute("SELECT * FROM tasks WHERE id=?", (int(task_id),)).fetchone()
-
 
 def task_mechanics(row):
     """The mechanic codes of one task, as a list."""
@@ -70,7 +70,6 @@ def task_mechanics(row):
     except (TypeError, ValueError):
         return []
 
-
 def task_params(row):
     """The parameters of one task, as a dict."""
     try:
@@ -78,14 +77,12 @@ def task_params(row):
     except (TypeError, ValueError):
         return {}
 
-
 def task_report(row):
     """The counters of one task, as a dict; empty while it is still running."""
     try:
         return json.loads(row["report"] or "{}")
     except (TypeError, ValueError):
         return {}
-
 
 def set_task_state(task_id, state, error=None, *, expected_state=None):
     """Move a task to another state, stamping the time where it matters.
@@ -120,7 +117,6 @@ def set_task_state(task_id, state, error=None, *, expected_state=None):
         conn.commit()
         return True
 
-
 def set_dry_run(task_id, dry_run=True):
     """Make a task a preview run, or stop being one.
 
@@ -132,13 +128,11 @@ def set_dry_run(task_id, dry_run=True):
                 (1 if dry_run else 0, int(task_id)))
     conn.commit()
 
-
 def set_report(task_id, report):
     """Store the counters a finished (or paused) run has reached."""
     cur.execute("UPDATE tasks SET report=? WHERE id=?",
                 (json.dumps(dict(report or {}), ensure_ascii=False), int(task_id)))
     conn.commit()
-
 
 def bump(task_id, checked=0, edited=0, failed=0, cursor=None):
     """Add to a running task's counters and move its cursor.
@@ -157,7 +151,6 @@ def bump(task_id, checked=0, edited=0, failed=0, cursor=None):
                      int(task_id)))
     conn.commit()
 
-
 def set_pages(task_id, titles):
     """Settle the page list of a task. -> how many pages there are.
 
@@ -173,7 +166,6 @@ def set_pages(task_id, titles):
     conn.commit()
     return len(rows)
 
-
 def count_pages(task_id, state=None):
     """How many pages a task holds, in total or in one state."""
     if state:
@@ -185,14 +177,12 @@ def count_pages(task_id, state=None):
                           (int(task_id),)).fetchone()
     return row["n"] if row else 0
 
-
 def next_pages(task_id, after, limit):
     """The next chunk of pages still to do, in order. -> list of rows."""
     return cur.execute(
         "SELECT * FROM task_pages WHERE task_id=? AND seq>? AND state='todo' "
         "ORDER BY seq LIMIT ?",
         (int(task_id), int(after), int(limit))).fetchall()
-
 
 def page_titles(task_id, limit=None):
     """The titles of a task's pages, in order — what the preview prints."""
@@ -203,12 +193,10 @@ def page_titles(task_id, limit=None):
         params.append(int(limit))
     return [row["title"] for row in cur.execute(sql, tuple(params)).fetchall()]
 
-
 def mark_page(task_id, seq, state, note=None):
     """Record what happened to one page."""
     cur.execute("UPDATE task_pages SET state=?, note=? WHERE task_id=? AND seq=?",
                 (str(state), note, int(task_id), int(seq)))
-
 
 def record_task_page(task_id, seq, state, note=None, report=None):
     """Commit one completed page, counters and restart data together.
@@ -236,13 +224,11 @@ def record_task_page(task_id, seq, state, note=None, report=None):
             conn.rollback()
             raise
 
-
 def failed_pages(task_id, limit=200):
     """The pages that would not be written, with the reason — for the report."""
     return cur.execute(
         "SELECT title, note FROM task_pages WHERE task_id=? AND state='fail' "
         "ORDER BY seq LIMIT ?", (int(task_id), int(limit))).fetchall()
-
 
 def active_tasks():
     """Every task that is running or waiting, oldest first.
@@ -255,18 +241,15 @@ def active_tasks():
         "SELECT * FROM tasks WHERE state IN ('pending', 'confirm', 'running') "
         "ORDER BY id").fetchall()
 
-
 def recent_tasks(limit=10):
     """The last few tasks, newest first — what /jobs prints under the queue."""
     return cur.execute("SELECT * FROM tasks ORDER BY id DESC LIMIT ?",
                        (int(limit),)).fetchall()
 
-
 def running_task():
     """The task the worker is on, or None."""
     return cur.execute(
         "SELECT * FROM tasks WHERE state='running' ORDER BY id LIMIT 1").fetchone()
-
 
 def cleanup_tasks(keep_days=30):
     """Forget the page lists of tasks that finished long ago.

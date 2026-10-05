@@ -23,7 +23,6 @@ from telegram_bot.dialogs import deliver
 
 logger = logging.getLogger("fd.telegram.catchall")
 
-
 @router.message()
 async def _dialog_catchall(message: Message):
     """Give one message to the dialog waiting for it, if there is one."""
@@ -32,4 +31,4 @@ async def _dialog_catchall(message: Message):
     text = message.text or message.caption or ""
     if text.startswith("/"):
         return
-    deliver(message.chat.id, message.from_user.id, text)
+    deliver(message.chat.id, message.from_user.id, message)

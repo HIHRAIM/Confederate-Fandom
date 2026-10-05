@@ -69,7 +69,6 @@ except ImportError:
 
 logger = logging.getLogger("fd.wiki")
 
-
 def _route_library_logging():
     """Send Pywikibot's own lines through this bot's logging, not past it.
 
@@ -112,7 +111,6 @@ def _route_library_logging():
     library.handlers = []
     library.propagate = True
     library.setLevel(logging.INFO)
-
 
 _route_library_logging()
 
@@ -275,7 +273,6 @@ def use_cookies(key):
     """
     return _use_cookies(str(key))
 
-
 def _write_password_file():
     """Put the credentials from .env where Pywikibot looks for them.
 
@@ -337,7 +334,6 @@ def _drop_cached_site(family, lang):
             gone += 1
     return gone
 
-
 def _forget_login(site):
     """Make one Site object forget that it ever logged in.
 
@@ -359,7 +355,6 @@ def _forget_login(site):
     except Exception:
         pass
 
-
 def _hard_reset(family, lang, key):
     """Throw away everything this process remembers about one wiki.
 
@@ -377,7 +372,6 @@ def _hard_reset(family, lang, key):
                    key, gone)
     _use_cookies(key)
 
-
 class WikiUnknown(ValueError):
     """Pywikibot has no way to address this wiki: no such family, or no such
     language in it.
@@ -391,13 +385,11 @@ class WikiUnknown(ValueError):
     generated for ``ru`` alone, and nothing had taught it the others.
     """
 
-
 def _unknown_site(error):
     """Whether an exception from `pywikibot.Site()` means "no such wiki"."""
     name = type(error).__name__
     return (name in ("UnknownSiteError", "UnknownFamilyError")
             or "does not exist in family" in str(error))
-
 
 def _login_from_scratch(family, lang, key):
     """Build the Site and sign in. -> the Site, or None when it would not.
@@ -429,7 +421,6 @@ def _login_from_scratch(family, lang, key):
                 "yes" if has_bot_right(site) else "no — edits will not be marked")
     return site
 
-
 def _cooldown_for(key):
     """How long to leave one wiki alone after a round of failed logins.
 
@@ -440,7 +431,6 @@ def _cooldown_for(key):
     """
     _failures[key] = _failures.get(key, 0) + 1
     return min(LOGIN_COOLDOWN * (2 ** (_failures[key] - 1)), LOGIN_COOLDOWN_MAX)
-
 
 def get_site(family, lang):
     """The logged-in Site of one wiki, built once and kept.

@@ -45,7 +45,6 @@ appointed: rollback, content moderator, discussions moderator, administrator,
 bureaucrat, bot. Fandom's global groups (staff, helper, soap) are deliberately
 not here — they are not this wiki's community."""
 
-
 RIGHT_GRANTED_BY = {
     "edit": None,
     "createpage": None,
@@ -95,8 +94,6 @@ be missing for two different reasons, and they want two different fixes: the
 account lacks it (a group on the wiki), or the password does not pass it on
 (a checkbox on Special:BotPasswords). `explain_missing` tells them apart."""
 
-
-
 def _info(site, fresh=False):
     """What the wiki says about this session. -> the userinfo mapping.
 
@@ -114,22 +111,18 @@ def _info(site, fresh=False):
         logger.warning("could not read the user info on %s: %s", site, e)
         return {}
 
-
 def groups(site, fresh=False):
     """The groups this session's account holds on one wiki, implicit ones out."""
     info = _info(site, fresh)
     return [g for g in info.get("groups", []) if g not in IMPLICIT_GROUPS]
 
-
 def rights(site, fresh=False):
     """Every right this session holds on one wiki, as a set."""
     return set(_info(site, fresh).get("rights", []))
 
-
 def has_right(site, right, fresh=False):
     """Whether this session may do one particular thing on one wiki."""
     return right in rights(site, fresh)
-
 
 def account_rights(site):
     """Every right the bot's *account* holds on one wiki, whatever the session
@@ -141,7 +134,6 @@ def account_rights(site):
     except Exception as e:
         logger.warning("could not read the account's rights on %s: %s", site, e)
         return None
-
 
 def explain_missing(site, missing, wiki_key=None):
     """Why this session cannot use these rights. -> utils.Explained, or None.
@@ -184,7 +176,6 @@ def explain_missing(site, missing, wiki_key=None):
                                           for group in groups))
     return Explained("task_missing_basic_rights", wiki=wiki_key)
 
-
 def group_label(group, lang):
     """A group's name as a person reads it, in their language, with the raw
     name in brackets; a group the i18n files do not name is shown raw.
@@ -201,12 +192,10 @@ def group_label(group, lang):
         return group
     return "{} ({})".format(localized(key, lang), group)
 
-
 def work_status(site, fresh=False):
     """Which of the three working statuses the bot holds here. -> list."""
     held = set(groups(site, fresh))
     return [g for g in WORK_GROUPS if g in held]
-
 
 def may_work(site, fresh=False):
     """Whether the bot has any standing on this wiki at all.
@@ -217,7 +206,6 @@ def may_work(site, fresh=False):
     """
     held = work_status(site, fresh)
     return bool(held), held
-
 
 def missing_rights(site, needed, fresh=False):
     """Which of the rights a mechanic needs this session does not hold.
@@ -230,7 +218,6 @@ def missing_rights(site, needed, fresh=False):
     return [(right, RIGHT_GRANTED_BY.get(right))
             for right in needed if right not in held]
 
-
 def needed_groups(missing):
     """The distinct groups that would cover everything in `missing`, in order
     of how much they grant."""
@@ -240,7 +227,6 @@ def needed_groups(missing):
             wanted.append(group)
     return sorted(wanted, key=lambda g: WORK_GROUPS.index(g)
                   if g in WORK_GROUPS else -1)
-
 
 def user_groups(site, username):
     """The groups another account holds on this wiki.
@@ -262,7 +248,6 @@ def user_groups(site, username):
     if not users or "missing" in users[0] or "invalid" in users[0]:
         return []
     return [g for g in users[0].get("groups", []) if g not in IMPLICIT_GROUPS]
-
 
 def is_wiki_staff(site, username):
     """Whether one account has any standing on one wiki.

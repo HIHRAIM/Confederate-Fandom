@@ -46,7 +46,6 @@ touch — but it does not need to be known, because planning is all it will do
 before it stops at 'confirm' and waits for a person to type /go. What it costs
 the queue is one page count, not a walk."""
 
-
 def _fire_schedules():
     """Turn every schedule whose moment has come into a task. -> their ids.
 
@@ -62,6 +61,17 @@ def _fire_schedules():
                      "id": row["created_by_id"],
                      "name": row["created_by_name"],
                      "wiki_user": row["created_by_wiki_user"]}
+        from utils import is_admin
+        if (not is_admin(requester["platform"], requester["id"]) and
+                db.get_wiki_admin(requester["platform"], requester["id"]) is None):
+            import sponsors
+            owner = sponsors.canonical_id(requester["platform"], requester["id"])
+            if (not owner or not sponsors.can_use_wiki(owner, row["wiki"]) or
+                    (row["community_id"] is not None and not sponsors.can_use_community(
+                        owner, row["community_platform"], row["community_id"])) or
+                    not sponsors.spend_task(owner)):
+                db.mark_fired(row)
+                continue
         params = db.schedule_params(row)
         try:
             task_id = db.create_task(
@@ -71,7 +81,9 @@ def _fire_schedules():
                 requester=requester,
                 dry_run=bool(params.get("dry_run")),
                 schedule_id=row["id"],
-                reply_chat=row["reply_chat"])
+                reply_chat=row["reply_chat"],
+                community_platform=row["community_platform"],
+                community_id=row["community_id"])
         except Exception:
             logger.exception("could not open a task for schedule %s", row["id"])
             continue
@@ -79,7 +91,6 @@ def _fire_schedules():
         made.append(task_id)
         logger.info("schedule %s fired as task %s", row["id"], task_id)
     return made
-
 
 def _next_task():
     """The task to work on now, or None. Running ones before pending ones.
@@ -97,7 +108,6 @@ def _next_task():
         if row["state"] == "pending":
             return row
     return None
-
 
 def _seconds_ahead(ahead):
     """How long the tasks in front of one task will take. -> seconds.
@@ -131,7 +141,6 @@ def _seconds_ahead(ahead):
         seconds += remaining * per_page
     return int(seconds)
 
-
 def queue_place(task_id):
     """Where a task stands in the queue. -> {"position", "eta"} or None.
 
@@ -164,7 +173,6 @@ def queue_place(task_id):
         return None
     return {"position": len(ahead) + 1, "eta": _seconds_ahead(ahead)}
 
-
 def queue_notice(task_id, lang):
     """The line to send a person whose task has to wait, or None.
 
@@ -182,7 +190,6 @@ def queue_notice(task_id, lang):
                          position=place["position"],
                          eta=format_duration(place["eta"], lang))
     return localized("queue_place", lang, id=task_id, position=place["position"])
-
 
 def go_hint(chat_key, task_id, lang):
     """How to start this task, spelled the way its messenger spells it.
@@ -205,7 +212,6 @@ def go_hint(chat_key, task_id, lang):
     key = "task_go_discord" if platform == "discord" else "task_go_telegram"
     return localized(key, lang, id=task_id)
 
-
 def reader_lang(row):
     """The language of the person who asked for a task (utils.lang_of).
 
@@ -217,7 +223,6 @@ def reader_lang(row):
     from utils import lang_of
 
     return lang_of(row["requested_by_platform"], row["requested_by_id"])
-
 
 async def _plan(row):
     """Plan one task and tell the person what it will do."""
@@ -262,7 +267,12 @@ async def _plan(row):
         return
 
     if row["schedule_id"]:
-        await start(task_id, announce_only=True)
+        outcome = await start(task_id, announce_only=True)
+        if outcome in ("quota", "forbidden"):
+            db.set_task_state(task_id, "failed", error=outcome)
+            await notify.send(row["reply_chat"], localized(
+                "sponsor_page_limit" if outcome == "quota" else "sponsor_wiki_required",
+                lang, limit=0, wiki=row["wiki"]))
         return
 
     mechanics, _unknown = registry.find_all(db.task_mechanics(row))
@@ -279,7 +289,6 @@ async def _plan(row):
         notes="\n".join(runner.render_notes(plan["notes"], lang)),
         how=go_hint(row["reply_chat"], task_id, lang),
     ))
-
 
 async def _chunk(row):
     """Walk one chunk of a running task, and close it when it is done."""
@@ -337,7 +346,6 @@ async def _chunk(row):
     await notify.announce(done(service))
     return False
 
-
 async def _failed(row, error, lang, service):
     """A task that broke while running: the row, the person, the service log."""
     import db
@@ -353,7 +361,6 @@ async def _failed(row, error, lang, service):
     await notify.announce(localized(
         "task_failed", service, id=task_id, wiki=row["wiki"],
         error=report.safe_error(error, service)))
-
 
 async def start(task_id, announce_only=False):
     """Move a confirmed task into the running state and get it going.
@@ -372,6 +379,21 @@ async def start(task_id, announce_only=False):
     row = db.get_task(task_id)
     if row is None:
         return False
+    if row["state"] != "confirm":
+        return False
+    from utils import is_admin
+    uid = row["requested_by_id"]
+    platform = row["requested_by_platform"]
+    if (uid is not None and not is_admin(platform, uid) and
+            db.get_wiki_admin(platform, uid) is None):
+        import sponsors
+        owner = sponsors.canonical_id(platform, uid)
+        if (not owner or not sponsors.can_use_wiki(owner, row["wiki"])
+                or (row["community_id"] is not None and not sponsors.can_use_community(
+                    owner, row["community_platform"], row["community_id"]))):
+            return "forbidden"
+        if not sponsors.reserve_pages(owner, db.count_pages(task_id)):
+            return "quota"
     if not db.set_task_state(task_id, "running", expected_state="confirm"):
         return False
     lang = reader_lang(row)
@@ -399,7 +421,6 @@ async def start(task_id, announce_only=False):
     scheduler.enqueue(JOB, reason="task {} started".format(task_id))
     return True
 
-
 async def stop(task_id):
     """Stop a task where it stands. -> whether there was one to stop.
 
@@ -421,7 +442,6 @@ async def stop(task_id):
         "task_stopped", service_lang(), id=task_id, wiki=row["wiki"],
         checked=row["checked"], edited=row["edited"]))
     return True
-
 
 async def tick():
     """One turn of the task queue. Registered with the scheduler as `tasks`.
@@ -460,7 +480,6 @@ async def tick():
         if scheduler.waiting_ahead(scheduler.TASK_PRIORITY):
             logger.info("the task queue steps aside: something is due")
             return
-
 
 def register():
     """Put the task queue on the schedule: every minute, behind the modules."""

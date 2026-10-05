@@ -70,7 +70,7 @@ PIXELMON_RE = re.compile(r"Pixelmon", re.I)
 
 CASE_ENDINGS = ("", "а", "я", "у", "ю", "ом", "ем", "ём", "е", "и", "ы", "ь",
                 "ей", "ов", "ев", "ам", "ям", "ами", "ями", "ах", "ях", "ой")
-STONE = "ит"                                   # мегакамень: …ит, …ита, …итом
+STONE = "ит"
 ALLOWED_TAILS = frozenset(CASE_ENDINGS) | {STONE + e for e in CASE_ENDINGS}
 
 TAIL_BLOCK = ("^(?!(?:"
@@ -144,7 +144,7 @@ def load_pairs(path: str = TSV_PATH) -> list[tuple[str, str]]:
             "нет списка замен {} — он должен лежать рядом с модулем".format(path))
     pairs = []
     with open(path, encoding="utf-8") as fh:
-        next(fh)                                    # заголовок
+        next(fh)
         for line in fh:
             if line.strip():
                 old, new = line.rstrip("\n").split("\t")[:2]

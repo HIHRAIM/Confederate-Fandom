@@ -34,7 +34,6 @@ logger = logging.getLogger("fd.discord.admins")
 
 MESSAGE_LIMIT = 1900
 
-
 @tree.command(name="wikiadmin", description=slash("slash_wikiadmin"))
 @app_commands.describe(user=slash("slash_wikiadmin_user"),
                        wiki_user=slash("slash_wikiadmin_wiki_user"))
@@ -72,7 +71,6 @@ async def wikiadmin_cmd(interaction: discord.Interaction,
         "wikiadmin_updated" if existed else "wikiadmin_added", lang,
         name=name, user_id=user.id, wiki_user=wiki_user.strip()))
 
-
 @tree.command(name="remwikiadmin", description=slash("slash_remwikiadmin"))
 @app_commands.describe(user=slash("slash_remwikiadmin_user"))
 async def remwikiadmin_cmd(interaction: discord.Interaction, user: discord.User):
@@ -89,7 +87,6 @@ async def remwikiadmin_cmd(interaction: discord.Interaction, user: discord.User)
         await interaction.response.send_message(
             localized("wikiadmin_not_found", lang, user_id=user.id))
 
-
 @tree.command(name="help", description=slash("slash_help"))
 async def help_cmd(interaction: discord.Interaction):
     """What the bot does and which commands it takes.
@@ -102,7 +99,6 @@ async def help_cmd(interaction: discord.Interaction):
     lang = lang_of("discord", interaction.user.id)
     title, lines = lists.help_text(lang, pages.MARKUP, lists.DISCORD)
     await pages.send(interaction, title, lines, lang, ephemeral=True)
-
 
 @tree.command(name="status", description=slash("slash_status"))
 async def status_cmd(interaction: discord.Interaction):
@@ -133,7 +129,6 @@ async def status_cmd(interaction: discord.Interaction):
         running=scheduler.running() or "—",
         waiting=", ".join(scheduler.waiting()) or "—",
         error=db.get_state("last_error") or "—")[:MESSAGE_LIMIT])
-
 
 @tree.command(name="backup", description=slash("slash_backup"))
 @app_commands.allowed_contexts(guilds=True, dms=True, private_channels=True)
@@ -183,7 +178,6 @@ async def backup_cmd(interaction: discord.Interaction):
         file=discord.File(io.BytesIO(data),
                           filename=backup_crypto.backup_filename()),
         ephemeral=True)
-
 
 @tree.command(name="lang", description=slash("slash_lang"))
 @app_commands.describe(code=slash("slash_lang_code"))

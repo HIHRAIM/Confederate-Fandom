@@ -1,6 +1,21 @@
 # Confederate Fandom
 
-Confederate Fandom is a bot for automating work on the wikis of the Fandom farm from Discord and Telegram. The people its operator appoints set it to work with a command and a short dialog: nineteen mechanics — find and replace, Russian and Ukrainian spelling and punctuation, markup cleanup, categories, interlanguage links, redirects, files, renames, protection, deletion, undoing a run of edits, page lists, template counts and category trees — over any Fandom wiki named by its address, once or on a schedule. Every run is planned before it writes anything: the pages are counted and the first twenty shown, a preview returns every diff as a file without touching the wiki, the rights of both the bot and the person who asked are checked on that very wiki, and the run ends with a report. Everything goes through one queue, so a walk of nine thousand articles and the work that cannot wait never stand in each other's way. The bot speaks six languages, and each person chooses their own with `/lang`; English until they do. Beside the work it is asked for, the bot can run standing modules on schedules of their own: it keeps the news block on the main pages of Telepedia and Radiopedia in step with a Telegram channel, standardises the Russian names of Pokémon species on the Pokémon Wiki once a night, and commits chosen wiki pages to a GitHub repository every midnight. The modules ship switched off: a bot set up for wiki work alone never mentions them and spends nothing on them.
+Confederate Fandom is a bot for automating work on the wikis of the Fandom farm from Discord and Telegram. The people its operator appoints set it to work with a command and a short dialog: twenty mechanics — find and replace, Russian and Ukrainian spelling and punctuation, markup cleanup, categories, interlanguage links, redirects, files, renames, protection, deletion, undoing a run of edits, page lists, template counts, category trees and file import from other MediaWiki wikis — over any Fandom wiki named by its address. File import is a one-time task; the other eligible mechanics can run once or on a schedule. Every run is planned before it writes anything: the pages are counted and the first twenty shown, a preview returns every diff as a file without touching the wiki, the rights of both the bot and the person who asked are checked on that very wiki, and the run ends with a report. Everything goes through one queue, so a walk of nine thousand articles and the work that cannot wait never stand in each other's way. The bot speaks six languages, and each person chooses their own with `/lang`; English until they do. Beside the work it is asked for, the bot can run standing modules on schedules of their own: it keeps the news block on the main pages of Telepedia and Radiopedia in step with a Telegram channel, standardises the Russian names of Pokémon species on the Pokémon Wiki once a night, and commits chosen wiki pages to a GitHub repository every midnight. The modules ship switched off: a bot set up for wiki work alone never mentions them and spends nothing on them.
+
+## Sponsorship
+
+Bot Admins and appointed wiki administrators retain their existing access. A sponsor can claim Fandom wikis where their Fandom account has staff standing and its public profile names their authenticated Discord username. They can run page-based tasks only on those wikis. The bot checks its own standing and rights before a run. Standalone mechanics are outside the sponsor plan because they have no page count. A sponsor cannot start, stop or schedule another account's tasks.
+
+| One subscription | Community role | €1 | €3 | €5 |
+|---|---:|---:|---:|---:|
+| Claimed wikis | 2 | 2 | 6 | 10 |
+| Discord servers and Telegram groups combined | 2 | 2 | 6 | 10 |
+| New tasks per UTC day | 2 | 2 | 6 | 10 |
+| Planned pages per UTC day | 30 | 30 | 90 | 150 |
+
+Use `/sponsor`, `/sponsor-wiki` and `/sponsor-community` on Discord to claim wikis and communities you administer. On Telegram, claim an administered group with `/sponsor_community`. Releasing a wiki or community starts a 30-day pause before that sponsor can assign a new slot, preventing one subscription from serving a rotating queue. To use the same allowance on Telegram, run `/sponsor-link` on Discord and send the one-use code to the bot in a private Telegram chat with `/sponsor_link CODE` within ten minutes. Either account can unlink; a link shares one budget. Bot Admins can work in a sponsor's community. Either community role on the Patreon server grants the €1 allowance after seven days of continuous observed membership, with one day of continued work after loss. Paid roles have 30 days of continued work after loss. Thirty days after working grace ends, unsupported wiki claims and their tasks are erased; unsupported communities' scoped tasks are erased and the bot leaves them. Another sponsor or a Bot Admin can take over a community before that deadline.
+
+For a Telegram `/wikiadmin @name <Fandom account>` invitation, the invited person should send `/claimwikiadmin` to this bot in a private chat. The reply confirms their Fandom account or shows the Telegram username and numeric ID the bot actually received. If the username differs from the invitation, a Bot Admin can issue `/wikiadmin <numeric ID> <Fandom account>` instead. A claimed invitation is saved together with the appointment in one database transaction.
 
 ## Requirements
 
@@ -146,7 +161,7 @@ src/
     lists.py             what /tasks, /jobs, /schedule, /help and
                          /wikiadmin say, for both messengers
 
-  scripts/             the nineteen mechanics, each named after its script
+  scripts/             the twenty mechanics, each named after its script
     wikitools.py         masking, cosmetics, the AWB rule format, summaries
     data/                the typo lists and the 2019 Ukrainian rules
 
@@ -252,7 +267,7 @@ Everything Confederate Fandom does, in one place.
 
 ### Tasks on any Fandom wiki
 
-Nineteen mechanics, each a Pywikibot script (or one of the operator's own) with its command line replaced by a dialog. `/tasks` prints them numbered; `/run` sets one going.
+Twenty mechanics, each a Pywikibot script (or one of the operator's own) with its command line replaced by a dialog. `/tasks` prints them numbered; `/run` sets one going.
 
 | # | Code | What it does | Rights it needs |
 |---|---|---|---|
@@ -275,6 +290,9 @@ Nineteen mechanics, each a Pywikibot script (or one of the operator's own) with 
 | 17 | `listpages` | Write the page list to a file | — |
 | 18 | `templatecount` | How many pages use the templates, and which | — |
 | 19 | `category-graph` | The tree of subcategories, as text or as a `.dot` file | — |
+| 20 | `importfiles` | Import current files from a public HTTPS MediaWiki wiki into the selected Fandom wiki, with a choice of file-page text and whether to overwrite existing files | upload, edit |
+
+`importfiles` runs on its own as a one-time task. Choose file names, the files used on one page or a list of pages, the files directly in one category or a list of categories, or a browse of all source files from a starting name. Lists can be pasted into the dialog or supplied as UTF-8 `.txt` attachments up to 128 KiB; a plan contains at most 500 files. Category subcategories are not traversed. The dialog asks whether to copy each source file-page text or use a source link, then whether to skip existing files or replace their binary and page text. The plan marks replacement as destructive and requires `/go` to start. Identical binaries are not uploaded again; in overwrite mode their file-page text can still be updated. Files larger than 80 MiB are rejected. The import transfers current versions only, not revision history, and cannot use a private or HTTP-only source wiki. Source-specific templates and links in copied descriptions are not rewritten for the destination.
 
 **They compose.** Everything that rewrites wikitext runs over the same page in one pass and saves once: `replace` + `typos-ru` + `cosmetic` is one line in the history, with a summary built from what all three actually did. `/run replace typos-ru cosmetic` is how that is asked for.
 
@@ -657,7 +675,7 @@ Beside the database, a finished run leaves up to three files in `src/reports/` �
 
 ## Acknowledgements
 
-Fifteen of the nineteen mechanics are ports of scripts that ship with **[Pywikibot](https://github.com/wikimedia/pywikibot)** by the Pywikibot team and its contributors, licensed **MIT**. What was kept is each script's model — the options it offers, the order it does things in, and the decisions it refuses to make on a person's behalf — with its command line replaced by a dialog and its page list by this bot's own. Each module names the script it came from, its authors and its licence in its own docstring; the list is `replace`, `add_text`, `unlink`, `category`, `category_graph`, `interwiki`, `redirect` (which also folds in `fixing_redirects`), `image`, `delinker`, `movepages`, `protect`, `delete`, `revertbot`, `listpages` and `templatecount`.
+Fifteen of the twenty mechanics are ports of scripts that ship with **[Pywikibot](https://github.com/wikimedia/pywikibot)** by the Pywikibot team and its contributors, licensed **MIT**. What was kept is each script's model — the options it offers, the order it does things in, and the decisions it refuses to make on a person's behalf — with its command line replaced by a dialog and its page list by this bot's own. Each module names the script it came from, its authors and its licence in its own docstring; the list is `replace`, `add_text`, `unlink`, `category`, `category_graph`, `interwiki`, `redirect` (which also folds in `fixing_redirects`), `image`, `delinker`, `movepages`, `protect`, `delete`, `revertbot`, `listpages` and `templatecount`.
 
 The other four are not ports of anything third-party. `typos_ru`, `punct_ru` and `pravopys_uk`, and the masking layer under all three, come from the operator's own earlier wiki scripts; the typo lists they read are in the **AWB** format, which is a file format rather than code, and no AutoWikiBrowser source is used here. `cosmetic` is this bot's own as well, and deliberately so: Pywikibot has a `cosmetic_changes.py`, but it renames templates and rewrites links by rules that differ per project, which on somebody else's wiki is an opinion about their markup. This one touches whitespace and punctuation, which is the part nobody argues about.
 

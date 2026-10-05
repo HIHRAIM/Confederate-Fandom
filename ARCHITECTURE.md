@@ -6,7 +6,7 @@ This is the map of the code: what the pieces are called, how a post travels from
 
 Confederate Fandom automates wiki work on the Fandom farm from Discord and Telegram, under one account and in one process. Three kinds of it:
 
-- **whatever it is asked** — nineteen mechanics over any Fandom wiki, set going by a command in Discord or Telegram, once or on a schedule;
+- **whatever it is asked** — twenty mechanics over any Fandom wiki, set going by a command in Discord or Telegram; file import runs once, and eligible maintenance mechanics can run on a schedule;
 - **the news** — a standing module: the news block of two main pages, kept in step with a Telegram channel, four times an hour;
 - **the species names** — a standing module: one wiki's articles walked once a night, the Russian names of Pokémon species brought to the standard ones;
 - **the page archive** — a standing module: chosen wiki pages committed to a GitHub repository every midnight in Kyiv, behind everything else in the queue.
@@ -119,7 +119,8 @@ Every kind may have `prepare(ctx)` (compile the rules, read the deletion log, wo
 | Getting answers to the person and the service log | `tasks/notify.py` |
 | The task queue as a scheduler job | `tasks/queue.py` |
 | Masking, cosmetics, the AWB rule format, the summary | `scripts/wikitools.py` |
-| The nineteen mechanics | `scripts/<name>.py`, one per script |
+| The twenty mechanics | `scripts/<name>.py`, one per script |
+| File import from another MediaWiki wiki | `scripts/importfiles.py` (public HTTPS API lookup, explicit files, page image lists, category members, bounded download, skip or confirmed overwrite), `discord_bot/dialogs.py` and `telegram_bot/dialogs.py` (bounded text attachments) |
 | Turning a domain into a Pywikibot family | `wiki/families.py` |
 | Logging in, keeping sessions apart, noticing a forgotten one | `wiki/site.py` (`get_site`, `_use_cookies`, `use_cookies`, `is_signed_in`, `_sign_in_again`) |
 | Getting back in after a login that failed | `wiki/site.py` (`_drop_cached_site`, `_hard_reset`, `_login_from_scratch`, `_cooldown_for`, `forget_sessions`) |

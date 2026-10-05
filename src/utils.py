@@ -125,7 +125,6 @@ def paginate(lines, budget=PAGE_CHARS):
             return ["\n".join(group) for group in groups]
         count += 1
 
-
 def has_translation(key):
     """Whether the six files carry this key at all, asked without complaining.
 
@@ -136,7 +135,6 @@ def has_translation(key):
     otherwise write a warning per line per call. This is the question to ask
     first."""
     return key in _LOCALE
-
 
 def job_label(name, lang):
     """A scheduler job's name as a person reads it: 'news' -> 'the news'.
@@ -151,7 +149,6 @@ def job_label(name, lang):
         return "—"
     key = "job_" + str(name)
     return localized(key, lang) if has_translation(key) else str(name)
-
 
 def format_duration(seconds, lang):
     """A rough length of time as a person reads it: "2 ч 15 мин", "8 с".
@@ -292,7 +289,6 @@ def is_admin(platform, user_id=None):
     except (TypeError, ValueError):
         return False
 
-
 def first_admin(platform):
     """The first bot administrator config.py names on one messenger, or None.
 
@@ -342,7 +338,6 @@ def schedule_approval():
 def admin_ids(platform):
     """Every bot administrator on one platform, as a sorted list."""
     return sorted(ADMINS.get(str(platform), set()))
-
 
 def _chat_keys(mapping, what):
     """One configured mapping of chats as '<platform>:<chat>[:<thread>]'.

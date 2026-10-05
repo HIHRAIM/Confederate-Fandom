@@ -36,13 +36,11 @@ _TAIL_RE = re.compile(
 """The tail of an article: categories, interlanguage links and the sort key.
 `before_categories` inserts in front of the first of them."""
 
-
 def prepare(ctx):
     """Nothing to compile; the check is that there is something to add."""
     if not (ctx.params.get("add_text") or "").strip():
         raise Explained("error_addtext_no_text")
     return None
-
 
 def _tail_start(text):
     """Where the category block begins, or the length of the text."""
@@ -51,7 +49,6 @@ def _tail_start(text):
         if first is None or match.start() < first:
             first = match.start()
     return len(text) if first is None else first
-
 
 def apply(ctx, page, text):
     """One page's text with the block added. -> (text, change labels)."""
@@ -78,11 +75,9 @@ def apply(ctx, page, text):
         return text, []
     return new, ["добавлен текст"]
 
-
 def summary_part(ctx, labels):
     """What this mechanic contributes to the edit summary."""
     return "добавление текста" if labels else None
-
 
 SPEC = mech.Mechanic(
     code="addtext",

@@ -192,7 +192,6 @@ COMMA_RULES = [
     ("пунктуация: запятая перед «но»", COMMA_BEFORE_NO, r", \1 "),
 ]
 
-
 def build_rules(level: str = "safe", quotes: bool = False):
     """-> the list of (name, compiled pattern, replacement).
 
@@ -209,14 +208,12 @@ def build_rules(level: str = "safe", quotes: bool = False):
     return rules
 
 SELF_TEST = [
-    # --- safe: пробелы ---
     ("safe", "Слово,другое", "Слово, другое", "пробел после запятой"),
     ("safe", "Раз;два", "Раз; два", "пробел после точки с запятой"),
     ("safe", "конец.Начало", "конец. Начало", "пробел после точки"),
     ("safe", "Что?Ответ", "Что? Ответ", "пробел после вопросительного"),
     ("safe", "текст( в скобках )", "текст (в скобках)", "пробелы в скобках"),
     ("safe", "слово(пояснение)", "слово (пояснение)", "пробел перед скобкой"),
-    # --- альтернативные окончания ---
     ("safe", "Готов(а) к бою", "Готов(-а) к бою", "альтернативное окончание"),
     ("safe", "Готов(-а) к бою", "Готов(-а) к бою", "уже с дефисом"),
     ("safe", "уважаемый(ая) читатель", "уважаемый(-ая) читатель",
@@ -225,7 +222,6 @@ SELF_TEST = [
     ("safe", "сделал(и) работу", "сделал(-и) работу", "окончание из буквы"),
     ("safe", "работал(ому) человеку", "работал(-ому) человеку",
      "окончание из трёх букв"),
-    # --- safe: чего трогать НЕЛЬЗЯ ---
     ("safe", "Цена 1,5 рубля", "Цена 1,5 рубля", "десятичная дробь"),
     ("safe", "Версия 2,0 и 3,5", "Версия 2,0 и 3,5", "дроби подряд"),
     ("safe", "А.С. Пушкин", "А.С. Пушкин", "инициалы"),
@@ -240,18 +236,14 @@ SELF_TEST = [
     ("safe", "Москва,Санкт-Петербург", "Москва, Санкт-Петербург",
      "обычный текст с заглавной справа правим"),
 
-    # --- typo: типографика ---
-
     ("typo", "Слово,, другое", "Слово, другое", "дубль запятой"),
     ("typo", "Текст.... конец", "Текст... конец", "четыре точки"),
     ("typo", "Текст... конец", "Текст... конец", "три точки не трогаем"),
     ("typo", "слово ...", "слово...", "пробел перед многоточием"),
 
-    # --- commas: запятые ---
     ("commas", "Он пришёл но ушёл", "Он пришёл, но ушёл", "перед «но»"),
     ("commas", "Было трудно зато интересно", "Было трудно, зато интересно",
      "перед «зато»"),
-    # --- commas: чего трогать НЕЛЬЗЯ ---
     ("commas", "Он пришёл, но ушёл", "Он пришёл, но ушёл",
      "запятая уже есть"),
     ("commas", "Но он ушёл", "Но он ушёл", "«Но» в начале предложения"),
@@ -264,13 +256,11 @@ SELF_TEST = [
      "«Но зато» с заглавной — тоже составной союз"),
 ]
 
-
 def _apply(text, rules):
     """Apply a list of (name, pattern, replacement) to raw text, for the tests."""
     for _name, rx, repl in rules:
         text = rx.sub(repl, text)
     return text
-
 
 def self_test():
     """Run every rule's own tests. -> the list of failures, empty when sound.
@@ -295,11 +285,9 @@ def self_test():
                             % (level, why, got, again))
     return failures
 
-
 FLAG_TYPO = "typo"
 FLAG_COMMAS = "commas"
 FLAG_QUOTES = "quotes"
-
 
 def prepare(ctx):
     """The punctuation rules of this run, checked before the first edit.
@@ -316,7 +304,6 @@ def prepare(ctx):
     return [wt.Rule(name, rx.pattern, repl, engine=wt.engine())
             for name, rx, repl in build_rules(level, FLAG_QUOTES in flags)]
 
-
 def apply(ctx, page, text):
     """One page's punctuation tidied. -> (text, the names of what changed).
 
@@ -330,11 +317,9 @@ def apply(ctx, page, text):
         return text, []
     return new, [name for name, _was, _now in changes]
 
-
 def summary_part(ctx, labels):
     """What this mechanic contributes to the edit summary."""
     return "пунктуация" if labels else None
-
 
 SPEC = mech.Mechanic(
     code="punct-ru",

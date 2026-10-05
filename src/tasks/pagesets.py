@@ -75,16 +75,13 @@ languages; the question names the one for the reader's language."""
 
 RECENT_DAYS = 7
 
-
 def needs_argument(source):
     """Whether this source has to be told what to look at."""
     return source in NEEDS_ARGUMENT
 
-
 def takes_namespaces(source):
     """Whether the namespaces a person names narrow this source at all."""
     return source not in NAMED
-
 
 def _namespaces(params, site=None):
     """The namespaces a task is confined to, as a list of numbers.
@@ -116,7 +113,6 @@ def _namespaces(params, site=None):
             out.append(number)
     return out or [DEFAULT_NAMESPACE]
 
-
 def _titles(pages, limit):
     """Page objects -> their titles, deduplicated, capped by `limit`.
 
@@ -141,7 +137,6 @@ def _titles(pages, limit):
         if limit and len(out) >= limit:
             break
     return out
-
 
 def collect(site, params, redirects=False):
     """The page list of one task. -> a list of titles, in the order to walk.
@@ -252,7 +247,6 @@ def collect(site, params, redirects=False):
 
     raise Explained("error_unknown_source", source=source)
 
-
 def _chain(first, second):
     """Two generators, one after the other, without loading either."""
     def _walk():
@@ -262,7 +256,6 @@ def _chain(first, second):
         for item in second:
             yield item
     return _walk()
-
 
 def _days_ago(days):
     """A Pywikibot timestamp `days` days back, for recentchanges' `end`."""

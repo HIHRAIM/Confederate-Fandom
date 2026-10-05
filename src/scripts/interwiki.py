@@ -112,7 +112,6 @@ _IW_LINE_RE = re.compile(
 matched at all — ``[[:uk:…]]`` is a link in the text and belongs to the
 author."""
 
-
 def _host_family(url):
     """The Fandom host family a URL belongs to. -> 'telepedia' or None.
 
@@ -123,7 +122,6 @@ def _host_family(url):
     """
     m = re.match(r"https?://([a-z0-9-]+)\.(fandom\.com|wikia\.org)/", str(url or ""), re.I)
     return m.group(1).lower() if m else None
-
 
 def prepare(ctx):
     """Work out the sister wikis, and open nothing yet. -> the state mapping.
@@ -171,7 +169,6 @@ def prepare(ctx):
     return {"langs": langs, "managed": managed, "sites": {}, "exists": {},
             "links": {}}
 
-
 def _sister_site(ctx, lang):
     """The logged-in Site of one sister wiki, opened once. -> Site or None.
 
@@ -204,7 +201,6 @@ def _sister_site(ctx, lang):
     state["sites"][lang] = site
     return site
 
-
 def _exists(ctx, lang, title):
     """Whether one page exists on one sister wiki, asked once per title.
 
@@ -232,7 +228,6 @@ def _exists(ctx, lang, title):
             wiki.use_cookies(ctx.wiki)
     state["exists"][key] = found
     return found
-
 
 def _links_of(ctx, lang, title):
     """The interlanguage links of one page on one sister wiki. -> {lang: title}.
@@ -264,7 +259,6 @@ def _links_of(ctx, lang, title):
     state["links"][key] = found
     return found
 
-
 def _mask_disabled(text):
     """Keep commented and escaped examples out of the language graph.
 
@@ -276,7 +270,6 @@ def _mask_disabled(text):
              for pattern in (wt.COMMENT_RE, wt.OPAQUE_RE)
              for match in pattern.finditer(text)]
     return wt.mask(text, wt.merge_spans(spans))
-
 
 def _strip(text, managed):
     """Take the managed language lines out. -> (rest, {lang: title}, clash).
@@ -314,14 +307,12 @@ def _strip(text, managed):
         found.setdefault(lang, title)
     return wt.unmask("\n".join(kept), saved), found, clash
 
-
 def _squash(text):
     """Text with the differences no reader sees taken out: trailing spaces,
     runs of blank lines, the ends. Two versions equal under this are the same
     page, and are not worth an edit."""
     text = re.sub(r"[ \t]+\n", "\n", text)
     return re.sub(r"\n{3,}", "\n\n", text).strip()
-
 
 def apply(ctx, page, text):
     """One page's interlanguage links completed and sorted."""
@@ -371,7 +362,6 @@ def apply(ctx, page, text):
         labels.append("интервики упорядочены")
     return new, labels
 
-
 def summary_part(ctx, labels):
     """What this mechanic contributes to the edit summary."""
     if not labels:
@@ -379,7 +369,6 @@ def summary_part(ctx, labels):
     if any(label.startswith("добавлены") for label in labels):
         return "интервики-ссылки"
     return "интервики-ссылки упорядочены"
-
 
 SPEC = mech.Mechanic(
     code="interwiki",

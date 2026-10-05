@@ -34,7 +34,6 @@ JOB = "news"
 
 _channel = {"resolved": False}
 
-
 async def _ensure_channel():
     """Make sure the bot knows which channel it is following.
 
@@ -60,7 +59,6 @@ async def _ensure_channel():
         await send_service_event("service_channel_failed",
                                  channel=SOURCE_CHANNEL, error=e)
         return source_chat_id() is not None
-
 
 async def _sync_from_preview():
     """Read the channel's public preview before a pass, if it is switched on.
@@ -99,7 +97,6 @@ async def _sync_from_preview():
         await send_service_event("backfill_done", seen=seen, added=added,
                                  updated=updated)
 
-
 async def job():
     """One news pass: catch up with the channel, then write the wikis.
 
@@ -132,7 +129,6 @@ async def job():
             await send_service_event("service_publish_failed", error=e)
         except Exception:
             pass
-
 
 def jobs():
     """The jobs of this module, for main.py to register. -> a list of dicts.

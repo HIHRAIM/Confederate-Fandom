@@ -93,12 +93,12 @@ from db.admins import (
     INVITE_DAYS,
     add_wiki_admin,
     add_wiki_admin_invite,
+    claim_wiki_admin_invite,
     get_wiki_admin,
     list_wiki_admin_invites,
     list_wiki_admins,
     remove_wiki_admin,
     remove_wiki_admin_invite,
-    take_wiki_admin_invite,
     touch_display_name,
     wiki_admins_named,
 )
@@ -144,7 +144,34 @@ from db.schedules import (
     schedule_params,
     set_enabled,
 )
-
+from db.sponsors import (
+    claim_community,
+    observe_community_role,
+    claim_wiki,
+    claimed_wikis,
+    claimed_communities,
+    community_claim,
+    due_sponsor_communities,
+    due_sponsor_wikis,
+    consume_sponsor_link_code,
+    create_sponsor_link_code,
+    known_sponsor_ids,
+    linked_discord_id,
+    linked_telegram_id,
+    paid_sponsor_tier,
+    purge_sponsor_wiki,
+    purge_sponsor_community,
+    release_community,
+    release_wiki,
+    save_sponsor_tier,
+    spend_sponsor_unit,
+    sponsor_tier,
+    sponsor_grace_days,
+    sponsor_slot_wait_days,
+    sponsor_usage,
+    unlink_sponsor_account,
+    wiki_claim,
+)
 
 def _check_for_shadowed_names():
     """Refuse to start when two submodules export the same name.
@@ -167,7 +194,7 @@ def _check_for_shadowed_names():
 
     owners = {}
     clashes = []
-    for name in ("posts", "slots", "admins", "users", "tasks", "schedules"):
+    for name in ("posts", "slots", "admins", "users", "tasks", "schedules", "sponsors"):
         module = importlib.import_module("db." + name)
         for attr in vars(module):
             if attr.startswith("_"):
@@ -184,6 +211,5 @@ def _check_for_shadowed_names():
         raise ImportError(
             "в db/ одно имя объявлено дважды, и плоский реэкспорт делает одно "
             "из них недостижимым: " + "; ".join(clashes))
-
 
 _check_for_shadowed_names()

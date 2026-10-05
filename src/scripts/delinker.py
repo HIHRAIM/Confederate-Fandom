@@ -40,7 +40,6 @@ DEFAULT_DAYS = 7
 
 LOG_LIMIT = 500
 
-
 def prepare(ctx):
     """Read the deletion log. -> the set of file names to take out.
 
@@ -95,7 +94,6 @@ def prepare(ctx):
         ctx.note("note_delinker_count", count=len(names))
     return names
 
-
 def apply(ctx, page, text):
     """One page with every deleted file taken out. -> (text, change labels)."""
     names = ctx.state.get(SPEC.code) or []
@@ -106,7 +104,6 @@ def apply(ctx, page, text):
             labels.append("убран удалённый файл «{}»".format(name))
     return text, labels
 
-
 def summary_part(ctx, labels):
     """What this mechanic contributes to the edit summary."""
     if not labels:
@@ -114,7 +111,6 @@ def summary_part(ctx, labels):
     if len(labels) == 1:
         return labels[0]
     return "убраны удалённые файлы ({})".format(len(labels))
-
 
 SPEC = mech.Mechanic(
     code="delinker",

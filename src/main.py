@@ -56,7 +56,6 @@ that ended a month ago. Fixed times rather than the "every twelve hours since
 start-up" the other bots use: a bot that is restarted often would otherwise
 back itself up on every restart."""
 
-
 async def sweep_job():
     """Throw away what a finished run no longer needs.
 
@@ -73,7 +72,6 @@ async def sweep_job():
         logger.info("nightly sweep done, %s report files removed", removed)
     except Exception:
         logger.exception("the nightly sweep failed")
-
 
 async def backup_job():
     """Send an encrypted snapshot of the database to the backup chats.
@@ -122,7 +120,6 @@ async def backup_job():
     logger.info("the database backup (%s bytes) went to %s chat(s)",
                 len(data), len(keys))
 
-
 def register_jobs():
     """Put the modules, the task queue and the sweep on the schedule.
 
@@ -136,9 +133,11 @@ def register_jobs():
                        priority=scheduler.TASK_PRIORITY)
     scheduler.register("backup", backup_job, daily_at=BACKUP_AT,
                        priority=scheduler.TASK_PRIORITY)
+    import sponsors
+    scheduler.register("sponsor_roles", sponsors.reconcile, minutes=(3,),
+                       priority=scheduler.TASK_PRIORITY)
     for name in at_start:
         scheduler.enqueue(name, reason="start-up")
-
 
 async def main():
     """Start the two messengers and the scheduler, then wait for whichever of
@@ -189,7 +188,6 @@ async def main():
                     await close
                 except Exception:
                     pass
-
 
 if __name__ == "__main__":
     asyncio.run(main())

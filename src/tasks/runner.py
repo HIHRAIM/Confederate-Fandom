@@ -47,11 +47,9 @@ _contexts = {}
 
 _busy = set()
 
-
 def is_busy(task_id):
     """Whether the worker owns this context; /stop must not close it then."""
     return task_id in _busy
-
 
 class Context:
     """Everything one running task carries, handed to every mechanic.
@@ -105,10 +103,8 @@ class Context:
         logger.info("task %s: %s", self.task_id,
                     localized(key, DEFAULT_LANG, **values))
 
-
 DEFAULT_READER = "en"
 """The language of a context before `_build_context` has found the person."""
-
 
 def render_notes(notes, lang):
     """A run's notes as the lines one reader reads. -> a list of strings.
@@ -126,13 +122,11 @@ def render_notes(notes, lang):
             lines.append(str(note))
     return lines
 
-
 def _target(row):
     """The (family, lang) of a task's wiki, from its stored key."""
     key = str(row["wiki"])
     family, _, lang = key.partition(":")
     return family, lang
-
 
 def _build_context(row):
     """Open the wiki and assemble a context for one task. -> Context.
@@ -165,7 +159,6 @@ def _build_context(row):
     ctx.reader = lang_of(requester["platform"], requester["id"])
     return ctx
 
-
 def context_for(row):
     """Reuse preparation, but always read the current preview flag from SQL.
 
@@ -188,19 +181,16 @@ def context_for(row):
     ctx.dry_run = bool(row["dry_run"])
     return ctx
 
-
 def forget(task_id):
     """Drop a finished task's context so its rules stop taking up room."""
     ctx = _contexts.pop(task_id, None)
     if ctx is not None and ctx.diffs is not None:
         ctx.diffs.close()
 
-
 def _prepare(ctx):
     """Let every mechanic get itself ready. Raises on anything unusable."""
     for mechanic in ctx.mechanics:
         ctx.state[mechanic.code] = mechanic.prepare(ctx)
-
 
 def plan(task_id):
     """Retain the preparing context while the messenger may stop this task."""
@@ -209,7 +199,6 @@ def plan(task_id):
         return _plan(task_id)
     finally:
         _busy.discard(task_id)
-
 
 def _plan(task_id):
     """Check everything and settle the page list. -> a mapping for the person.
@@ -255,6 +244,12 @@ def _plan(task_id):
         titles = list(dict.fromkeys(titles))
         pages = db.set_pages(task_id, titles)
         sample = titles[:PREVIEW_TITLES]
+        if requester.get("role") == access.SPONSOR:
+            import sponsors
+            owner = sponsors.canonical_id(requester["platform"], requester["id"])
+            limit = sponsors.limits(db.sponsor_tier(owner))["pages"]
+            if pages > limit:
+                raise access.Refusal("sponsor_page_limit", limit=limit)
         if not pages:
             ctx.note("note_no_pages")
 
@@ -266,7 +261,6 @@ def _plan(task_id):
             "dry_run": ctx.dry_run,
             "mechanics": [m.code for m in ctx.mechanics],
             "wiki": ctx.wiki}
-
 
 def _compose_summary(ctx, per_mechanic):
     """The edit summary of one page, from what actually happened to it.
@@ -284,7 +278,6 @@ def _compose_summary(ctx, per_mechanic):
     if len(parts) == 1:
         return parts[0]
     return "{} и {}".format(", ".join(parts[:-1]), parts[-1])
-
 
 def _walk_page(ctx, row):
     """One page through every mechanic. -> (state, note).
@@ -370,7 +363,6 @@ def _walk_page(ctx, row):
 
     return ("done" if edited else "skip"), ("; ".join(notes) or None)
 
-
 def run_chunk(task_id):
     """Keep ownership of the context until the worker finishes its chunk."""
     _busy.add(task_id)
@@ -378,7 +370,6 @@ def run_chunk(task_id):
         return _run_chunk(task_id)
     finally:
         _busy.discard(task_id)
-
 
 def _run_chunk(task_id):
     """Walk one chunk of a task's pages. -> True while there is more to do.
@@ -429,7 +420,6 @@ def _run_chunk(task_id):
 
     return bool(db.next_pages(task_id, cursor, 1))
 
-
 def finish(task_id):
     """Close a task while retaining exclusive ownership of its context."""
     _busy.add(task_id)
@@ -437,7 +427,6 @@ def finish(task_id):
         return _finish(task_id)
     finally:
         _busy.discard(task_id)
-
 
 def _finish(task_id):
     """Close a task: the standalone mechanics, the files, the counters.

@@ -165,6 +165,8 @@ CREATE TABLE IF NOT EXISTS tasks (
     requested_by_name TEXT,
     requested_by_wiki_user TEXT,
     reply_chat TEXT,
+    community_platform TEXT,
+    community_id TEXT,
     schedule_id INTEGER,
     created_at INTEGER,
     started_at INTEGER,
@@ -219,10 +221,57 @@ CREATE TABLE IF NOT EXISTS schedules (
     created_by_name TEXT,
     created_by_wiki_user TEXT,
     reply_chat TEXT,
+    community_platform TEXT,
+    community_id TEXT,
     created_at INTEGER,
     last_run INTEGER,
     next_run INTEGER,
     approval TEXT
+);
+
+-- sponsor_tiers and sponsor_wikis keep subscription identity and wiki slots
+-- separate from the operator-appointed wiki_admins table.
+CREATE TABLE IF NOT EXISTS sponsor_tiers (
+    discord_id TEXT PRIMARY KEY,
+    tier INTEGER NOT NULL,
+    checked_at INTEGER NOT NULL,
+    grace_since INTEGER,
+    grace_tier INTEGER,
+    community_role_since INTEGER,
+    community_role_present INTEGER NOT NULL DEFAULT 0,
+    slot_changed_at INTEGER
+);
+CREATE TABLE IF NOT EXISTS sponsor_wikis (
+    wiki TEXT PRIMARY KEY,
+    discord_id TEXT NOT NULL,
+    wiki_user TEXT NOT NULL,
+    claimed_at INTEGER NOT NULL
+);
+-- Sponsor communities are explicit so expiry never guesses which guild or
+-- group belongs to a wiki. An admin: owner is permanent operator work.
+CREATE TABLE IF NOT EXISTS sponsor_communities (
+    platform TEXT NOT NULL,
+    community_id TEXT NOT NULL,
+    discord_id TEXT NOT NULL,
+    claimed_at INTEGER NOT NULL,
+    PRIMARY KEY (platform, community_id)
+);
+CREATE TABLE IF NOT EXISTS sponsor_usage (
+    discord_id TEXT NOT NULL,
+    day TEXT NOT NULL,
+    tasks INTEGER NOT NULL DEFAULT 0,
+    pages INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (discord_id, day)
+);
+CREATE TABLE IF NOT EXISTS sponsor_account_links (
+    discord_id TEXT PRIMARY KEY,
+    telegram_id TEXT NOT NULL UNIQUE,
+    linked_at INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS sponsor_link_codes (
+    discord_id TEXT PRIMARY KEY,
+    code TEXT NOT NULL UNIQUE,
+    expires_at INTEGER NOT NULL
 );
 """
 
@@ -253,6 +302,19 @@ def _add_missing_columns(cur, conn):
         },
         "schedules": {
             "approval": "TEXT",
+            "community_platform": "TEXT",
+            "community_id": "TEXT",
+        },
+        "tasks": {
+            "community_platform": "TEXT",
+            "community_id": "TEXT",
+        },
+        "sponsor_tiers": {
+            "grace_since": "INTEGER",
+            "grace_tier": "INTEGER",
+            "community_role_since": "INTEGER",
+            "community_role_present": "INTEGER NOT NULL DEFAULT 0",
+            "slot_changed_at": "INTEGER",
         },
     }
     for table, columns in wanted.items():

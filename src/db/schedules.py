@@ -26,7 +26,6 @@ from db import conn, cur
 
 KINDS = ("hourly", "daily", "weekly")
 
-
 def _parse_ints(text):
     """'0,15,30' -> [0, 15, 30]; anything unparseable is dropped."""
     out = []
@@ -34,7 +33,6 @@ def _parse_ints(text):
         if part.isdigit():
             out.append(int(part))
     return sorted(set(out))
-
 
 def next_due(kind, minutes=None, hour=None, minute=None, weekdays=None, now=None):
     """When a schedule of this shape is next due. -> a unix timestamp.
@@ -71,14 +69,12 @@ def next_due(kind, minutes=None, hour=None, minute=None, weekdays=None, now=None
             return int(moment.timestamp())
     return int((now + timedelta(days=7)).timestamp())
 
-
 PENDING = "pending"
 """The approval state of a schedule no bot administrator has said yes to."""
 
-
 def create_schedule(wiki, mechanics, params, kind, requester, minutes=None,
                     hour=None, minute=None, weekdays=None, reply_chat=None,
-                    pending=False):
+                    pending=False, community_platform=None, community_id=None):
     """Add a repeating run. -> its id.
 
     `pending` makes it wait for a bot administrator (discord_bot/approvals.py):
@@ -91,21 +87,22 @@ def create_schedule(wiki, mechanics, params, kind, requester, minutes=None,
         INSERT INTO schedules
             (wiki, mechanics, params, kind, minutes, hour, minute, weekdays,
              enabled, created_by_platform, created_by_id, created_by_name,
-             created_by_wiki_user, reply_chat, created_at, next_run, approval)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             created_by_wiki_user, reply_chat, community_platform,
+             community_id, created_at, next_run, approval)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (str(wiki), json.dumps(list(mechanics), ensure_ascii=False),
          json.dumps(dict(params or {}), ensure_ascii=False),
          str(kind), minutes, hour, minute, weekdays, 0 if pending else 1,
          (requester or {}).get("platform"), (requester or {}).get("id"),
          (requester or {}).get("name"), (requester or {}).get("wiki_user"),
-         reply_chat, now,
+         reply_chat, community_platform,
+         str(community_id) if community_id is not None else None, now,
          next_due(kind, minutes, hour, minute, weekdays),
          PENDING if pending else None),
     )
     conn.commit()
     return row.lastrowid
-
 
 def is_pending(row):
     """Whether a schedule still waits for a bot administrator's decision."""
@@ -113,7 +110,6 @@ def is_pending(row):
         return row["approval"] == PENDING
     except (IndexError, KeyError, TypeError):
         return False
-
 
 def approve_schedule(schedule_id):
     """Let a pending schedule run. -> its row, or None when it was not pending.
@@ -132,7 +128,6 @@ def approve_schedule(schedule_id):
     conn.commit()
     return get_schedule(schedule_id)
 
-
 def reject_schedule(schedule_id):
     """Throw a pending schedule away. -> the row it was, or None."""
     row = get_schedule(schedule_id)
@@ -143,12 +138,10 @@ def reject_schedule(schedule_id):
     conn.commit()
     return row
 
-
 def get_schedule(schedule_id):
     """One schedule's row, or None."""
     return cur.execute("SELECT * FROM schedules WHERE id=?",
                        (int(schedule_id),)).fetchone()
-
 
 def list_schedules(enabled_only=False):
     """Every repeating run, oldest first."""
@@ -157,14 +150,12 @@ def list_schedules(enabled_only=False):
             "SELECT * FROM schedules WHERE enabled=1 ORDER BY id").fetchall()
     return cur.execute("SELECT * FROM schedules ORDER BY id").fetchall()
 
-
 def due_schedules(now=None):
     """The schedules whose moment has come."""
     moment = int(now or time.time())
     return cur.execute(
         "SELECT * FROM schedules WHERE enabled=1 AND next_run IS NOT NULL "
         "AND next_run <= ? ORDER BY next_run", (moment,)).fetchall()
-
 
 def next_schedule(now=None):
     """The enabled repeating run that comes due soonest, or None.
@@ -178,7 +169,6 @@ def next_schedule(now=None):
         "SELECT * FROM schedules WHERE enabled=1 AND next_run IS NOT NULL "
         "AND next_run > ? ORDER BY next_run LIMIT 1", (moment,)).fetchone()
 
-
 def mark_fired(row):
     """Record that a schedule has just fired and move it to its next moment."""
     cur.execute(
@@ -188,7 +178,6 @@ def mark_fired(row):
                   row["weekdays"]),
          int(row["id"])))
     conn.commit()
-
 
 def set_enabled(schedule_id, enabled):
     """Switch a repeating run on or off without losing it. -> whether it exists.
@@ -209,7 +198,6 @@ def set_enabled(schedule_id, enabled):
     conn.commit()
     return True
 
-
 def delete_schedule(schedule_id):
     """Remove a repeating run. -> whether there was one."""
     existed = get_schedule(schedule_id) is not None
@@ -217,14 +205,12 @@ def delete_schedule(schedule_id):
     conn.commit()
     return existed
 
-
 def schedule_mechanics(row):
     """The mechanic codes of one schedule, as a list."""
     try:
         return json.loads(row["mechanics"])
     except (TypeError, ValueError):
         return []
-
 
 def schedule_params(row):
     """The parameters of one schedule, as a dict."""

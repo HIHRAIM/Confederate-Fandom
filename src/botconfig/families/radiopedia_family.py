@@ -5,7 +5,6 @@
 """
 from pywikibot import family
 
-
 class Family(family.Family):
 
     """Радиопедия на Fandom."""

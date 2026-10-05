@@ -117,11 +117,9 @@ exactly what must not be broken across a line. ``\\s`` becomes ``[ \\t]`` so
 the rule normalises only the variants written with ordinary spaces («и т.п.»
 -> «и т. п.») and leaves the already-correct ones alone."""
 
-
 Options = wt.Options
 """The flags of one pass live in wikitools: both language modules and the
 task runner pass the same object around."""
-
 
 def strip_awb_guards(pattern: str) -> tuple[str, bool]:
     """Remove AWB's guard window. -> (pattern, whether there was one).
@@ -133,7 +131,6 @@ def strip_awb_guards(pattern: str) -> tuple[str, bool]:
     new = _AWB_GUARD_BEHIND.sub("", pattern)
     new = _AWB_GUARD_AHEAD.sub("", new)
     return new, new != pattern
-
 
 def load_ru_typos(path: str = None, strip_guards: bool = True,
                   warn: bool = True) -> tuple[list, dict]:
@@ -173,14 +170,12 @@ def load_ru_typos(path: str = None, strip_guards: bool = True,
                 print(f"  ! typos_ru.xml:{line} «{name}»: {exc}", file=sys.stderr)
     return rules, stats
 
-
 def punct_rules(level, quotes: bool = False):
     """The punctuation rules as ordinary wt.Rule, so that masking applies."""
     if not level or level == "off":
         return []
     return [wt.Rule(name, rx.pattern, repl, engine=regex or re)
             for name, rx, repl in punct_ru.build_rules(level, quotes)]
-
 
 def build_rules(typos: bool = True, punct_level: str = "safe",
                 quotes: bool = False, strip_guards: bool = True):
@@ -197,7 +192,6 @@ def build_rules(typos: bool = True, punct_level: str = "safe",
     rules += punct_rules(punct_level, quotes)
     return rules
 
-
 def process(text: str, rules, opts) -> tuple[str, list]:
     """One page's text through the rules, with the protection the flags ask for."""
     return wt.process_text(
@@ -211,7 +205,6 @@ def process(text: str, rules, opts) -> tuple[str, list]:
         skip_foreign=opts.skip_foreign)
 
 SELF_TEST = [
-    # --- опечатки из typos_ru.xml (все проверены на реальном списке) ---
     ("Абанент не отвечает.", "Абонент не отвечает.", "опечатка: абонент"),
     ("Это абракодабра.", "Это абракадабра.", "опечатка: абракадабра"),
     ("Он учасник соревнований.", "Он участник соревнований.",
@@ -222,7 +215,6 @@ SELF_TEST = [
      "опечатка: количество"),
     ("Он придти не смог.", "Он прийти не смог.", "опечатка: прийти"),
 
-    # --- защита: то же, что у uk-bot ---
     ("[[Категория:Абанент]]", "[[Категория:Абанент]]", "категория"),
     ("[[Файл:Учасник.jpg|мини|Учасник]]", "[[Файл:Учасник.jpg|мини|Учасник]]",
      "файл"),
@@ -236,7 +228,6 @@ SELF_TEST = [
     ("Ссылка [https://ex.com/учасник учасник тут].",
      "Ссылка [https://ex.com/учасник учасник тут].", "внешняя ссылка"),
 
-    # --- иноязычные вставки (то, ради чего AWB городил окно {30}) ---
     ("Він учасник змагань.", "Він учасник змагань.",
      "украинское предложение не трогаем"),
     ("Ён удзельнік спаборніцтваў.", "Ён удзельнік спаборніцтваў.",
@@ -246,7 +237,6 @@ SELF_TEST = [
      "русское правим, украинское рядом — нет"),
 ]
 
-# Главное отличие от AWB: правило срабатывает и в первых 30 символах.
 SELF_TEST_LEAD = [
     ("Учасник соревнований прибыл.", "Участник соревнований прибыл.",
      "срабатывает в самом начале статьи (AWB — нет)"),
@@ -261,7 +251,6 @@ SELF_TEST_COSMETIC = [
     ("Слово , другое .", "Слово, другое.", "пробел перед знаком"),
     ("Иван - директор", "Иван — директор", "дефис -> тире"),
     ("а\n\n\n\n\nб\n", "а\n\nб\n", "пустые строки"),
-    # Реальный случай с gfl:ru — калибр, а не конец предложения.
     ("A .223 competition cartridge", "A .223 competition cartridge",
      "точка перед цифрой: калибр не трогаем"),
     (".30-64 Rounds и .300BLK", ".30-64 Rounds и .300BLK",
@@ -271,7 +260,6 @@ SELF_TEST_COSMETIC = [
     ("Число 3 . 14 тут", "Число 3. 14 тут",
      "точка с пробелом после — обычная пунктуация"),
 
-    # --- двойные пробелы ---
     ("Слово  другое", "Слово другое", "двойной пробел -> одиночный"),
     ("Раз   два    три", "Раз два три", "три и четыре пробела"),
     ("Иван  -  директор", "Иван — директор",
@@ -289,24 +277,18 @@ SELF_TEST_COSMETIC = [
      "отступ снимается, внутренний двойной схлопывается"),
 ]
 
-# В списке `&nbsp;` менялся на обычный пробел — неразрывность терялась.
-# REPLACE_FIXES возвращает настоящий U+00A0.
 SELF_TEST_NBSP = [
     ("Всего 10&nbsp;000 штук.", "Всего 10 000 штук.",
      "&nbsp; -> неразрывный пробел, а не обычный"),
-    # Правильно набранные сокращения не трогаем: там неразрывный
-    # пробел, и менять его на обычный — деградация.
     ("яблоки и т. п. тут", "яблоки и т. п. тут",
      "«и т. п.» с неразрывными — не трогаем"),
     ("верно, т. е. так", "верно, т. е. так",
      "«т. е.» с неразрывным — не трогаем"),
-    # А слипшиеся — нормализуем.
     ("яблоки и т.п. тут", "яблоки и т. п. тут",
      "«и т.п.» -> «и т. п.»"),
     ("верно, т.е. так", "верно, т. е. так", "«т.е.» -> «т. е.»"),
 ]
 
-# Пунктуация внутри бота: важно, что маскировка защищает разметку.
 SELF_TEST_PUNCT = [
     ("Слово,другое тут", "Слово, другое тут", "пробел после запятой"),
     ("[[Файл:А,Б.jpg|мини|Подпись]]", "[[Файл:А,Б.jpg|мини|Подпись]]",
@@ -318,7 +300,6 @@ SELF_TEST_PUNCT = [
     ("Цена 1,5 рубля", "Цена 1,5 рубля", "дробь"),
 ]
 
-# Все сочетания трёх видов правок.
 SUMMARY_TEST = [
     ("==Раздел==", SUMMARY_COSMETIC, "только косметика"),
     ("Он учасник.", SUMMARY_LANG, "только опечатка"),
@@ -333,7 +314,6 @@ SUMMARY_TEST = [
      f"{SUMMARY_LANG}, {SUMMARY_PUNCT} и {SUMMARY_COSMETIC}",
      "все три вида"),
 ]
-
 
 def self_test(rules=None, punct_level="safe"):
     """Run every rule's own tests. -> the list of failures, empty when sound.
@@ -405,7 +385,6 @@ def self_test(rules=None, punct_level="safe"):
 
     return failures + punct_ru.self_test()
 
-
 def prepare(ctx):
     """Compile the rule set of this run, and check it before the first edit.
 
@@ -432,7 +411,6 @@ def prepare(ctx):
                             fix_labels=FLAG_LABELS in flags,
                             skip_refs=FLAG_SKIP_REFS in flags)}
 
-
 def apply(ctx, page, text):
     """One page's text corrected. -> (text, the names of what was changed)."""
     state = ctx.state.get(SPEC.code) or {}
@@ -441,13 +419,11 @@ def apply(ctx, page, text):
         return text, []
     return new, [name for name, _was, _now in changes]
 
-
 def summary_part(ctx, labels):
     """The summary this run earned: exactly the kinds of change it made."""
     if not labels:
         return None
     return wt.make_summary([(name, "", "") for name in labels], SUMMARY_PARTS)
-
 
 FLAG_COSMETIC = "cosmetic"
 FLAG_PUNCT_OFF = "punct_off"

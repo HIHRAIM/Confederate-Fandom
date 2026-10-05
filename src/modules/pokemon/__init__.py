@@ -36,7 +36,6 @@ JOB = "species"
 
 from modules.pokemon.rules import find_derived, fix_text, fix_title
 
-
 async def job():
     """One walk of the species wiki, in the worker thread Pywikibot needs."""
     from utils import send_service_event
@@ -73,7 +72,6 @@ async def job():
         except Exception:
             pass
 
-
 def setting(name, default=None):
     """One of this module's settings, or its default when config.py does not
     name it: a deployment that does not walk the species wiki carries none of
@@ -83,11 +81,9 @@ def setting(name, default=None):
     value = getattr(config, name, default)
     return default if value is None else value
 
-
 def enabled():
     """Whether this deployment walks the species wiki at all."""
     return bool(setting("SPECIES_WIKI"))
-
 
 def jobs():
     """The jobs of this module, for main.py to register. -> a list of dicts.

@@ -47,7 +47,6 @@ Only a parameter that declares `blank` reads it that way. Everywhere else a
 «0» is what was typed: a search for the digit zero is a search, not a
 mistake, and neither is a hyphen as a replacement."""
 
-
 class Param:
     """One thing a mechanic has to be told.
 
@@ -146,7 +145,6 @@ class Param:
             return parse_flags(raw, self.option_values())
         raise ValueError("this kind is not parsed here")
 
-
 def strip_fences(text):
     """A pasted block with its ``` fences taken off, if it has any.
 
@@ -164,7 +162,6 @@ def strip_fences(text):
         if lines and lines[-1].strip().endswith("```"):
             lines[-1] = lines[-1].strip()[:-3]
     return "\n".join(lines).strip()
-
 
 def parse_pairs(text):
     """A block of «old new» lines. -> [(old, new), ...], in the order given.
@@ -193,7 +190,6 @@ def parse_pairs(text):
             pairs.append((old, new))
     return pairs
 
-
 def parse_flags(text, values):
     """«1 3 4» -> the values chosen; «0» or «-» -> none. Raises on nonsense.
 
@@ -219,11 +215,9 @@ def parse_flags(text, values):
             chosen.append(value)
     return chosen
 
-
 def flag_params(params):
     """The switches of a mechanic — the ones that go into one FLAGS message."""
     return [p for p in params if p.kind == FLAGS]
-
 
 def asked_params(params, values=None):
     """The parameters the dialog actually puts a question about.
@@ -238,7 +232,6 @@ def asked_params(params, values=None):
     """
     return [p for p in params
             if (p.required or p.kind == FLAGS) and p.wanted(values)]
-
 
 def fill_defaults(params, values):
     """Put the defaults in for everything the dialog did not ask about."""

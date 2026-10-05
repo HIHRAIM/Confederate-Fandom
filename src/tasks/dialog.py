@@ -48,13 +48,22 @@ WHEN_OPTIONS = ((ONCE, "when_once"), (HOURLY, "when_hourly"),
                 (DAILY, "when_daily"), (WEEKLY, "when_weekly"))
 
 MAX_ATTEMPTS = 3
+MAX_LIST_BYTES = 128 * 1024
+
+def decode_list_document(filename, data):
+    """Read a bounded UTF-8 text list without storing the document."""
+    if not str(filename or "").lower().endswith(".txt") or not data or len(data) > MAX_LIST_BYTES:
+        raise ValueError("expected a nonempty UTF-8 .txt file of at most 128 KiB")
+    try:
+        return data.decode("utf-8-sig")
+    except UnicodeError as error:
+        raise ValueError("text file is not UTF-8") from error
 
 SUMMARY_BY_BOT = ("0", "-", "—")
 """The answers that leave the edit summary to the bot. The question offers
 «0», like every other question that can be answered with "nothing"; the
 dashes are what it used to offer, still taken because a summary made of one
 dash is never what somebody meant."""
-
 
 class Conversation:
     """What each messenger has to provide for the dialog to run.
@@ -77,10 +86,13 @@ class Conversation:
         """Send a question, wait for the answer. -> the text, or None."""
         raise NotImplementedError
 
+    async def ask_text_or_file(self, text):
+        """Read a pasted list; messenger subclasses also accept .txt files."""
+        return await self.ask(text)
+
     async def say(self, text):
         """Send something that needs no answer."""
         raise NotImplementedError
-
 
 def mechanics_entries(lang):
     """The catalogue as data, one dict per mechanic, in the numbered order.
@@ -104,7 +116,6 @@ def mechanics_entries(lang):
         })
     return entries
 
-
 def mechanics_list(lang):
     """The catalogue as one plain block of text, for the dialog's question.
 
@@ -123,14 +134,12 @@ def mechanics_list(lang):
             if entry["destructive"] else ""))
     return "\n".join(lines)
 
-
 def _numbered(lang, header, options):
     """A numbered list of (value, i18n key) pairs, as one message."""
     lines = [header]
     for index, (_value, key) in enumerate(options, 1):
         lines.append("{}. {}".format(index, localized(key, lang)))
     return "\n".join(lines)
-
 
 async def _ask_choice(conv, header, options, error_key="dialog_bad_choice"):
     """Ask a numbered question until the answer is one of the numbers."""
@@ -149,14 +158,20 @@ async def _ask_choice(conv, header, options, error_key="dialog_bad_choice"):
         await conv.say(localized(error_key, conv.lang))
     return None
 
-
 async def _ask_param(conv, param, values):
     """Ask for one parameter until the answer parses. -> the value or None."""
     if param.kind == CHOICE:
         return await _ask_choice(conv, localized(param.label, conv.lang),
                                  param.options)
     for _attempt in range(MAX_ATTEMPTS):
-        answer = await conv.ask(localized(param.label, conv.lang))
+        try:
+            if param.name in ("file_names", "file_pages", "file_categories"):
+                answer = await conv.ask_text_or_file(localized(param.label, conv.lang))
+            else:
+                answer = await conv.ask(localized(param.label, conv.lang))
+        except ValueError:
+            await conv.say(localized("dialog_file_list_invalid", conv.lang))
+            continue
         if answer is None:
             return None
         try:
@@ -164,7 +179,6 @@ async def _ask_param(conv, param, values):
         except ValueError:
             await conv.say(localized("dialog_bad_value", conv.lang))
     return None
-
 
 async def _ask_flags(conv, mechanics):
     """Every switch of every chosen mechanic, in one numbered message.
@@ -214,7 +228,6 @@ async def _ask_flags(conv, mechanics):
         return result
     return None
 
-
 async def _ask_pageset(conv):
     """Where the pages come from: the source and its argument."""
     options = tuple((code, key) for code, key, _needs in pagesets.SOURCES)
@@ -249,7 +262,6 @@ async def _ask_pageset(conv):
     raw = limit.strip().rstrip(".")
     params["limit"] = int(raw) if raw.isdigit() else 0
     return params
-
 
 async def _ask_when(conv):
     """Once, or on a schedule — and if on a schedule, when exactly.
@@ -302,7 +314,6 @@ async def _ask_when(conv):
     return {"kind": WEEKLY, "hour": hour, "minute": minute,
             "weekdays": ",".join(str(day) for day in days)}
 
-
 def _minutes(text):
     """«0, 30» -> [0, 30]; None when anything is not a minute of the hour.
 
@@ -317,7 +328,6 @@ def _minutes(text):
         if int(token) not in minutes:
             minutes.append(int(token))
     return minutes or None
-
 
 def _weekdays(text):
     """«1, 4» -> [0, 3]: the days as a person numbers them, Monday first and
@@ -335,7 +345,6 @@ def _weekdays(text):
         if int(token) - 1 not in days:
             days.append(int(token) - 1)
     return days or None
-
 
 async def build(conv, tokens=()):
     """The whole conversation. -> the new task's id, or None.
@@ -362,11 +371,16 @@ async def build(conv, tokens=()):
         answer = await conv.ask(localized("dialog_pick_mechanics", conv.lang))
         if answer is None:
             return None
+
         mechanics, unknown = registry.find_all(answer.replace(",", " ").split())
         if unknown or not mechanics:
             await conv.say(localized("run_unknown", conv.lang,
                                      what=", ".join(unknown) or "—"))
             return None
+
+    if requester.get("role") == access.SPONSOR and any(m.standalone for m in mechanics):
+        await conv.say(localized("sponsor_standalone_disabled", conv.lang))
+        return None
 
     target = None
     for _attempt in range(MAX_ATTEMPTS):
@@ -395,6 +409,17 @@ async def build(conv, tokens=()):
                                  error=explain(e, conv.lang)))
         return None
     wiki_key = "{}:{}".format(family, lang)
+    if requester.get("role") == access.SPONSOR:
+        import sponsors
+        owner = sponsors.canonical_id(requester["platform"], requester["id"])
+        community_id = getattr(conv, "community_id", None)
+        if community_id is not None and not sponsors.can_use_community(
+                owner, requester["platform"], community_id):
+            await conv.say(localized("sponsor_community_required", conv.lang))
+            return None
+        if not sponsors.can_use_wiki(owner, wiki_key):
+            await conv.say(localized("sponsor_wiki_required", conv.lang, wiki=wiki_key))
+            return None
 
     params = {}
     if registry.needs_source(mechanics):
@@ -436,6 +461,14 @@ async def build(conv, tokens=()):
             return None
 
     codes = [mechanic.code for mechanic in mechanics]
+    if requester.get("role") == access.SPONSOR:
+        import sponsors
+        community_id = getattr(conv, "community_id", None)
+        owner = sponsors.canonical_id(requester["platform"], requester["id"])
+        if community_id is not None and not sponsors.can_use_community(
+                owner, requester["platform"], community_id):
+            await conv.say(localized("sponsor_community_required", conv.lang))
+            return None
     if when["kind"] != ONCE:
         from utils import schedule_approval
 
@@ -446,7 +479,10 @@ async def build(conv, tokens=()):
             kind=when["kind"], requester=requester,
             minutes=when.get("minutes"), hour=when.get("hour"),
             minute=when.get("minute"), weekdays=when.get("weekdays"),
-            reply_chat=conv.chat_key, pending=pending)
+            reply_chat=conv.chat_key, pending=pending,
+            community_platform=(requester["platform"] if getattr(conv, "community_id", None)
+                                is not None else None),
+            community_id=getattr(conv, "community_id", None))
         described = describe_schedule(db.get_schedule(schedule_id), conv.lang)
         if pending:
             from tasks import notify
@@ -465,8 +501,17 @@ async def build(conv, tokens=()):
                                  mechanics=", ".join(codes), when=described))
         return None
 
+    if requester.get("role") == access.SPONSOR:
+        import sponsors
+        owner = sponsors.canonical_id(requester["platform"], requester["id"])
+        if not sponsors.spend_task(owner):
+            await conv.say(localized("sponsor_task_limit", conv.lang))
+            return None
     task_id = db.create_task(wiki=wiki_key, mechanics=codes, params=params,
-                             requester=requester, reply_chat=conv.chat_key)
+                             requester=requester, reply_chat=conv.chat_key,
+                             community_platform=(requester["platform"] if getattr(conv, "community_id", None)
+                                                 is not None else None),
+                             community_id=getattr(conv, "community_id", None))
     await conv.say(localized("task_created", conv.lang, id=task_id,
                              wiki=wiki_key, mechanics=", ".join(codes)))
     notice = task_queue.queue_notice(task_id, conv.lang)
@@ -474,7 +519,6 @@ async def build(conv, tokens=()):
         await conv.say(notice)
     scheduler.enqueue(task_queue.JOB, reason="task {} created".format(task_id))
     return task_id
-
 
 def describe_schedule(row, lang):
     """When a repeating run happens, as a person reads it."""

@@ -46,12 +46,10 @@ CHAIN_LIMIT = 10
 
 _LINK_RE = re.compile(r"\[\[([^\[\]\|#]+)(#[^\[\]\|]*)?(\|([^\[\]]*))?\]\]")
 
-
 def redirects(params):
     """Which pages the chosen mode works on: redirects for «двойные» and
     «битые», ordinary pages for «ссылки» (see `Mechanic.redirects`)."""
     return (params.get("redirect_mode") or DOUBLE) != LINKS
-
 
 def _redirect_link(ctx, title):
     """The link a redirect page carries, pointing at `title`.
@@ -68,7 +66,6 @@ def _redirect_link(ctx, title):
         namespace = 0
     return "[[{}{}]]".format(":" if namespace in (6, 14) else "", title)
 
-
 def prepare(ctx):
     """A cache of what each title resolves to, shared by every page of the run.
 
@@ -76,7 +73,6 @@ def prepare(ctx):
     again; without the cache that is one request per link per page.
     """
     return {"resolved": {}, "exists": {}}
-
 
 def _final_target(ctx, title):
     """Follow a redirect chain to its end. -> (title, exists, hops).
@@ -119,7 +115,6 @@ def _final_target(ctx, title):
     result = (current, exists, hops)
     cache[title] = result
     return result
-
 
 def apply(ctx, page, text):
     """One page's redirects put right. -> (text, change labels)."""
@@ -189,7 +184,6 @@ def apply(ctx, page, text):
         return text, []
     return new, ["ссылка на перенаправление ×{}".format(count[0])]
 
-
 def summary_part(ctx, labels):
     """What this mechanic contributes to the edit summary."""
     if not labels:
@@ -198,7 +192,6 @@ def summary_part(ctx, labels):
     if mode == DOUBLE:
         return "исправление двойного перенаправления"
     return "ссылки на перенаправления заменены на прямые"
-
 
 SPEC = mech.Mechanic(
     code="redirect",

@@ -40,7 +40,6 @@ MESSAGES = {
 """The commit messages when config.MYARCHIVE names none. The repository is
 the operator's, so its language is theirs to choose there."""
 
-
 def repo_path(lang, subdomain, page, namespaces):
     """Where one page lives in the repository."""
     title = page["title"]
@@ -52,11 +51,9 @@ def repo_path(lang, subdomain, page, namespaces):
             title += ".lua"
     return "/".join((ROOT, lang, subdomain, title))
 
-
 def blob_sha(data):
     """The hash git gives a file with these bytes."""
     return hashlib.sha1(b"blob %d\0" % len(data) + data).hexdigest()
-
 
 def _same(stored, data):
     """Equal but for line endings and trailing blank lines."""
@@ -64,14 +61,12 @@ def _same(stored, data):
         return raw.replace(b"\r\n", b"\n").rstrip()
     return stored is not None and norm(stored) == norm(data)
 
-
 def _message(editors, owner, messages):
     """The first line of an update's commit message."""
     others = [name for name in editors if name != owner]
     if not others:
         return messages["updated"]
     return messages["updated_by"].format(editors=", ".join(editors))
-
 
 def _trailers(github, editors, coauthors, me):
     """The Co-authored-by lines for the editors config links to GitHub."""
@@ -85,7 +80,6 @@ def _trailers(github, editors, coauthors, me):
         if address and line not in lines:
             lines.append(line)
     return lines
-
 
 def _group(urls):
     """The configured addresses by wiki, in the order given. -> ({(host,
@@ -101,7 +95,6 @@ def _group(urls):
         if title not in titles:
             titles.append(title)
     return wikis, bad
-
 
 def run_pass(cfg, token):
     """Archive every configured page once. -> a mapping of counters and lists."""

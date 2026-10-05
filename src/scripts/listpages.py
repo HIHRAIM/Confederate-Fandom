@@ -24,11 +24,9 @@ FLAG_TIMESTAMP = "timestamp"
 FLAG_CATEGORIES = "categories"
 FLAG_REDIRECTS = "redirects"
 
-
 def prepare(ctx):
     """Nothing to build; the report is collected page by page."""
     return None
-
 
 def collect(ctx, page):
     """One line of the report for one page."""
@@ -56,7 +54,6 @@ def collect(ctx, page):
         parts.append(localized("report_unreadable", ctx.reader,
                                error=type(e).__name__))
     return ["\t".join(parts)]
-
 
 SPEC = mech.Mechanic(
     code="listpages",

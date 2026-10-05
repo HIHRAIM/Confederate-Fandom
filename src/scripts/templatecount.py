@@ -22,14 +22,12 @@ from tasks.params import FLAGS, TEXT, Param
 FLAG_LIST = "list"
 FLAG_REDIRECTS = "with_redirects"
 
-
 def prepare(ctx):
     """Check that there is something to count."""
     names = _names(ctx)
     if not names:
         raise Explained("error_templatecount_none")
     return names
-
 
 def _names(ctx):
     """The template names of this run, without their namespace prefix."""
@@ -43,7 +41,6 @@ def _names(ctx):
         if name and name not in out:
             out.append(name)
     return out
-
 
 def finish(ctx):
     """Ask the wiki and build the report. -> the lines of the file."""
@@ -81,7 +78,6 @@ def finish(ctx):
 
     ctx.note("note_templatecount_total", count=total)
     return lines
-
 
 SPEC = mech.Mechanic(
     code="templatecount",

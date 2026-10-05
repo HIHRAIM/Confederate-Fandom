@@ -28,7 +28,6 @@ FLAG_REGEX = "regex"
 FLAG_NOCASE = "nocase"
 FLAG_PROTECT = "protect"
 
-
 def prepare(ctx):
     """Compile the pattern once for the whole run. -> the compiled pattern.
 
@@ -48,7 +47,6 @@ def prepare(ctx):
         return engine.compile(pattern, options)
     except Exception as e:
         raise Explained("error_bad_regex", pattern=find, error=str(e))
-
 
 def apply(ctx, page, text):
     """One page's text with the replacement made. -> (text, change labels)."""
@@ -71,7 +69,6 @@ def apply(ctx, page, text):
         return text, []
     return new, ["замена ×{}".format(count)]
 
-
 def summary_part(ctx, labels):
     """What this mechanic contributes to the edit summary."""
     if not labels:
@@ -81,7 +78,6 @@ def summary_part(ctx, labels):
     if replacement:
         return "замена «{}» на «{}»".format(find, replacement)
     return "удаление «{}»".format(find)
-
 
 SPEC = mech.Mechanic(
     code="replace",

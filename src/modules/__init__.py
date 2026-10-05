@@ -37,7 +37,6 @@ from modules import myarchive, pokemon, teleradiopedia
 
 MODULES = (teleradiopedia, pokemon, myarchive)
 
-
 def register(scheduler):
     """Put every module's jobs on the schedule. -> the ones to run at start-up.
 

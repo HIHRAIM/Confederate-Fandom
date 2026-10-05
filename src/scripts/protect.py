@@ -33,7 +33,6 @@ WHAT_UPLOAD = "upload"
 
 DEFAULT_EXPIRY = "infinite"
 
-
 def prepare(ctx):
     """Build the protection mapping once. -> {action: level}."""
     level = ctx.params.get("protect_level") or SYSOP
@@ -41,7 +40,6 @@ def prepare(ctx):
     if not what:
         what = [WHAT_EDIT, WHAT_MOVE]
     return {action: level for action in what}
-
 
 def act(ctx, page):
     """Protect (or unprotect) one page. -> (state, note)."""
@@ -71,7 +69,6 @@ def act(ctx, page):
         return "fail", "{}: {}".format(type(e).__name__, e)
     return "done", ", ".join("{}={}".format(action, level)
                              for action, level in sorted(protections.items()))
-
 
 SPEC = mech.Mechanic(
     code="protect",

@@ -33,20 +33,24 @@ from utils import localized, user_lang
 
 logger = logging.getLogger("fd.telegram.tasks")
 
-
 def _caller(message):
     """Who is asking, or None when they may not ask. -> the requester mapping."""
     user = message.from_user
     if user is None:
         return None
     name = ("@" + user.username) if user.username else user.full_name
-    return access.caller("telegram", user.id, name)
-
+    requester = access.caller("telegram", user.id, name)
+    if requester and requester["role"] == access.SPONSOR \
+            and message.chat.type in ("group", "supergroup"):
+        import sponsors
+        owner = sponsors.canonical_id("telegram", user.id)
+        if not sponsors.can_use_community(owner, "telegram", message.chat.id):
+            return None
+    return requester
 
 async def _deny(message, lang):
     """The answer everyone who may not use these commands gets."""
     await message.answer(localized("not_admin", lang))
-
 
 def _positive_id(text):
     """Read a task or schedule id that SQLite can represent, or None.
@@ -61,7 +65,6 @@ def _positive_id(text):
     value = int(text)
     return value if 0 < value <= 9223372036854775807 else None
 
-
 @router.message(Command("tasks"))
 async def tasks_cmd(message: Message):
     """The catalogue: what the bot can be told to do, numbered.
@@ -70,11 +73,11 @@ async def tasks_cmd(message: Message):
     the name in bold, the code in monospace after it
     (telegram_bot/pages.py)."""
     lang = user_lang(message.from_user)
-    if _caller(message) is None:
+    requester = _caller(message)
+    if requester is None:
         await _deny(message, lang)
         return
     await pages.send(message, "tasks", lang)
-
 
 @router.message(Command("run"))
 async def run_cmd(message: Message):
@@ -91,7 +94,6 @@ async def run_cmd(message: Message):
         logger.exception("the /run dialog failed")
         await message.answer(localized("dialog_failed", lang, error=e))
 
-
 @router.message(Command("go"))
 async def go_cmd(message: Message):
     """Confirm a planned task and set it going. `dry` runs it without writing.
@@ -101,7 +103,8 @@ async def go_cmd(message: Message):
     the token `dry`.
     """
     lang = user_lang(message.from_user)
-    if _caller(message) is None:
+    requester = _caller(message)
+    if requester is None:
         await _deny(message, lang)
         return
 
@@ -120,27 +123,38 @@ async def go_cmd(message: Message):
                                        state=row["state"]))
         return
 
+    if requester.get("role") == access.SPONSOR and (
+            row["requested_by_platform"] != "telegram" or
+            str(row["requested_by_id"]) != str(message.from_user.id)):
+        await _deny(message, lang)
+        return
     if flags == ["dry"]:
         db.set_dry_run(task_id)
-    await task_queue.start(task_id)
-
+    outcome = await task_queue.start(task_id)
+    if outcome is not True:
+        await message.answer(localized("sponsor_page_limit" if outcome == "quota"
+                                       else "sponsor_wiki_required", lang,
+                                       limit=0, wiki=row["wiki"]))
 
 @router.message(Command("jobs"))
 async def jobs_cmd(message: Message):
     """What the bot is doing, what is queued, and how the last runs ended."""
     lang = user_lang(message.from_user)
-    if _caller(message) is None:
+    requester = _caller(message)
+    if requester is None:
         await _deny(message, lang)
         return
 
-    await pages.send(message, "jobs", lang)
-
+    owner = (("telegram", message.from_user.id) if
+             requester.get("role") == access.SPONSOR else None)
+    await pages.send(message, "jobs", lang, owner=owner)
 
 @router.message(Command("stop"))
 async def stop_cmd(message: Message):
     """Stop a task. What it has already written stays written."""
     lang = user_lang(message.from_user)
-    if _caller(message) is None:
+    requester = _caller(message)
+    if requester is None:
         await _deny(message, lang)
         return
     parts = (message.text or "").split()[1:]
@@ -148,17 +162,23 @@ async def stop_cmd(message: Message):
     if task_id is None:
         await message.answer(localized("stop_usage", lang))
         return
+    row = db.get_task(task_id)
+    if requester.get("role") == access.SPONSOR and (row is None or
+            row["requested_by_platform"] != "telegram" or
+            str(row["requested_by_id"]) != str(message.from_user.id)):
+        await _deny(message, lang)
+        return
     if await task_queue.stop(task_id):
         await message.answer(localized("stop_done", lang, id=task_id))
     else:
         await message.answer(localized("task_unknown", lang, id=task_id))
 
-
 @router.message(Command("schedule"))
 async def schedule_cmd(message: Message):
     """The repeating runs. `/schedule off|on|del <id>` changes one."""
     lang = user_lang(message.from_user)
-    if _caller(message) is None:
+    requester = _caller(message)
+    if requester is None:
         await _deny(message, lang)
         return
 
@@ -170,6 +190,11 @@ async def schedule_cmd(message: Message):
             return
         action = parts[0].lower()
         row = db.get_schedule(schedule_id)
+        if requester.get("role") == access.SPONSOR and (row is None or
+                row["created_by_platform"] != "telegram" or
+                str(row["created_by_id"]) != str(message.from_user.id)):
+            await _deny(message, lang)
+            return
         if action in ("del", "delete"):
             ok = db.delete_schedule(schedule_id)
             key = "schedule_deleted" if ok else "schedule_unknown"
@@ -182,7 +207,10 @@ async def schedule_cmd(message: Message):
         await message.answer(localized(key, lang, id=schedule_id))
         return
 
-    if not db.list_schedules():
+    owner = (("telegram", message.from_user.id) if
+             requester.get("role") == access.SPONSOR else None)
+    from tasks import lists
+    if not lists.schedules(lang, pages.MARKUP, owner=owner)[1]:
         await message.answer(localized("schedule_empty", lang))
         return
-    await pages.send(message, "sched", lang)
+    await pages.send(message, "sched", lang, owner=owner)

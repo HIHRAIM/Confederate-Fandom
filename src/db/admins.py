@@ -25,10 +25,9 @@ becomes a row here. Nothing is stored about anybody else who writes.
 """
 import time
 
-from db import conn, cur
+from db import conn, cur, _db_lock
 
 PLATFORMS = ("discord", "telegram")
-
 
 def add_wiki_admin(platform, user_id, wiki_user, display_name=None, added_by=None):
     """Appoint one person, or update the Fandom account of one already there.
@@ -51,7 +50,6 @@ def add_wiki_admin(platform, user_id, wiki_user, display_name=None, added_by=Non
     )
     conn.commit()
 
-
 def remove_wiki_admin(platform, user_id):
     """Take the appointment away. -> whether there was one."""
     row = get_wiki_admin(platform, user_id)
@@ -59,7 +57,6 @@ def remove_wiki_admin(platform, user_id):
                 (str(platform), int(user_id)))
     conn.commit()
     return row is not None
-
 
 def get_wiki_admin(platform, user_id):
     """The row of one person, or None when they were never appointed."""
@@ -72,7 +69,6 @@ def get_wiki_admin(platform, user_id):
         (str(platform), uid),
     ).fetchone()
 
-
 def list_wiki_admins(platform=None):
     """Everyone appointed, oldest first — the order /wikiadmin prints them in."""
     if platform:
@@ -83,7 +79,6 @@ def list_wiki_admins(platform=None):
     return cur.execute(
         "SELECT * FROM wiki_admins ORDER BY platform, added_at, user_id"
     ).fetchall()
-
 
 def touch_display_name(platform, user_id, display_name):
     """Keep the stored display name in step with the messenger's.
@@ -99,25 +94,21 @@ def touch_display_name(platform, user_id, display_name):
     )
     conn.commit()
 
-
 INVITE_DAYS = 7
 """How long an appointment by @name waits for its person to write to the bot.
 
 A week is enough to tell somebody «напиши боту» and short enough that an
 @name given up in the meantime is unlikely to have found a new owner."""
 
-
 def _invite_key(username):
     """An @name as the invitations table keys it: no '@', lower case."""
     return str(username or "").strip().lstrip("@").lower()
-
 
 def _drop_lapsed_invites():
     """Forget the invitations nobody claimed in time."""
     cutoff = int(time.time()) - INVITE_DAYS * 86400
     cur.execute("DELETE FROM wiki_admin_invites WHERE added_at < ?", (cutoff,))
     conn.commit()
-
 
 def add_wiki_admin_invite(username, wiki_user, added_by=None):
     """Appoint an @name whose id the bot does not know yet.
@@ -139,25 +130,42 @@ def add_wiki_admin_invite(username, wiki_user, added_by=None):
     )
     conn.commit()
 
+def claim_wiki_admin_invite(username, user_id, display_name):
+    """Atomically exchange this account's invitation for an ID appointment.
 
-def take_wiki_admin_invite(username):
-    """The waiting invitation for this @name, removed. -> the row, or None.
-
-    Asked on every message from somebody who has an @name, so the question is
-    one indexed lookup; a lapsed row is treated as none and dropped."""
+    The old two-step path deleted and committed the invitation before writing
+    the appointment. If the second write failed, the invitation was lost and
+    the person remained unconfirmed. A failed write now rolls both changes
+    back, so the next message can retry safely.
+    """
     key = _invite_key(username)
     if not key:
         return None
-    row = cur.execute("SELECT * FROM wiki_admin_invites WHERE username=?",
-                      (key,)).fetchone()
-    if row is None:
-        return None
-    cur.execute("DELETE FROM wiki_admin_invites WHERE username=?", (key,))
-    conn.commit()
-    if int(row["added_at"] or 0) < int(time.time()) - INVITE_DAYS * 86400:
-        return None
-    return row
-
+    with _db_lock:
+        row = cur.execute("SELECT * FROM wiki_admin_invites WHERE username=?",
+                          (key,)).fetchone()
+        if row is None:
+            return None
+        expired = int(row["added_at"] or 0) < int(time.time()) - INVITE_DAYS * 86400
+        try:
+            if not expired:
+                cur.execute(
+                    "INSERT INTO wiki_admins"
+                    " (platform,user_id,wiki_user,display_name,added_by,added_at)"
+                    " VALUES ('telegram',?,?,?,?,?)"
+                    " ON CONFLICT(platform,user_id) DO UPDATE SET"
+                    " wiki_user=excluded.wiki_user,"
+                    " display_name=excluded.display_name,"
+                    " added_by=excluded.added_by",
+                    (int(user_id), row["wiki_user"], display_name,
+                     row["added_by"], int(time.time())),
+                )
+            cur.execute("DELETE FROM wiki_admin_invites WHERE username=?", (key,))
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        return None if expired else row
 
 def list_wiki_admin_invites():
     """Every invitation still waiting, oldest first."""
@@ -165,7 +173,6 @@ def list_wiki_admin_invites():
     return cur.execute(
         "SELECT * FROM wiki_admin_invites ORDER BY added_at, username"
     ).fetchall()
-
 
 def remove_wiki_admin_invite(username):
     """Withdraw a waiting invitation. -> whether there was one."""
@@ -175,7 +182,6 @@ def remove_wiki_admin_invite(username):
     cur.execute("DELETE FROM wiki_admin_invites WHERE username=?", (key,))
     conn.commit()
     return had
-
 
 def wiki_admins_named(platform, display_name):
     """The appointed people currently shown under this name on a platform.

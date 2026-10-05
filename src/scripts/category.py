@@ -32,13 +32,11 @@ _ANY_CATEGORY_PREFIX = r"(?:[Кк]атегория|[Кк]атегорія|[Cc]at
 _INTERWIKI_TAIL_RE = re.compile(
     r"(?:^\s*\[\[\s*[a-z][a-z-]{1,11}\s*:[^\]]*\]\]\s*$)", re.M)
 
-
 def _clean(name):
     """A category name without its namespace prefix and without decoration."""
     text = str(name or "").strip().lstrip(":")
     text = re.sub(r"^" + _ANY_CATEGORY_PREFIX + r"\s*:\s*", "", text)
     return re.sub(r"\s+", " ", text.replace("_", " ")).strip()
-
 
 def prepare(ctx):
     """Work out the wiki's own word for "category" and check the arguments.
@@ -72,7 +70,6 @@ def prepare(ctx):
             "pattern": _pattern(name),
             "target_pattern": _pattern(target) if target else None}
 
-
 def _insert(text, line):
     """Put one category line where categories belong: after the prose."""
     match = None
@@ -83,7 +80,6 @@ def _insert(text, line):
         return text.rstrip("\n") + "\n" + line + "\n"
     return text[:match.start()].rstrip("\n") + "\n" + line + "\n\n" + \
         text[match.start():].lstrip("\n")
-
 
 def apply(ctx, page, text):
     """One page with its categories changed. -> (text, change labels)."""
@@ -128,7 +124,6 @@ def apply(ctx, page, text):
         return text, []
     return _insert(text, "[[{}:{}]]".format(prefix, name)), ["добавлена категория"]
 
-
 def summary_part(ctx, labels):
     """What this mechanic contributes to the edit summary."""
     if not labels:
@@ -141,7 +136,6 @@ def summary_part(ctx, labels):
         return "категория «{}» заменена на «{}»".format(
             state.get("name"), state.get("to"))
     return "добавлена категория «{}»".format(state.get("name"))
-
 
 SPEC = mech.Mechanic(
     code="category",

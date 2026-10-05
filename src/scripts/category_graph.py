@@ -29,14 +29,12 @@ DEFAULT_DEPTH = 3
 
 MAX_NODES = 20000
 
-
 def prepare(ctx):
     """Check that there is a category to start from."""
     root = (ctx.params.get("graph_root") or "").strip().lstrip(":")
     if not root:
         raise Explained("error_graph_no_root")
     return root
-
 
 def _walk(ctx, root, depth):
     """The tree under one category. -> a list of (level, title, seen before).
@@ -66,7 +64,6 @@ def _walk(ctx, root, depth):
         for child in children:
             stack.append((level + 1, child))
     return out
-
 
 def finish(ctx):
     """Build the tree and return the lines of the report file."""
@@ -103,7 +100,6 @@ def finish(ctx):
     seen = "  " + localized("report_graph_seen", ctx.reader)
     return ["{}{}{}".format("  " * level, title, seen if already else "")
             for level, title, already in nodes]
-
 
 SPEC = mech.Mechanic(
     code="category-graph",

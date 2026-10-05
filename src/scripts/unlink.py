@@ -29,13 +29,11 @@ from tasks.params import FLAGS, TEXT, Param
 
 FLAG_KEEP_BOLD = "keep_bold"
 
-
 def _normalise(title):
     """A page title as MediaWiki compares them: spaces, first letter capital."""
     text = str(title or "").strip().replace("_", " ")
     text = re.sub(r"\s+", " ", text).lstrip(":")
     return text[:1].upper() + text[1:] if text else text
-
 
 def prepare(ctx):
     """Build the pattern that matches links to the target. -> the pattern.
@@ -54,7 +52,6 @@ def prepare(ctx):
         r"\[\[\s*(?P<target>" + pattern + r")\s*"
         r"(?:\|(?P<label>[^\]\|]*))?\]\](?P<tail>[a-zа-яёіїєґ]*)",
         re.UNICODE)
-
 
 def apply(ctx, page, text):
     """One page's text with the links to the target taken out."""
@@ -75,14 +72,12 @@ def apply(ctx, page, text):
         return text, []
     return new, ["снята ссылка ×{}".format(count[0])]
 
-
 def summary_part(ctx, labels):
     """What this mechanic contributes to the edit summary."""
     if not labels:
         return None
     return "убраны ссылки на «{}»".format(
         _normalise(ctx.params.get("unlink_title")))
-
 
 SPEC = mech.Mechanic(
     code="unlink",

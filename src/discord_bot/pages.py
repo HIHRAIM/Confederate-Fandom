@@ -44,7 +44,6 @@ def esc(text):
     """Text that has to survive Discord's markdown as it was written."""
     return discord.utils.escape_markdown(str(text))
 
-
 def code(text):
     """One technical name, as monospace: `replace`.
 
@@ -53,15 +52,12 @@ def code(text):
     mechanic codes, and none of them has ever contained one."""
     return "`{}`".format(str(text).replace("`", "'"))
 
-
 def bold(text):
     """One name, as the eye's first stop on the line."""
     return "**{}**".format(discord.utils.escape_markdown(str(text)))
 
-
 MARKUP = types.SimpleNamespace(code=code, bold=bold, esc=esc)
 """This half's three formatters, in the shape `tasks/lists.py` takes."""
-
 
 def embed(title, pages, index, lang):
     """One page as an embed. The footer appears only when there is more than
@@ -73,7 +69,6 @@ def embed(title, pages, index, lang):
         built.set_footer(text=localized("page_of", lang, page=index + 1,
                                         total=len(pages)))
     return built
-
 
 class _PagedView(ui.View):
     """The two arrows under a paginated answer, for one person."""
@@ -115,7 +110,6 @@ class _PagedView(ui.View):
                 embed=embed(self.title, self.pages, self.index, self.lang),
                 view=self)
         return callback
-
 
 async def send(interaction, title, lines, lang, ephemeral=False):
     """Answer an interaction with a paginated embed.

@@ -20,6 +20,9 @@ load_env()
 
 TELEGRAM_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 DISCORD_TOKEN = os.environ["DISCORD_BOT_TOKEN"]
+PATREON_GUILD_ID = GUILD_ID
+PATREON_TIER_ROLES = {1: ROLE_ID, 2: ROLE_ID}
+SPONSOR_URL = "https://www.patreon.com/YOUR_CAMPAIGN"
 
 # The wiki account. WIKI_BOT_PASSWORD_SUFFIX is the name of the BotPassword
 # (Special:BotPasswords), not the account name: the login name the bot sends is
@@ -254,3 +257,6 @@ MYARCHIVE = None
 #         "updated_by": "обновление после правок {editors}",
 #     },
 # }
+
+COMMUNITY_SPONSOR_ROLE_IDS = (1249359989282443314, 869587188327788564)
+PATREON_TIER_ROLES[3] = 1554181707672985724

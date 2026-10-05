@@ -13,13 +13,12 @@
 """
 from pywikibot import family
 
-
 class Family(family.Family):
 
     name = 'pokemon'
 
     langs = {code: 'pokemon.fandom.com' for code in (
-        'en',                     # Pokémon Wiki (в корне)
+        'en',
         'ru', 'uk',
         'bg', 'ca', 'da', 'de', 'es', 'nl', 'no', 'pt-br', 'tr', 'vi',
     )}

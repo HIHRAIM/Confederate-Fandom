@@ -26,7 +26,6 @@ _REGISTRY_EXPORTS = (
     "needs_pages", "numbered", "of_kind", "rights_for",
 )
 
-
 def __getattr__(name):
     """Load the catalogue only when it is requested, after a script's SPEC.
 

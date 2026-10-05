@@ -10,3 +10,4 @@ before.
 """
 from discord_bot.commands import tasks
 from discord_bot.commands import admins
+from discord_bot.commands import sponsors

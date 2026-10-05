@@ -128,7 +128,6 @@ _SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?…])\s+|\n+|(?=\|)|(?<=\|)")
 """Sentence boundaries: a full stop, a line break and list markup all end a
 fragment."""
 
-
 def foreign_spans(text: str) -> list[tuple[int, int]]:
     """Sentences that are not written in Russian (Ukrainian, Belarusian).
 
@@ -152,7 +151,6 @@ def foreign_spans(text: str) -> list[tuple[int, int]]:
             spans.append((start, pos))
     return spans
 
-
 def iter_balanced(text: str, op: str, cl: str) -> list[tuple[int, int]]:
     """Every ``op…cl`` pair, nested ones included, as (start, end)."""
     stack: list[int] = []
@@ -170,7 +168,6 @@ def iter_balanced(text: str, op: str, cl: str) -> list[tuple[int, int]]:
             i += 1
     spans.sort()
     return spans
-
 
 def split_top_level(s: str) -> list[tuple[int, int]]:
     """The bounds of the parts separated by a top-level ``|``.
@@ -210,7 +207,6 @@ def split_top_level(s: str) -> list[tuple[int, int]]:
     parts.append((start, n))
     return parts
 
-
 def _template_spans(text: str, template_values: str) -> list[tuple[int, int]]:
     """The protected pieces of a template: its name, its parameter names and
     its service values.
@@ -249,7 +245,6 @@ def _template_spans(text: str, template_values: str) -> list[tuple[int, int]]:
         spans.append((end - 2, end))
     return spans
 
-
 def _top_level_eq(seg: str) -> int | None:
     """The position of the top-level ``=`` in one part of a template, or None.
 
@@ -271,7 +266,6 @@ def _top_level_eq(seg: str) -> int | None:
             i += 1
     return None
 
-
 def _link_spans(text: str, fix_labels: bool) -> list[tuple[int, int]]:
     """Wiki links. Whole by default, label included.
 
@@ -292,7 +286,6 @@ def _link_spans(text: str, fix_labels: bool) -> list[tuple[int, int]]:
         spans.append((start, start + 2 + parts[0][1] + 1))
         spans.append((end - 2, end))
     return spans
-
 
 def protected_spans(text: str, fix_labels: bool = False,
                     template_values: str = "named",
@@ -318,7 +311,6 @@ def protected_spans(text: str, fix_labels: bool = False,
     spans += _template_spans(text, template_values)
     return merge_spans(spans)
 
-
 def merge_spans(spans: list[tuple[int, int]]) -> list[tuple[int, int]]:
     """Sort the spans and fuse the ones that touch or overlap."""
     if not spans:
@@ -332,13 +324,11 @@ def merge_spans(spans: list[tuple[int, int]]) -> list[tuple[int, int]]:
             out.append((start, end))
     return out
 
-
 _M_OPEN, _M_CLOSE = "", ""
 _M_DIGITS = {str(d): chr(0xE100 + d) for d in range(10)}
 """The markers are characters from the private use area: wikitext never
 contains them, and they are neither letters nor digits, so ``\\b`` and ``\\w``
 behave around them exactly as they do around a punctuation mark."""
-
 
 def mask(text: str, spans: list[tuple[int, int]]) -> tuple[str, list[str]]:
     """Replace the protected pieces with markers. -> (text, what was saved)."""
@@ -354,10 +344,8 @@ def mask(text: str, spans: list[tuple[int, int]]) -> tuple[str, list[str]]:
     out.append(text[pos:])
     return "".join(out), saved
 
-
 _UNMASK_RE = re.compile(_M_OPEN + r"([-]+)" + _M_CLOSE)
 _M_BACK = {v: k for k, v in _M_DIGITS.items()}
-
 
 def unmask(text: str, saved: list[str]) -> str:
     """Put the protected pieces back where their markers stand."""
@@ -367,7 +355,6 @@ def unmask(text: str, saved: list[str]) -> str:
         return saved[idx]
 
     return _UNMASK_RE.sub(_restore, text)
-
 
 class Rule:
     """One replacement rule.
@@ -387,12 +374,10 @@ class Rule:
         self.rx = (engine or re).compile(pattern, flags)
         self.repl = repl
 
-
 _XML_UNESCAPE = (("&lt;", "<"), ("&gt;", ">"), ("&quot;", '"'),
                  ("&apos;", "'"), ("&amp;", "&"))
 _ATTR_RE = re.compile(r"(\w+)\s*=\s*\"([^\"]*)\"")
 _DOLLAR_RE = re.compile(r"\$(\d)")
-
 
 def unescape(value: str) -> str:
     """XML entities back to characters. ``&amp;`` last, or «&amp;lt;» breaks."""
@@ -400,9 +385,7 @@ def unescape(value: str) -> str:
         value = value.replace(src, dst)
     return value
 
-
 _TYPO_RE = re.compile(r"<Typo\b([^>]*?)/>")
-
 
 def load_typos(path: str, warn: bool = True, engine=None,
                prefix: str = "опечатка") -> list[Rule]:
@@ -429,7 +412,6 @@ def load_typos(path: str, warn: bool = True, engine=None,
                 print(f"  ! {os.path.basename(path)}:{line} «{name}»: {exc}",
                       file=sys.stderr)
     return rules
-
 
 HEADING_RE = re.compile(r"^(={2,6})[ \t]*(\S.*?)[ \t]*\1[ \t]*$", re.M)
 """``==Заголовок==`` -> ``== Заголовок ==``, the level kept by the back
@@ -459,7 +441,6 @@ _ONLY_TOKEN_RE = re.compile(r"^[ \t]*[-]+[ \t]*$")
 """A line that is nothing but a marker for a protected piece: it may be a
 ``<pre>`` or a ``<gallery>``, and its indent must not be touched."""
 
-
 def strip_leading_spaces(text: str) -> tuple[str, int]:
     """Remove the indent at the start of lines.
 
@@ -481,7 +462,6 @@ def strip_leading_spaces(text: str) -> tuple[str, int]:
         lines[i] = lines[i].lstrip(" \t")
         n += 1
     return "\n".join(lines), n
-
 
 def apply_cosmetic(text: str) -> tuple[str, list[tuple[str, str, str]]]:
     """The cosmetic edits. -> (text, the list of changes).
@@ -529,11 +509,9 @@ def apply_cosmetic(text: str) -> tuple[str, list[tuple[str, str, str]]]:
         text = stripped
     return text, changes
 
-
 def is_cosmetic(change_name: str) -> bool:
     """A cosmetic change, or a language one (spelling, a typo)?"""
     return change_name.startswith("косметика")
-
 
 def join_ru(items: list[str], conj: str = "и") -> str:
     """«а» / «а и б» / «а, б и в» — a list with a conjunction before the last."""
@@ -542,7 +520,6 @@ def join_ru(items: list[str], conj: str = "и") -> str:
     if len(items) == 1:
         return items[0]
     return f"{', '.join(items[:-1])} {conj} {items[-1]}"
-
 
 def make_summary(changes: list[tuple[str, str, str]],
                  parts: list[tuple[str, str]], conj: str = "и") -> str:
@@ -564,7 +541,6 @@ def make_summary(changes: list[tuple[str, str, str]],
                 present.append(label)
                 break
     return join_ru(present, conj)
-
 
 def apply_rules(text: str, rules: list[Rule],
                 max_passes: int = 4) -> tuple[str, list[tuple[str, str, str]]]:
@@ -592,7 +568,6 @@ def apply_rules(text: str, rules: list[Rule],
         if text == before:
             break
     return text, changes
-
 
 class Options:
     """The flags one text-rewriting pass runs with.
@@ -623,7 +598,6 @@ class Options:
                 "skip_foreign": self.skip_foreign,
                 "cosmetic": self.cosmetic}
 
-
 def process_text(text: str, rules: list[Rule], fix_labels: bool = False,
                  template_values: str = "named", skip_refs: bool = False,
                  skip_italics: bool = False, cosmetic: bool = False,
@@ -652,7 +626,6 @@ def process_text(text: str, rules: list[Rule], fix_labels: bool = False,
                 break
     return unmask(masked, saved), changes
 
-
 def diff_text(title: str, old: str, new: str, context: int = 1) -> str:
     """The unified diff of one page, as text.
 
@@ -664,7 +637,6 @@ def diff_text(title: str, old: str, new: str, context: int = 1) -> str:
         old.splitlines(), new.splitlines(),
         fromfile=f"{title} (было)", tofile=f"{title} (стало)",
         lineterm="", n=context))
-
 
 def engine():
     """The regex engine the AWB lists need, or ``re`` when it is not installed.

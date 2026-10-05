@@ -20,10 +20,8 @@ API = "https://api.github.com"
 
 TIMEOUT = 30
 
-
 class GitHubError(RuntimeError):
     """GitHub said no: the status and GitHub's own message, and no token."""
-
 
 class GitHub:
     """One repository and one branch of it."""

@@ -46,7 +46,6 @@ _reported_missing = set()
 """The pages already reported as missing since the process started: a page
 that does not exist is said once, not every night until config is fixed."""
 
-
 def settings():
     """(config.MYARCHIVE as a dict, the token or ""). Never raises."""
     import config
@@ -56,12 +55,10 @@ def settings():
         cfg = {}
     return cfg, os.environ.get(TOKEN_VARIABLE, "").strip()
 
-
 def enabled():
     """Whether this deployment keeps an archive: a repository, pages, a token."""
     cfg, token = settings()
     return bool(token and cfg.get("repo") and cfg.get("pages"))
-
 
 async def job():
     """One archive pass, in a worker thread, reported only when it matters.
@@ -92,7 +89,6 @@ async def job():
             created=result["created"], updated=result["updated"],
             missing=", ".join(missing) or "—",
             errors="; ".join(result["errors"]) or "—")
-
 
 def jobs():
     """The jobs of this module, for main.py to register. -> a list of dicts."""

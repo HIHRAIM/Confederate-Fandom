@@ -36,7 +36,6 @@ REPORT_KEEP_DAYS = 14
 
 _PATH_RE = re.compile(r"[A-Za-z]:[\\/][^\s'\"]+|/(?:home|usr|etc|root|var)/[^\s'\"]+")
 
-
 def safe_error(error, lang=None):
     """One exception as a line a person can read and nothing else.
 
@@ -60,11 +59,9 @@ def safe_error(error, lang=None):
     text = _PATH_RE.sub("<path>", text)
     return " ".join(text.split())[:500]
 
-
 def _path(task_id, suffix):
     """Where one of a task's files lives."""
     return os.path.join(REPORTS_DIR, "task-{}.{}".format(int(task_id), suffix))
-
 
 def _ensure_dir():
     """Make the reports directory, once."""
@@ -72,7 +69,6 @@ def _ensure_dir():
         os.makedirs(REPORTS_DIR, exist_ok=True)
     except OSError as e:
         logger.warning("could not make the reports directory: %s", e)
-
 
 class DiffFile:
     """The diff file of one run, written as the run goes.
@@ -137,7 +133,6 @@ class DiffFile:
         self._handle = None
         return self.path
 
-
 def write_lines(task_id, suffix, heading, lines):
     """One list of lines as a file. -> its path, or None when there are none."""
     if not lines:
@@ -154,7 +149,6 @@ def write_lines(task_id, suffix, heading, lines):
         return None
     return path
 
-
 def files_of(task_id):
     """Every file one task left behind, in the order to send them."""
     found = []
@@ -163,7 +157,6 @@ def files_of(task_id):
         if os.path.exists(path):
             found.append(path)
     return found
-
 
 def cleanup(keep_days=REPORT_KEEP_DAYS):
     """Delete the report files of runs that are long over.

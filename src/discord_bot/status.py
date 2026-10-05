@@ -62,7 +62,6 @@ QUEUE_JOB = "tasks"
 Registered at every minute of the hour (tasks/queue.py: register), so it is
 always the nearest thing due and would crowd out everything worth showing."""
 
-
 def _wait(seconds):
     """A countdown rounded so that it does not change every second.
 
@@ -72,7 +71,6 @@ def _wait(seconds):
     """
     seconds = max(0, int(seconds))
     return seconds - seconds % 60 if seconds >= 60 else seconds
-
 
 def _running_text(job, lang):
     """The line for the job under way, or None when none is.
@@ -110,7 +108,6 @@ def _running_text(job, lang):
     if job == "species":
         return localized("presence_editing", lang, wiki=wiki_key(SPECIES_WIKI))
     return localized("presence_busy", lang, job=job_label(job, lang))
-
 
 def _next_text(lang):
     """The line for what happens next, or None when nothing is on the clock.
@@ -151,7 +148,6 @@ def _next_text(lang):
     return localized(key, lang, when=format_duration(_wait(seconds), lang),
                      **values)
 
-
 def text(lang):
     """The whole line, in one language. Never raises.
 
@@ -170,7 +166,6 @@ def text(lang):
         logger.exception("could not work out what the status should say")
         line = localized("presence_idle", lang)
     return str(line)[:NAME_LIMIT]
-
 
 async def loop():
     """Keep the presence in step with what the bot is doing.

@@ -34,6 +34,7 @@ MESSAGE_LIMIT = 1900
 
 intents = discord.Intents.none()
 intents.guilds = True
+intents.members = True
 intents.guild_messages = True
 intents.message_content = True
 intents.dm_messages = True
@@ -47,7 +48,6 @@ DISCORD_LOCALES = {
     "pl": "pl", "pt-BR": "pt", "ru": "ru", "uk": "uk",
 }
 """Discord's client languages, as the codes of the six i18n files."""
-
 
 def slash(key):
     """The text of one slash-command description, from the i18n files.
@@ -64,7 +64,6 @@ def slash(key):
 
     return app_commands.locale_str(localized(key, DEFAULT_LANG), key=key)
 
-
 class _Translator(app_commands.Translator):
     """Hands Discord the descriptions `slash` marked, in every language the
     bot speaks. Anything without a key — the command names, the choices —
@@ -79,7 +78,6 @@ class _Translator(app_commands.Translator):
         if not key or not lang or lang == DEFAULT_LANG or not has_translation(key):
             return None
         return localized(key, lang)[:100]
-
 
 @client.event
 async def on_ready():
@@ -99,7 +97,6 @@ async def on_ready():
     except Exception as e:
         logger.warning("connected to Discord as %s, but the commands would "
                        "not sync: %s", client.user, e)
-
 
 @tree.error
 async def on_command_error(interaction, error):
@@ -121,7 +118,6 @@ async def on_command_error(interaction, error):
     except Exception:
         pass
 
-
 async def _channel(channel_id):
     """One channel, from the cache or from Discord. -> the channel or None."""
     try:
@@ -135,7 +131,6 @@ async def _channel(channel_id):
     except Exception as e:
         logger.warning("could not reach the Discord channel %s: %s", channel_id, e)
         return None
-
 
 async def send_log(channel_id, text):
     """Write one report into one channel. Never raises.
@@ -151,7 +146,6 @@ async def send_log(channel_id, text):
         await channel.send(str(text)[:MESSAGE_LIMIT])
     except Exception as e:
         logger.warning("could not write to the Discord channel %s: %s", channel_id, e)
-
 
 async def send_files(channel_id, paths, caption=None, lang=None):
     """Send a task's files into one channel. Never raises.
@@ -187,7 +181,6 @@ async def send_files(channel_id, paths, caption=None, lang=None):
     except Exception as e:
         logger.warning("could not send files to the Discord channel %s: %s",
                        channel_id, e)
-
 
 async def main():
     """Start the client and the presence loop. One of the tasks main.py waits on.
