@@ -4,4 +4,4 @@ discord.py>=2.7.1
 pywikibot>=11.8.0
 regex>=2026.9.29
 requests>=2.32.0
-tzdata>=2026.4
+tzdata>=2026.5
