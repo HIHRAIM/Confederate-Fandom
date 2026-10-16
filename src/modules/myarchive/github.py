@@ -7,9 +7,17 @@ did change costs a request for its last commit and one to commit it.
 The token never leaves this module: it goes into the Authorization header and
 nowhere else, and an error is reported as GitHub's status and message, which
 do not carry it.
+
+**Commits are paced, and a rate limit is obeyed.** GitHub asks for at least a
+second between mutating requests made in bulk, and warns that an integration
+which goes on asking after a rate-limit answer may be banned. So `put` waits
+WRITE_PAUSE after the previous commit, and a 403 or 429 that is a rate limit
+raises `RateLimited`, which ends the pass instead of moving on to the next
+page.
 """
 import base64
 import logging
+import time
 import urllib.parse
 
 import requests
@@ -20,8 +28,34 @@ API = "https://api.github.com"
 
 TIMEOUT = 30
 
+WRITE_PAUSE = 1.0
+"""Seconds from the end of one commit to the start of the next, at the least:
+GitHub's own advice for mutating requests ("Best practices for using the REST
+API"). A night with a few changed pages does not notice it; the first night
+of a long page list is a minute or two longer."""
+
 class GitHubError(RuntimeError):
     """GitHub said no: the status and GitHub's own message, and no token."""
+
+class RateLimited(GitHubError):
+    """GitHub said to slow down: a secondary rate limit, or the hourly quota
+    spent. Nothing more may be asked until the time GitHub names, so the pass
+    stops at the first one; the pages left over are committed the next night,
+    because a page already committed then compares equal to its file."""
+
+def _rate_limited(response, message):
+    """Whether an error answer is a rate limit rather than a refusal. GitHub
+    answers 429, or 403 with `retry-after`, with `x-ratelimit-remaining: 0`,
+    or with a message that says so — a 403 without any of them is a missing
+    permission and must not be mistaken for one."""
+    if response.status_code == 429:
+        return True
+    if response.status_code != 403:
+        return False
+    headers = response.headers
+    return ("retry-after" in headers
+            or headers.get("x-ratelimit-remaining") == "0"
+            or "rate limit" in str(message or "").lower())
 
 class GitHub:
     """One repository and one branch of it."""
@@ -38,9 +72,11 @@ class GitHub:
         })
         self._branch = branch or None
         self._ids = {}
+        self._last_write = None
 
     def _call(self, method, path, **kwargs):
-        """One request. -> the decoded answer, or None for a 404."""
+        """One request. -> the decoded answer, or None for a 404. Raises
+        RateLimited for a rate limit and GitHubError for any other error."""
         response = self.session.request(method, API + path, timeout=TIMEOUT,
                                         **kwargs)
         if response.status_code == 404:
@@ -50,8 +86,11 @@ class GitHub:
                 message = response.json().get("message")
             except ValueError:
                 message = response.reason
-            raise GitHubError("GitHub {} on {}: {}".format(
-                response.status_code, path.split("?")[0], message))
+            text = "GitHub {} on {}: {}".format(
+                response.status_code, path.split("?")[0], message)
+            if _rate_limited(response, message):
+                raise RateLimited(text)
+            raise GitHubError(text)
         return response.json() if response.content else {}
 
     @property
@@ -117,9 +156,19 @@ class GitHub:
         return "{}+{}@users.noreply.github.com".format(user_id, login)
 
     def put(self, path, data, message, sha=None):
-        """Create or replace one file with one commit."""
+        """Create or replace one file with one commit, no sooner than
+        WRITE_PAUSE after the previous one — counted from the end of that
+        one whether it succeeded or not, since a refused write is a request
+        all the same. Blocking: the pass runs in a worker thread."""
+        if self._last_write is not None:
+            wait = self._last_write + WRITE_PAUSE - time.monotonic()
+            if wait > 0:
+                time.sleep(wait)
         body = {"message": message, "branch": self.branch,
                 "content": base64.b64encode(data).decode("ascii")}
         if sha:
             body["sha"] = sha
-        self._call("PUT", self._contents(path), json=body)
+        try:
+            self._call("PUT", self._contents(path), json=body)
+        finally:
+            self._last_write = time.monotonic()

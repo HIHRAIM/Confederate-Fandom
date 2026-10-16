@@ -256,12 +256,28 @@ CREATE TABLE IF NOT EXISTS sponsor_communities (
     claimed_at INTEGER NOT NULL,
     PRIMARY KEY (platform, community_id)
 );
+-- Historical task/page counters remain for additive migration compatibility.
 CREATE TABLE IF NOT EXISTS sponsor_usage (
     discord_id TEXT NOT NULL,
     day TEXT NOT NULL,
     tasks INTEGER NOT NULL DEFAULT 0,
     pages INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (discord_id, day)
+);
+-- Duration reservations are shared by linked accounts and read at /go.
+CREATE TABLE IF NOT EXISTS sponsor_duration_usage (
+    discord_id TEXT NOT NULL,
+    day TEXT NOT NULL,
+    over5 INTEGER NOT NULL DEFAULT 0,
+    over10 INTEGER NOT NULL DEFAULT 0,
+    over30 INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (discord_id, day)
+);
+-- Recent dialog activity and admitted starts drive load-sensitive admission.
+CREATE TABLE IF NOT EXISTS task_request_activity (
+    identity TEXT PRIMARY KEY,
+    seen_at INTEGER NOT NULL,
+    last_go INTEGER
 );
 CREATE TABLE IF NOT EXISTS sponsor_account_links (
     discord_id TEXT PRIMARY KEY,
@@ -308,6 +324,9 @@ def _add_missing_columns(cur, conn):
         "tasks": {
             "community_platform": "TEXT",
             "community_id": "TEXT",
+            "estimated_seconds": "INTEGER NOT NULL DEFAULT 0",
+            "work_seconds": "REAL NOT NULL DEFAULT 0",
+            "timed_pages": "INTEGER NOT NULL DEFAULT 0",
         },
         "sponsor_tiers": {
             "grace_since": "INTEGER",

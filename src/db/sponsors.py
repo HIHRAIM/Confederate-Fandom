@@ -299,14 +299,110 @@ def sponsor_slot_wait_days(discord_id, cooldown_days=30):
     return max(0, int((remaining + 86399) // 86400))
 
 def sponsor_usage(discord_id):
-    """Today UTC's task and page totals."""
+    """Legacy task/page counters; current admission uses duration counters."""
     day = datetime.now(timezone.utc).date().isoformat()
     row = cur.execute("SELECT tasks,pages FROM sponsor_usage WHERE discord_id=? AND day=?",
                       (str(discord_id), day)).fetchone()
     return (int(row[0]), int(row[1])) if row else (0, 0)
 
+def sponsor_duration_usage(discord_id, day=None):
+    """Nested duration counters for the current UTC day."""
+    day = day or datetime.now(timezone.utc).date().isoformat()
+    row = cur.execute(
+        "SELECT over5,over10,over30 FROM sponsor_duration_usage WHERE discord_id=? AND day=?",
+        (str(discord_id), day),
+    ).fetchone()
+    return tuple(map(int, row)) if row else (0, 0, 0)
+
+def task_request_identity(platform, user_id):
+    """Count a linked Discord/Telegram pair as one active person."""
+    owner = str(user_id) if platform == "discord" else linked_discord_id(user_id)
+    return "discord:" + owner if owner else str(platform) + ":" + str(user_id)
+
+def touch_task_request(platform, user_id):
+    """Remember recent dialog activity without recording answers."""
+    now = int(time.time())
+    with _db_lock:
+        cur.execute("DELETE FROM task_request_activity WHERE seen_at<? AND COALESCE(last_go,0)<?",
+                    (now - 900, now - 900))
+        cur.execute(
+            "INSERT INTO task_request_activity (identity,seen_at) VALUES (?,?)"
+            " ON CONFLICT(identity) DO UPDATE SET seen_at=excluded.seen_at",
+            (task_request_identity(platform, user_id), now),
+        )
+        conn.commit()
+
+def task_load_status(platform, user_id, *, include_requester=False):
+    """Throttle only with six people drafting or holding execution-queue work.
+
+    Under load, each person may admit one task per minute and hold up to two
+    unfinished admitted tasks. A sole user's task volume never enables it.
+    """
+    now = int(time.time())
+    identity = task_request_identity(platform, user_id)
+    from tasks.dialog import active_task_dialog_identities
+    drafting = active_task_dialog_identities()
+    running = cur.execute(
+        "SELECT requested_by_platform,requested_by_id FROM tasks WHERE state='running'"
+    ).fetchall()
+    queued = [task_request_identity(row[0], row[1]) for row in running if row[1] is not None]
+    candidate = {identity} if include_requester else set()
+    people = drafting | set(queued) | candidate
+    active = len(people) > 5
+    own = queued.count(identity)
+    row = cur.execute("SELECT last_go FROM task_request_activity WHERE identity=?", (identity,)).fetchone()
+    wait = max(0, int(row[0] or 0) + 60 - now) if row else 0
+    return {"active": active, "people": len(people),
+            "queued": own, "wait": wait, "allowed": not active or (own < 2 and wait == 0)}
+
+def admit_sponsor_task(task_id, discord_id, caps, seconds):
+    """Reserve nested daily budgets and change state under one shared lock.
+
+    Refused or repeated /go requests spend nothing. Scheduled runs use the
+    same admission rules. A started or stopped task keeps its reservation.
+    """
+    costs = tuple(int(seconds > threshold) for threshold in (300, 600, 1800))
+    with _db_lock:
+        day = datetime.now(timezone.utc).date().isoformat()
+        row = cur.execute("SELECT * FROM tasks WHERE id=?", (int(task_id),)).fetchone()
+        if row is None or row["state"] != "confirm":
+            return False
+        load = task_load_status(row["requested_by_platform"], row["requested_by_id"], include_requester=True)
+        if not load["allowed"]:
+            return "load"
+        used = sponsor_duration_usage(discord_id, day)
+        if any(used[i] + costs[i] > caps[key] for i, key in enumerate(("over5", "over10", "over30"))):
+            return "quota"
+        now = int(time.time())
+        conn.execute("SAVEPOINT sponsor_admission")
+        try:
+            cur.execute(
+                "INSERT INTO sponsor_duration_usage (discord_id,day,over5,over10,over30)"
+                " VALUES (?,?,?,?,?) ON CONFLICT(discord_id,day) DO UPDATE SET"
+                " over5=over5+excluded.over5,over10=over10+excluded.over10,over30=over30+excluded.over30",
+                (str(discord_id), day, *costs),
+            )
+            identity = task_request_identity(row["requested_by_platform"], row["requested_by_id"])
+            cur.execute(
+                "INSERT INTO task_request_activity (identity,seen_at,last_go) VALUES (?,?,?)"
+                " ON CONFLICT(identity) DO UPDATE SET seen_at=excluded.seen_at,last_go=excluded.last_go",
+                (identity, now, now),
+            )
+            cur.execute("UPDATE tasks SET state='running',started_at=COALESCE(started_at,?),estimated_seconds=?"
+                        " WHERE id=? AND state='confirm'", (now, seconds, int(task_id)))
+            conn.execute("RELEASE sponsor_admission")
+            conn.commit()
+        except Exception:
+            conn.execute("ROLLBACK TO sponsor_admission")
+            conn.execute("RELEASE sponsor_admission")
+            raise
+        return True
+
 def spend_sponsor_unit(discord_id, column, limit, amount=1):
-    """Reserve a task or planned pages atomically before work begins."""
+    """Legacy task/page reservation, retained for older callers only.
+
+    Current task admission never calls this; it uses admit_sponsor_task.
+    """
     if column not in {"tasks", "pages"}:
         raise ValueError(column)
     if amount < 0 or amount > int(limit):

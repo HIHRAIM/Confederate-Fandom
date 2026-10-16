@@ -13,18 +13,26 @@
 **Which wikis are linked.** Not guessed and not configured: read from the
 wiki's own ``meta=siteinfo&siprop=interwikimap``. Every entry marked as a
 language is one this mechanic *manages* — its lines are kept, sorted and put
-at the end — but only the ones on the same host are *opened*, because only
-those share the bot's login and can be read and checked. On tadc.fandom.com
-the Japanese version lives on theamazingdigitalcircus.fandom.com: its link is
-a real language link, the reader sees it in the menu, and it is kept exactly
-as written; it is simply never used to find more.
+at the end. The ones on the same host are read through the bot's own
+logged-in sessions; a language version on another Fandom host — on
+tadc.fandom.com the Japanese one lives on theamazingdigitalcircus.fandom.com —
+is read anonymously through its api.php (wiki/anon.py), which needs no login
+and no family file. Both are followed and both can be added.
 
-That distinction is written down because it was once missing. The block used
-to be rebuilt from the same-host languages alone, so a ``[[ja:…]]`` line was
+That second half is new, and the first was once missing: the block used to
+be rebuilt from the same-host languages alone, so a ``[[ja:…]]`` line was
 taken out with the others and never put back — two pages of tadc:ru lost
 their link to the Japanese wiki in one run. A line with a prefix that is not a
 language at all (``[[wikipedia:…]]``) is not this mechanic's business and is
 left where it stands.
+
+**Redirects.** A link may point at a redirect on the other wiki. Followed
+blindly it reads a page with no links on it, so the chain used to stop there
+and a link to the redirect was written as it was. Now the redirect is
+followed to its target: a link brought back is written to the target
+itself, and a link the page already carries is left as its author wrote it
+but reported (`note_interwiki_redirect`), so that a person can make it
+direct.
 
 **What gets added.** The rule the operator asked for: a link that stands on one
 of two linked wikis and not on the other. So the bot reads the interwiki links
@@ -79,6 +87,15 @@ it is.
 
 One run touches one wiki. Running the same task on the sister wiki closes the
 other half of the loop, and the report says so.
+
+**Two modes, chosen in the dialog.** Everything above is the first,
+*complete*. The second, *table*, is for the articles that have no link to
+follow: it finds candidates by title and sound, writes them as a table on the
+bot's user pages for a person to review before /go, and sets the links from
+the reviewed table. It lives in scripts/interwiki_table.py; every hook below
+hands over to it when `interwiki_mode` is "table", and the table's own
+questions are asked only in that mode (`Param.depends`). A table run does not
+repeat on a schedule (`repeats`).
 """
 import logging
 import re
@@ -87,10 +104,19 @@ import sys
 from tasks import mechanic as mech
 from tasks import report
 from utils import Explained
-from tasks.params import FLAGS, Param
+from tasks.params import CHOICE, FLAGS, INT, TEXT, Param
 from scripts import wikitools as wt
 
 logger = logging.getLogger("fd.scripts.interwiki")
+
+MODE_COMPLETE = "complete"
+
+MODE_TABLE = "table"
+
+def _table(params):
+    """Whether a run is in the table mode. A row stored before the modes
+    existed has no `interwiki_mode` and is the first mode."""
+    return (params or {}).get("interwiki_mode") == MODE_TABLE
 
 FLAG_SORT_ONLY = "sort_only"
 """Add nothing: only move the block to the end of the page and sort it.
@@ -123,51 +149,70 @@ def _host_family(url):
     m = re.match(r"https?://([a-z0-9-]+)\.(fandom\.com|wikia\.org)/", str(url or ""), re.I)
     return m.group(1).lower() if m else None
 
-def prepare(ctx):
-    """Work out the sister wikis, and open nothing yet. -> the state mapping.
+def language_map(site, own_lang):
+    """The language versions a wiki declares. -> {'langs', 'managed', 'urls'}.
 
-    The sites are opened lazily: a wiki nothing links to costs no login, and a
-    run over a category where every page is already complete may never open a
-    second wiki at all.
-    """
+    `managed` is every interwiki prefix marked as a language; `urls` is the
+    article address (``https://host/ja/wiki/$1``) of each one that lives on
+    Fandom, wherever the host; `langs` is the subset on the wiki's own host,
+    which the bot opens with its own login. Shared with the interwiki table
+    (scripts/interwiki_table.py)."""
     from wiki import families
 
     try:
-        data = ctx.site.siteinfo["interwikimap"]
+        data = site.siteinfo["interwikimap"]
     except Exception as e:
         raise Explained("error_interwiki_map", error=str(e))
 
-    own_host = _host_family(ctx.site.base_url(""))
+    own_host = _host_family(site.base_url(""))
     if not own_host:
         try:
-            own_host = families.family_name(ctx.site.hostname())
+            own_host = families.family_name(site.hostname())
         except Exception:
             own_host = None
 
-    langs = {}
-    managed = set()
+    langs, managed, urls = {}, set(), {}
     for entry in data:
         prefix = str(entry.get("prefix") or "").lower()
-        if not prefix or prefix == ctx.lang:
+        if not prefix or prefix == own_lang:
             continue
         if "language" not in entry and not entry.get("language"):
             continue
         managed.add(prefix)
         host = _host_family(entry.get("url"))
-        if not host or (own_host and host != own_host):
+        if not host:
+            continue
+        urls[prefix] = entry.get("url")
+        if own_host and host != own_host:
             continue
         langs[prefix] = {"family": families.family_name(host),
                          "lang": prefix, "url": entry.get("url")}
+    return {"langs": langs, "managed": managed, "urls": urls}
 
+def prepare(ctx):
+    """Work out the sister wikis, and open nothing yet. -> the state mapping.
+
+    In the table mode, scripts/interwiki_table.py prepares instead.
+
+    The sites are opened lazily: a wiki nothing links to costs no login, and a
+    run over a category where every page is already complete may never open a
+    second wiki at all.
+    """
+    if _table(ctx.params):
+        from scripts import interwiki_table
+
+        return interwiki_table.prepare(ctx)
+    found = language_map(ctx.site, ctx.lang)
+    langs, managed = found["langs"], found["managed"]
     if not managed:
         ctx.note("note_interwiki_none")
     else:
         ctx.note("note_interwiki_langs", langs=", ".join(sorted(managed)))
-        elsewhere = sorted(managed - set(langs))
+        elsewhere = sorted(set(found["urls"]) - set(langs))
         if elsewhere:
             ctx.note("note_interwiki_elsewhere", langs=", ".join(elsewhere))
-    return {"langs": langs, "managed": managed, "sites": {}, "exists": {},
-            "links": {}}
+    return {"langs": langs, "managed": managed, "urls": found["urls"],
+            "sites": {}, "anon": {}, "resolved": {}, "links": {}}
 
 def _sister_site(ctx, lang):
     """The logged-in Site of one sister wiki, opened once. -> Site or None.
@@ -194,15 +239,32 @@ def _sister_site(ctx, lang):
             site = wiki.get_site(family, code)
         except Exception as e:
             logger.warning("cannot reach the %s wiki: %s", lang, e)
-            ctx.note("note_interwiki_unreachable", lang=lang,
+            ctx.note("note_interwiki_unreachable", code=lang,
                      error=report.safe_error(e, ctx.reader))
         finally:
             wiki.use_cookies(ctx.wiki)
     state["sites"][lang] = site
     return site
 
-def _exists(ctx, lang, title):
-    """Whether one page exists on one sister wiki, asked once per title.
+def _anon_wiki(ctx, lang):
+    """The anonymous reader of a language version on another host, made once.
+    -> AnonWiki or None when the interwiki map gives it no Fandom address."""
+    from wiki.anon import AnonWiki
+
+    state = ctx.state.get(SPEC.code)
+    if lang not in state["anon"]:
+        url = state["urls"].get(lang)
+        state["anon"][lang] = AnonWiki.from_article_url(url) if url else None
+    return state["anon"][lang]
+
+def _readable(ctx, lang):
+    """Whether the bot can read the pages of one language version at all."""
+    state = ctx.state.get(SPEC.code)
+    return lang in state["langs"] or lang in state["urls"]
+
+def _resolve(ctx, lang, title):
+    """Where a title on one sister wiki leads. -> (the article's title or None
+    when there is none, whether a redirect was followed), asked once.
 
     Opening the sister restores the caller's jar before it returns, so the
     sister's jar must be selected again for the actual page request. This
@@ -213,20 +275,37 @@ def _exists(ctx, lang, title):
 
     state = ctx.state.get(SPEC.code)
     key = (lang, title)
-    if key in state["exists"]:
-        return state["exists"][key]
-    site = _sister_site(ctx, lang)
-    found = False
-    if site is not None:
-        try:
-            entry = state["langs"][lang]
-            wiki.use_cookies("{}:{}".format(entry["family"], entry["lang"]))
-            found = pywikibot.Page(site, title).exists()
-        except Exception as e:
-            logger.warning("cannot check %s:%s: %s", lang, title, e)
-        finally:
-            wiki.use_cookies(ctx.wiki)
-    state["exists"][key] = found
+    if key in state["resolved"]:
+        return state["resolved"][key]
+    found = (None, False)
+    if lang in state["langs"]:
+        site = _sister_site(ctx, lang)
+        if site is not None:
+            try:
+                entry = state["langs"][lang]
+                wiki.use_cookies("{}:{}".format(entry["family"], entry["lang"]))
+                page = pywikibot.Page(site, title)
+                if page.exists():
+                    if page.isRedirectPage():
+                        target = page.getRedirectTarget()
+                        if target.exists() and not target.isRedirectPage():
+                            found = (target.title(), True)
+                    else:
+                        found = (page.title(), False)
+            except Exception as e:
+                logger.warning("cannot check %s:%s: %s", lang, title, e)
+            finally:
+                wiki.use_cookies(ctx.wiki)
+    else:
+        reader = _anon_wiki(ctx, lang)
+        if reader is not None:
+            try:
+                for _asked, page, target in reader.pages([title]):
+                    if page is not None:
+                        found = (page["title"], bool(target))
+            except Exception as e:
+                logger.warning("cannot check %s:%s anonymously: %s", lang, title, e)
+    state["resolved"][key] = found
     return found
 
 def _links_of(ctx, lang, title):
@@ -234,28 +313,44 @@ def _links_of(ctx, lang, title):
 
     This is the propagation the operator asked for: a link that stands on the
     Ukrainian article and not on the Russian one is found here and brought
-    back.
+    back. A redirect is followed to the article first — the redirect page
+    itself carries no links. On the bot's own host the page text is read; on
+    another host the wiki's own list of the page's language links.
     """
     import wiki
     import pywikibot
 
     state = ctx.state.get(SPEC.code)
-    key = (lang, title)
+    final, _redirected = _resolve(ctx, lang, title)
+    if final is None:
+        return {}
+    key = (lang, final)
     if key in state["links"]:
         return state["links"][key]
-    site = _sister_site(ctx, lang)
     found = {}
-    if site is not None:
-        try:
-            entry = state["langs"][lang]
-            wiki.use_cookies("{}:{}".format(entry["family"], entry["lang"]))
-            text, _saved = _mask_disabled(pywikibot.Page(site, title).text)
-            for match in _IW_LINE_RE.finditer(text):
-                found[match.group("lang").lower()] = match.group("title").strip()
-        except Exception as e:
-            logger.warning("cannot read %s:%s: %s", lang, title, e)
-        finally:
-            wiki.use_cookies(ctx.wiki)
+    if lang in state["langs"]:
+        site = _sister_site(ctx, lang)
+        if site is not None:
+            try:
+                entry = state["langs"][lang]
+                wiki.use_cookies("{}:{}".format(entry["family"], entry["lang"]))
+                text, _saved = _mask_disabled(pywikibot.Page(site, final).text)
+                for match in _IW_LINE_RE.finditer(text):
+                    found[match.group("lang").lower()] = match.group("title").strip()
+            except Exception as e:
+                logger.warning("cannot read %s:%s: %s", lang, final, e)
+            finally:
+                wiki.use_cookies(ctx.wiki)
+    else:
+        reader = _anon_wiki(ctx, lang)
+        if reader is not None:
+            try:
+                for _asked, page, _target in reader.pages([final], prop="langlinks",
+                                                          lllimit="max"):
+                    for item in (page or {}).get("langlinks") or []:
+                        found[str(item.get("lang")).lower()] = item.get("title")
+            except Exception as e:
+                logger.warning("cannot read %s:%s anonymously: %s", lang, final, e)
     state["links"][key] = found
     return found
 
@@ -315,7 +410,12 @@ def _squash(text):
     return re.sub(r"\n{3,}", "\n\n", text).strip()
 
 def apply(ctx, page, text):
-    """One page's interlanguage links completed and sorted."""
+    """One page's interlanguage links completed and sorted — or, in the
+    table mode, set as the checked table has them."""
+    if _table(ctx.params):
+        from scripts import interwiki_table
+
+        return interwiki_table.apply(ctx, page, text)
     state = ctx.state.get(SPEC.code) or {}
     known_langs = state.get("langs") or {}
     managed = state.get("managed") or set(known_langs)
@@ -332,19 +432,32 @@ def apply(ctx, page, text):
 
     added = []
     if FLAG_SORT_ONLY not in flags:
+        name = page.title() if page is not None else "?"
+        for lang, title in present.items():
+            if not _readable(ctx, lang):
+                continue
+            final, redirected = _resolve(ctx, lang, title)
+            if redirected:
+                ctx.note("note_interwiki_redirect", page=name, code=lang,
+                         title=title, target=final)
         pending = [(lang, title) for lang, title in links.items()
-                   if lang in known_langs]
+                   if _readable(ctx, lang)]
         while pending:
             lang, title = pending.pop(0)
             for other_lang, other_title in _links_of(ctx, lang, title).items():
                 if other_lang == ctx.lang or other_lang in links:
                     continue
-                if other_lang not in known_langs:
+                if other_lang not in managed or not _readable(ctx, other_lang):
                     continue
-                if _exists(ctx, other_lang, other_title):
-                    links[other_lang] = other_title
-                    added.append(other_lang)
-                    pending.append((other_lang, other_title))
+                final, redirected = _resolve(ctx, other_lang, other_title)
+                if final is None:
+                    continue
+                if redirected:
+                    ctx.note("note_interwiki_redirect_added", page=name,
+                             code=other_lang, title=other_title, target=final)
+                links[other_lang] = final
+                added.append(other_lang)
+                pending.append((other_lang, final))
 
     if not links:
         return text, []
@@ -366,9 +479,42 @@ def summary_part(ctx, labels):
     """What this mechanic contributes to the edit summary."""
     if not labels:
         return None
+    if _table(ctx.params):
+        return "интервики-ссылки по таблице"
     if any(label.startswith("добавлены") for label in labels):
         return "интервики-ссылки"
     return "интервики-ссылки упорядочены"
+
+def planned(ctx, titles):
+    """The table mode writes its table here, before /go."""
+    if _table(ctx.params):
+        from scripts import interwiki_table
+
+        interwiki_table.planned(ctx, titles)
+
+def before_start(row, lang):
+    """The table mode reads its table back here, at /go. Never touches
+    Pywikibot: it runs beside the worker."""
+    import db
+
+    if not _table(db.task_params(row)):
+        return None
+    from scripts import interwiki_table
+
+    return interwiki_table.before_start(row, lang)
+
+def finish(ctx):
+    """The table mode makes the tasks for the other wikis here."""
+    if not _table(ctx.params):
+        return None
+    from scripts import interwiki_table
+
+    return interwiki_table.finish(ctx)
+
+def repeats(params):
+    """Whether a run with these settings may repeat on a schedule: a table
+    waits for a person, so the table mode may not."""
+    return not _table(params)
 
 SPEC = mech.Mechanic(
     code="interwiki",
@@ -376,8 +522,22 @@ SPEC = mech.Mechanic(
     module=sys.modules[__name__],
     rights=("edit",),
     params=(
+        Param("interwiki_mode", CHOICE, "param_interwiki_mode", options=(
+            (MODE_COMPLETE, "iw_mode_complete"),
+            (MODE_TABLE, "iw_mode_table"),
+        )),
         Param("interwiki_flags", FLAGS, "param_interwiki_flags", options=(
             (FLAG_SORT_ONLY, "flag_iw_sort_only"),
-        )),
+        ), depends=("interwiki_mode", MODE_COMPLETE)),
+        Param("iw_langs", TEXT, "param_iw_langs", depends=("interwiki_mode", MODE_TABLE)),
+        Param("iw_threshold", INT, "param_iw_threshold", minimum=50, maximum=100,
+              depends=("interwiki_mode", MODE_TABLE)),
+        Param("iw_scope", CHOICE, "param_iw_scope", options=(
+            ("this", "iw_scope_this"),
+            ("all", "iw_scope_all"),
+        ), depends=("interwiki_mode", MODE_TABLE)),
+        Param("interwiki_table_flags", FLAGS, "param_interwiki_table_flags", options=(
+            ("empty_rows", "flag_iwt_empty"),
+        ), depends=("interwiki_mode", MODE_TABLE)),
     ),
 )

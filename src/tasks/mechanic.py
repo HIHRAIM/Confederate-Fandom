@@ -133,6 +133,38 @@ class Mechanic:
         hook = getattr(self.module, "pages", None)
         return list(hook(ctx)) if hook else []
 
+    def planned(self, ctx, titles):
+        """Whatever a mechanic prepares for a person to look at before /go.
+
+        Called once the page list is settled, still in planning. The
+        interwiki table is written here, so that the person reviews it on the
+        wiki before confirming anything; a mechanic without the hook does
+        nothing, and planning stays free of edits for every other one."""
+        hook = getattr(self.module, "planned", None)
+        if hook:
+            hook(ctx, titles)
+
+    def before_start(self, row, lang):
+        """What a mechanic checks at /go, before the task may run.
+
+        -> None to run as planned; {'problems': text} to answer the person and
+        keep the task waiting; {'titles', 'params', 'warnings'} to run with a
+        page list and parameters settled now. Runs beside the worker, so it
+        must not touch Pywikibot (wiki/anon.py reads without it)."""
+        hook = getattr(self.module, "before_start", None)
+        return hook(row, lang) if hook else None
+
+    def repeats(self, params):
+        """Whether a run with these settings may repeat on a schedule.
+
+        `schedulable` answers for the mechanic as a whole; this answers for one
+        set of answers to its dialog, because a mechanic may have a mode that
+        cannot repeat — the interwiki table waits for a person — beside one
+        that can. A mechanic without the hook repeats whenever it is
+        schedulable."""
+        hook = getattr(self.module, "repeats", None)
+        return self.schedulable and (hook(params) if hook else True)
+
     def redirects(self, params):
         """Which pages this mechanic can do anything with, for these settings.
 

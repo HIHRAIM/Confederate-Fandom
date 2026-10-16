@@ -77,6 +77,16 @@ def task_params(row):
     except (TypeError, ValueError):
         return {}
 
+def set_task_params(task_id, params):
+    """Replace the parameters of one task.
+
+    For what a task learns after the dialog and must keep across a restart:
+    the interwiki table records here which pages it wrote and what each row
+    held, and at /go the checked plan of edits."""
+    cur.execute("UPDATE tasks SET params=? WHERE id=?",
+                (json.dumps(dict(params or {}), ensure_ascii=False), int(task_id)))
+    conn.commit()
+
 def task_report(row):
     """The counters of one task, as a dict; empty while it is still running."""
     try:
@@ -198,7 +208,7 @@ def mark_page(task_id, seq, state, note=None):
     cur.execute("UPDATE task_pages SET state=?, note=? WHERE task_id=? AND seq=?",
                 (str(state), note, int(task_id), int(seq)))
 
-def record_task_page(task_id, seq, state, note=None, report=None):
+def record_task_page(task_id, seq, state, note=None, report=None, *, work_seconds=None):
     """Commit one completed page, counters and restart data together.
 
     A chunk can be interrupted after any wiki request. Deferring its SQL
@@ -215,9 +225,11 @@ def record_task_page(task_id, seq, state, note=None, report=None):
             if changed:
                 cur.execute(
                     "UPDATE tasks SET checked=checked+1, edited=edited+?, "
-                    "failed=failed+?, cursor=?, report=? WHERE id=?",
+                    "failed=failed+?, cursor=?, report=?,work_seconds=work_seconds+?,"
+                    "timed_pages=timed_pages+? WHERE id=?",
                     (int(state == "done"), int(state == "fail"), int(seq),
                      json.dumps(dict(report or {}), ensure_ascii=False),
+                     max(0.0, float(work_seconds or 0)), int(work_seconds is not None),
                      int(task_id)))
             conn.commit()
         except Exception:

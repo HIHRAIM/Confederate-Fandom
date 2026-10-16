@@ -10,19 +10,21 @@ logger = logging.getLogger("fd.sponsors")
 
 TIER1_WIKIS = 2
 TIER1_COMMUNITIES = 2
-TIER1_TASKS_DAY = 2
-TIER1_PAGES_DAY = 30
+TIER1_OVER5_DAY = 10
+TIER1_OVER10_DAY = 5
+TIER1_OVER30_DAY = 2
 TIER2_MULTIPLIER = 3
 TIER3_MULTIPLIER = 5
 
 def limits(tier):
-    """One subscription's wiki, task and page allowance."""
+    """One subscription's slots and nested estimated-duration allowance."""
     factor = (0 if tier == 0 else TIER3_MULTIPLIER if tier == 3
               else TIER2_MULTIPLIER if tier == 2 else 1)
     return {"wikis": TIER1_WIKIS * factor,
             "communities": TIER1_COMMUNITIES * factor,
-            "tasks": TIER1_TASKS_DAY * factor,
-            "pages": TIER1_PAGES_DAY * factor}
+            "over5": TIER1_OVER5_DAY * factor,
+            "over10": TIER1_OVER10_DAY * factor,
+            "over30": TIER1_OVER30_DAY * factor}
 
 def status_addendum(discord_id, lang):
     """Explain free-role activation and retention in subscription status."""
@@ -193,13 +195,17 @@ def can_use_community(discord_id, platform, community_id):
     return bool(row and row["discord_id"] == str(discord_id)
                 and db.sponsor_tier(discord_id) != 0)
 
-def spend_task(discord_id):
-    """Reserve one planned run, including a schedule firing."""
-    tier = db.sponsor_tier(discord_id)
-    return tier != 0 and db.spend_sponsor_unit(discord_id, "tasks", limits(tier)["tasks"])
-
-def reserve_pages(discord_id, pages):
-    """Reserve the planned page count before a task may start."""
-    tier = db.sponsor_tier(discord_id)
-    return tier != 0 and db.spend_sponsor_unit(
-        discord_id, "pages", limits(tier)["pages"], pages)
+def limit_text(discord_id, lang):
+    """Current slot, duration and load usage for one subscription."""
+    from utils import localized
+    caps = limits(db.sponsor_tier(discord_id))
+    wikis = db.claimed_wikis(discord_id)
+    over5, over10, over30 = db.sponsor_duration_usage(discord_id)
+    load = db.task_load_status("discord", discord_id)
+    return localized(
+        "limit_status", lang, wikis=len(wikis), names=", ".join(row["wiki"] for row in wikis) or "—",
+        wiki_limit=caps["wikis"], communities=len(db.claimed_communities(discord_id)),
+        community_limit=caps["communities"], over5=over5, over10=over10, over30=over30,
+        cap5=caps["over5"], cap10=caps["over10"], cap30=caps["over30"],
+        load=localized("limit_load_on" if load["active"] else "limit_load_off", lang),
+        people=load["people"], queued=load["queued"], wait=load["wait"])

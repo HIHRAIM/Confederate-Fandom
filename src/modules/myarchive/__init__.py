@@ -65,10 +65,11 @@ async def job():
 
     Silent when nothing changed, like the news: a line every night saying
     "nothing" is a line nobody reads. A pass that committed something, could
-    not find a page or failed says so in the service chats.
+    not find a page, failed, or was stopped by a GitHub rate limit says so in
+    the service chats, worded in the service language.
     """
     from modules.myarchive import archive
-    from utils import send_service_event
+    from utils import localized, send_service_event, service_lang
 
     cfg, token = settings()
     try:
@@ -83,12 +84,20 @@ async def job():
     missing = [page for page in result["missing"]
                if page not in _reported_missing]
     _reported_missing.update(result["missing"])
-    if result["created"] or result["updated"] or missing or result["errors"]:
+    lang = service_lang()
+    errors = [localized("service_archive_not_a_page", lang, url=url)
+              for url in result["bad"]]
+    errors += result["errors"]
+    if result["stopped"]:
+        page, error = result["stopped"]
+        errors.append(localized("service_archive_stopped", lang,
+                                page=page, error=error))
+    if result["created"] or result["updated"] or missing or errors:
         await send_service_event(
             "service_archive_done", repo=cfg.get("repo"),
             created=result["created"], updated=result["updated"],
             missing=", ".join(missing) or "—",
-            errors="; ".join(result["errors"]) or "—")
+            errors="; ".join(errors) or "—")
 
 def jobs():
     """The jobs of this module, for main.py to register. -> a list of dicts."""

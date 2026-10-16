@@ -176,6 +176,7 @@ BOTH = (TELEGRAM, DISCORD)
 HELP_SECTIONS = (
     ("help_sponsors", (
         ("cmd_sponsor", BOTH),
+        ("cmd_limit", BOTH),
         ("cmd_sponsor_wiki", (DISCORD,)),
         ("cmd_sponsor_unwiki", (DISCORD,)),
         ("cmd_sponsor_community", BOTH),

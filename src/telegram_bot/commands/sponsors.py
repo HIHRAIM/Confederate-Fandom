@@ -41,19 +41,9 @@ async def sponsor_cmd(message: Message):
         await message.answer(localized("sponsor_link_missing", lang))
         return
     tier = await sponsors.refresh_tier(owner)
-    caps = sponsors.limits(tier)
-    tasks, pages = db.sponsor_usage(owner)
-    wikis = db.claimed_wikis(owner)
-    status = localized(
-        "sponsor_status", lang,
-        tier=(localized("sponsor_tier_community", lang) if tier == -1 else tier),
-        wikis=len(wikis),
-        wiki_limit=caps["wikis"], tasks=tasks, task_limit=caps["tasks"],
-        pages=pages, page_limit=caps["pages"],
-        names=", ".join(row["wiki"] for row in wikis) or "—", url=SPONSOR_URL)
-    status += "\n" + localized("sponsor_community_usage", lang,
-                                 communities=len(db.claimed_communities(owner)),
-                                 limit=caps["communities"])
+    status = localized("sponsor_status", lang,
+        tier=localized("sponsor_tier_community", lang) if tier == -1 else tier,
+        url=SPONSOR_URL) + "\n" + sponsors.limit_text(owner, lang)
     addendum = sponsors.status_addendum(owner, lang)
     if addendum:
         status += "\n" + addendum
@@ -126,3 +116,16 @@ async def sponsor_uncommunity_cmd(message: Message):
     changed = bool(owner and db.release_community("telegram", message.chat.id, owner))
     await message.answer(localized(
         "sponsor_community_released" if changed else "sponsor_community_not_owned", lang))
+
+@router.message(Command("limit"))
+async def limit_cmd(message: Message):
+    """Share the Discord subscriber's usage through their authenticated link."""
+    lang = user_lang(message.from_user)
+    owner = sponsors.canonical_id("telegram", message.from_user.id) if message.from_user else None
+    if owner is None:
+        await message.answer(localized("limit_sponsors_only", lang))
+        return
+    await sponsors.refresh_tier(owner)
+    text = (sponsors.limit_text(owner, lang) if db.sponsor_tier(owner) != 0
+            else localized("limit_sponsors_only", lang))
+    await message.answer(text)

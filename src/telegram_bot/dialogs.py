@@ -98,12 +98,16 @@ class TelegramConversation(Conversation):
 
     async def ask(self, text):
         """Send a question and wait for this person's next message here."""
+        import db
+        db.touch_task_request(self.platform, self.user_id)
         await self.message.answer(str(text))
         answer = await wait_for_message(self.message.chat.id, self.user_id)
         return (answer.text or answer.caption or "") if answer is not None else None
 
     async def ask_text_or_file(self, text):
         """Accept a pasted list or one bounded UTF-8 .txt document."""
+        import db
+        db.touch_task_request(self.platform, self.user_id)
         from telegram_bot.client import bot
 
         await self.message.answer(str(text))

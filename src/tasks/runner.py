@@ -244,19 +244,17 @@ def _plan(task_id):
         titles = list(dict.fromkeys(titles))
         pages = db.set_pages(task_id, titles)
         sample = titles[:PREVIEW_TITLES]
-        if requester.get("role") == access.SPONSOR:
-            import sponsors
-            owner = sponsors.canonical_id(requester["platform"], requester["id"])
-            limit = sponsors.limits(db.sponsor_tier(owner))["pages"]
-            if pages > limit:
-                raise access.Refusal("sponsor_page_limit", limit=limit)
         if not pages:
             ctx.note("note_no_pages")
+        for mechanic in ctx.mechanics:
+            mechanic.planned(ctx, titles)
 
+    from tasks.estimates import save_estimate
+    seconds = save_estimate(task_id)
     if not db.set_task_state(task_id, "confirm", expected_state="pending"):
         forget(task_id)
         return {}
-    return {"pages": pages, "sample": sample, "notes": list(ctx.notes),
+    return {"pages": pages, "seconds": seconds, "sample": sample, "notes": list(ctx.notes),
             "destructive": registry.is_destructive(ctx.mechanics),
             "dry_run": ctx.dry_run,
             "mechanics": [m.code for m in ctx.mechanics],
@@ -363,6 +361,20 @@ def _walk_page(ctx, row):
 
     return ("done" if edited else "skip"), ("; ".join(notes) or None)
 
+def _public_log(ctx, row):
+    """The task's line in the public log of its wiki (tasks/publiclog.py),
+    once, before its first page. The flag is kept in the task's parameters,
+    so a run that resumes after a restart does not log itself twice."""
+    import db
+    from tasks import publiclog
+
+    ctx.dry_run = bool(row["dry_run"])
+    publiclog.record(ctx, row)
+    stored = db.task_params(db.get_task(ctx.task_id) or row)
+    stored["public_log_done"] = True
+    db.set_task_params(ctx.task_id, stored)
+    ctx.params["public_log_done"] = True
+
 def run_chunk(task_id):
     """Keep ownership of the context until the worker finishes its chunk."""
     _busy.add(task_id)
@@ -389,6 +401,8 @@ def _run_chunk(task_id):
     ctx = context_for(row)
     if ctx.diffs is None:
         ctx.diffs = report.DiffFile(task_id, ctx.wiki, ctx.dry_run, ctx.reader)
+    if not ctx.params.get("public_log_done"):
+        _public_log(ctx, row)
 
     started = time.monotonic()
     cursor = row["cursor"]
@@ -403,12 +417,14 @@ def _run_chunk(task_id):
         if not pages:
             break
         page_row = pages[0]
+        page_started = time.monotonic()
         state, note = _walk_page(ctx, page_row)
+        elapsed = time.monotonic() - page_started
         cursor = page_row["seq"]
         checked += 1
         db.record_task_page(task_id, cursor, state, note, {
             "checkpoint": {"notes": list(ctx.notes),
-                           "report_lines": list(ctx.report_lines)}})
+                           "report_lines": list(ctx.report_lines)}}, work_seconds=elapsed)
 
         if checked >= CHUNK_PAGES:
             break

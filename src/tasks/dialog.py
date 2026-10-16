@@ -180,7 +180,7 @@ async def _ask_param(conv, param, values):
             await conv.say(localized("dialog_bad_value", conv.lang))
     return None
 
-async def _ask_flags(conv, mechanics):
+async def _ask_flags(conv, mechanics, values=None):
     """Every switch of every chosen mechanic, in one numbered message.
 
     The one place the dialog would otherwise grow without limit: four
@@ -188,12 +188,16 @@ async def _ask_flags(conv, mechanics):
     nobody answers twenty questions. Here they are one list, and the person
     writes the numbers they want — or `0`, which is what most runs want.
 
+    A switch that belongs to an answer not given — the interwiki mechanic's
+    «only sort» when the person chose its table mode — is not offered
+    (`Param.depends`, read against `values`).
+
     -> {parameter name: [values]}, or None on a timeout.
     """
     entries = []
     for mechanic in mechanics:
         for param in mechanic.params:
-            if param.kind != FLAGS:
+            if param.kind != FLAGS or not param.wanted(values or {}):
                 continue
             for value, key in param.options:
                 entries.append((param.name, value, key,
@@ -346,7 +350,31 @@ def _weekdays(text):
             days.append(int(token) - 1)
     return days or None
 
+_active_task_dialogs = {}
+
+def active_task_dialog_identities():
+    """Current task conversations; a linked pair appears once."""
+    return set(_active_task_dialogs)
+
 async def build(conv, tokens=()):
+    """Track a live conversation until completion, failure or cancellation."""
+    import db
+
+    requester = access.caller(conv.platform, conv.user_id, conv.display_name)
+    if requester is None:
+        return await _build(conv, tokens)
+    identity = db.task_request_identity(conv.platform, conv.user_id)
+    _active_task_dialogs[identity] = _active_task_dialogs.get(identity, 0) + 1
+    try:
+        return await _build(conv, tokens)
+    finally:
+        remaining = _active_task_dialogs[identity] - 1
+        if remaining:
+            _active_task_dialogs[identity] = remaining
+        else:
+            _active_task_dialogs.pop(identity, None)
+
+async def _build(conv, tokens=()):
     """The whole conversation. -> the new task's id, or None.
 
     `tokens` are whatever came with the command, so `/run replace typos-ru`
@@ -361,6 +389,7 @@ async def build(conv, tokens=()):
         await conv.say(localized("not_admin", conv.lang))
         return None
 
+    db.touch_task_request(conv.platform, conv.user_id)
     mechanics, unknown = registry.find_all(tokens)
     if unknown:
         await conv.say(localized("run_unknown", conv.lang,
@@ -438,7 +467,7 @@ async def build(conv, tokens=()):
             return None
         params[param.name] = value
 
-    flags = await _ask_flags(conv, mechanics)
+    flags = await _ask_flags(conv, mechanics, params)
     if flags is None:
         return None
     params.update(flags)
@@ -455,7 +484,7 @@ async def build(conv, tokens=()):
         params["summary"] = ""
 
     when = {"kind": ONCE}
-    if registry.schedulable(mechanics):
+    if registry.schedulable(mechanics, params):
         when = await _ask_when(conv)
         if when is None:
             return None
@@ -501,12 +530,6 @@ async def build(conv, tokens=()):
                                  mechanics=", ".join(codes), when=described))
         return None
 
-    if requester.get("role") == access.SPONSOR:
-        import sponsors
-        owner = sponsors.canonical_id(requester["platform"], requester["id"])
-        if not sponsors.spend_task(owner):
-            await conv.say(localized("sponsor_task_limit", conv.lang))
-            return None
     task_id = db.create_task(wiki=wiki_key, mechanics=codes, params=params,
                              requester=requester, reply_chat=conv.chat_key,
                              community_platform=(requester["platform"] if getattr(conv, "community_id", None)

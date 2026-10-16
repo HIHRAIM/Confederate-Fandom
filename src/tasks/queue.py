@@ -68,8 +68,7 @@ def _fire_schedules():
             owner = sponsors.canonical_id(requester["platform"], requester["id"])
             if (not owner or not sponsors.can_use_wiki(owner, row["wiki"]) or
                     (row["community_id"] is not None and not sponsors.can_use_community(
-                        owner, row["community_platform"], row["community_id"])) or
-                    not sponsors.spend_task(owner)):
+                        owner, row["community_platform"], row["community_id"]))):
                 db.mark_fired(row)
                 continue
         params = db.schedule_params(row)
@@ -266,19 +265,25 @@ async def _plan(row):
         runner.forget(task_id)
         return
 
-    if row["schedule_id"]:
-        outcome = await start(task_id, announce_only=True)
-        if outcome in ("quota", "forbidden"):
+    if row["schedule_id"] or db.task_params(row).get("after_task"):
+        outcome = await start(task_id, announce_only=bool(row["schedule_id"]))
+        if outcome in ("quota", "load", "forbidden"):
             db.set_task_state(task_id, "failed", error=outcome)
             await notify.send(row["reply_chat"], localized(
-                "sponsor_page_limit" if outcome == "quota" else "sponsor_wiki_required",
+                "sponsor_duration_limit" if outcome == "quota" else
+                "sponsor_load_limit" if outcome == "load" else "sponsor_wiki_required",
                 lang, limit=0, wiki=row["wiki"]))
         return
 
     mechanics, _unknown = registry.find_all(db.task_mechanics(row))
     names = ", ".join(localized(m.name_key, lang) for m in mechanics)
+    from utils import format_duration
     sample = "\n".join("• " + title for title in plan["sample"])
     more = plan["pages"] - len(plan["sample"])
+    notes = runner.render_notes(plan["notes"], lang)
+    if registry.needs_pages(mechanics):
+        notes.append(localized("task_estimate", lang,
+                               duration=format_duration(plan["seconds"], lang)))
     await notify.send(row["reply_chat"], localized(
         "task_planned", lang,
         id=task_id, wiki=plan["wiki"], mechanics=names,
@@ -286,7 +291,7 @@ async def _plan(row):
         sample=sample + (("\n" + localized("task_sample_more", lang, count=more))
                          if more > 0 else ""),
         warning=localized("task_destructive", lang) if plan["destructive"] else "",
-        notes="\n".join(runner.render_notes(plan["notes"], lang)),
+        notes="\n".join(notes),
         how=go_hint(row["reply_chat"], task_id, lang),
     ))
 
@@ -362,6 +367,50 @@ async def _failed(row, error, lang, service):
         "task_failed", service, id=task_id, wiki=row["wiki"],
         error=report.safe_error(error, service)))
 
+async def _review(row):
+    """Let a mechanic check what a person reviewed, at /go. -> None to go on,
+    or "review" when the task has to wait (the person has been told why).
+
+    The interwiki table is the one such mechanic (Mechanic.before_start): it
+    reads the table back, answers with every mistake in it, or settles the
+    page list and the plan of edits from it. That happens here, before the
+    sponsor quota is charged and before the task is running, so a table with
+    a mistake costs nothing and the next /go starts again from the same
+    place. The check reads anonymously and runs in a thread of its own,
+    beside the worker; it never touches Pywikibot.
+    """
+    import db
+    from tasks import notify, registry, report, runner
+    from utils import localized
+
+    mechanics, _unknown = registry.find_all(db.task_mechanics(row))
+    reviewing = [m for m in mechanics if getattr(m.module, "before_start", None)]
+    if not reviewing:
+        return None
+    lang = reader_lang(row)
+    for mechanic in reviewing:
+        try:
+            outcome = await asyncio.to_thread(mechanic.before_start, row, lang)
+        except Exception as e:
+            logger.exception("task %s could not be checked before the run", row["id"])
+            await notify.send(row["reply_chat"], localized(
+                "task_review_failed", lang, id=row["id"], error=report.safe_error(e, lang)))
+            return "review"
+        if not outcome:
+            continue
+        if outcome.get("problems"):
+            await notify.send(row["reply_chat"], outcome["problems"])
+            return "review"
+        if outcome.get("params") is not None:
+            db.set_task_params(row["id"], outcome["params"])
+        if outcome.get("titles") is not None:
+            db.set_pages(row["id"], outcome["titles"])
+        if outcome.get("warnings"):
+            await notify.send(row["reply_chat"], outcome["warnings"])
+        if not runner.is_busy(row["id"]):
+            runner.forget(row["id"])
+    return None
+
 async def start(task_id, announce_only=False):
     """Move a confirmed task into the running state and get it going.
 
@@ -381,6 +430,12 @@ async def start(task_id, announce_only=False):
         return False
     if row["state"] != "confirm":
         return False
+    review = await _review(row)
+    if review is not None:
+        return review
+    row = db.get_task(task_id)
+    if row is None or row["state"] != "confirm":
+        return False
     from utils import is_admin
     uid = row["requested_by_id"]
     platform = row["requested_by_platform"]
@@ -392,9 +447,12 @@ async def start(task_id, announce_only=False):
                 or (row["community_id"] is not None and not sponsors.can_use_community(
                     owner, row["community_platform"], row["community_id"]))):
             return "forbidden"
-        if not sponsors.reserve_pages(owner, db.count_pages(task_id)):
-            return "quota"
-    if not db.set_task_state(task_id, "running", expected_state="confirm"):
+        from tasks.estimates import save_estimate
+        seconds = save_estimate(task_id)
+        outcome = db.admit_sponsor_task(task_id, owner, sponsors.limits(db.sponsor_tier(owner)), seconds)
+        if outcome is not True:
+            return outcome
+    elif not db.set_task_state(task_id, "running", expected_state="confirm"):
         return False
     lang = reader_lang(row)
     requester = {"platform": row["requested_by_platform"],

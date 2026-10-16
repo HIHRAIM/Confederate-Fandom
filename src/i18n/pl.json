@@ -710,7 +710,7 @@
   },
   "mech_interwiki_desc": {
     "status": "unverified",
-    "text": "dopisuje brakujące odnośniki do innych wersji językowych, zbiera je na końcu i sortuje"
+    "text": "uzupełnić brakujące linki do innych wersji językowych, zebrać je na końcu i posortować — albo zbudować tabelę par artykułów do sprawdzenia i według niej ustawić linki"
   },
   "mech_listpages": {
     "status": "unverified",
@@ -854,7 +854,7 @@
   },
   "note_interwiki_elsewhere": {
     "status": "unverified",
-    "text": "Na innym hoście: {langs} — ich linki zostają, ale nie są sprawdzane ani uzupełniane."
+    "text": "Na innym hoście: {langs} — bot czyta je bez logowania."
   },
   "note_interwiki_langs": {
     "status": "unverified",
@@ -866,7 +866,7 @@
   },
   "note_interwiki_unreachable": {
     "status": "unverified",
-    "text": "Wersja «{lang}» jest niedostępna: {error}"
+    "text": "Wersja «{code}» jest niedostępna: {error}"
   },
   "note_mechanic_failed": {
     "status": "unverified",
@@ -1412,6 +1412,14 @@
     "status": "unverified",
     "text": "Archiwum stron nie zostało zaktualizowane: {error}"
   },
+  "service_archive_not_a_page": {
+    "status": "unverified",
+    "text": "to nie jest adres strony: {url}"
+  },
+  "service_archive_stopped": {
+    "status": "unverified",
+    "text": "{page}: GitHub poprosił o zmniejszenie częstotliwości zapytań, więc przebieg zatrzymał się tutaj; pozostałe strony zostaną zapisane przy następnym przebiegu ({error})"
+  },
   "service_channel_failed": {
     "status": "unverified",
     "text": "Nie udało się odczytać kanału źródłowego {channel}: {error}"
@@ -1767,7 +1775,7 @@
   "slash_sponsor": {"status": "unverified", "text": "Show your sponsorship and Fandom work budget"},
   "slash_sponsor_wiki": {"status": "unverified", "text": "Claim a wiki where you are Fandom staff"},
   "slash_sponsor_unwiki": {"status": "unverified", "text": "Release your wiki claim"},
-  "sponsor_status": {"status": "unverified", "text": "Tier {tier}. Wikis {wikis}/{wiki_limit}: {names}. Today: tasks {tasks}/{task_limit}, planned pages {pages}/{page_limit}. Subscribe: {url}"},
+  "sponsor_status": {"status": "unverified", "text": "Tier {tier}. Subscribe: {url}"},
   "sponsor_not_active": {"status": "unverified", "text": "No active Patreon role was found. Subscribe at {url} and connect Patreon to Discord."},
   "sponsor_wiki_invalid": {"status": "unverified", "text": "The wiki or Fandom account could not be verified."},
   "sponsor_wiki_staff": {"status": "unverified", "text": "This Fandom account needs staff rights on that wiki."},
@@ -1868,5 +1876,326 @@
   "param_file_pages": {"status": "unverified", "text": "Source page titles, one per line; paste text or attach a UTF-8 .txt file (up to 128 KiB):"},
   "param_file_category": {"status": "unverified", "text": "Source category name:"},
   "param_file_categories": {"status": "unverified", "text": "Source category names, one per line; paste text or attach a UTF-8 .txt file (up to 128 KiB):"},
-  "dialog_file_list_invalid": {"status": "unverified", "text": "Send a nonempty UTF-8 .txt file up to 128 KiB, or paste the list as text."}
+  "dialog_file_list_invalid": {"status": "unverified", "text": "Send a nonempty UTF-8 .txt file up to 128 KiB, or paste the list as text."},
+  "slash_limit": {"status": "unverified", "text": "Show your current subscription usage"},
+  "cmd_limit": {"status": "unverified", "text": "/limit — your current subscription usage (sponsors only)."},
+  "limit_sponsors_only": {"status": "unverified", "text": "This command is available only to active sponsors, including working grace. Link Telegram to the subscribing Discord account first."},
+  "limit_status": {"status": "unverified", "text": "Wiki slots: {wikis}/{wiki_limit} ({names}); communities: {communities}/{community_limit}.\nTasks admitted today UTC: estimated >5 min {over5}/{cap5}; >10 min {over10}/{cap10}; >30 min {over30}/{cap30}. Tasks up to 5 min have no daily quota. A longer task also uses every lower threshold. Daily budgets reset at 00:00 UTC and are shared by linked accounts.\nLoad restriction: {load}; active people: {people}. Your admitted unfinished tasks: {queued}; cooldown remaining: {wait} s. Under load: one admission per 60 seconds and at most two admitted unfinished tasks."},
+  "limit_load_on": {"status": "unverified", "text": "active"},
+  "limit_load_off": {"status": "unverified", "text": "inactive"},
+  "sponsor_duration_limit": {"status": "unverified", "text": "Your estimated-duration task allowance is used for today UTC. Tasks over 5, 10 and 30 minutes use nested daily budgets. Retry /go after 00:00 UTC."},
+  "sponsor_load_limit": {"status": "unverified", "text": "The bot is busy with several users. Under load you may admit one task per 60 seconds and keep up to two admitted unfinished tasks. Use /limit to check, then retry /go."},
+  "task_estimate": {"status": "unverified", "text": "Estimated worker time: {duration}, excluding queue waits. This estimate uses measured matching passes or a conservative per-page default; actual duration can differ."},
+  "note_interwiki_redirect": {
+    "status": "unverified",
+    "text": "Na «{page}» link {code}:«{title}» prowadzi do przekierowania na «{target}». Zostawiono go bez zmian; lepiej zastąpić go linkiem bezpośrednim."
+  },
+  "note_interwiki_redirect_added": {
+    "status": "unverified",
+    "text": "Na «{page}» dodano bezpośredni link {code}:«{target}»: inna wersja językowa wskazywała przekierowanie «{title}»."
+  },
+  "param_iw_langs": {
+    "status": "unverified",
+    "text": "Które wersje językowe porównać? Kody oddzielone spacjami (na przykład: en uk pl) albo * — wszystkie."
+  },
+  "param_iw_threshold": {
+    "status": "unverified",
+    "text": "Jak podobne mają być tytuły, w procentach (od 50 do 100)? 100 — tylko brzmiące tak samo; 90 to zwykle dobry wybór."
+  },
+  "param_iw_scope": {
+    "status": "unverified",
+    "text": "Gdzie ustawić linki po sprawdzeniu tabeli?"
+  },
+  "iw_scope_this": {
+    "status": "unverified",
+    "text": "tylko na tej wiki"
+  },
+  "iw_scope_all": {
+    "status": "unverified",
+    "text": "na wszystkich wiki z tabeli — bot utworzy osobne zadanie dla każdej i na każdej potrzebne są Twoje uprawnienia"
+  },
+  "param_interwiki_table_flags": {
+    "status": "unverified",
+    "text": "Dodatkowo:"
+  },
+  "flag_iwt_empty": {
+    "status": "unverified",
+    "text": "dodać do tabeli także artykuły bez propozycji — aby wpisać pary ręcznie"
+  },
+  "error_iwtable_langs": {
+    "status": "unverified",
+    "text": "Ta wiki nie ma takich wersji językowych: {langs}. Ma: {available}."
+  },
+  "iwtable_intro": {
+    "status": "unverified",
+    "text": "To jest tabela interwiki zadania nr {id} dla {wiki}, część {part} z {parts}. Każdy wiersz to jeden temat w różnych wersjach językowych, każda kolumna to język."
+  },
+  "iwtable_howto": {
+    "status": "unverified",
+    "text": "Sprawdź kolorowe komórki — zaproponował je bot. Popraw błędną komórkę, wyczyść zbędną, uzupełnij brakującą: linkiem albo samym tytułem artykułu — język wynika z kolumny. Pusta komórka oznacza, że artykułu w tym języku nie ma. Wiersz, którego nie należy ruszać, usuń w całości. Aby usunąć istniejący link, wyczyść jego komórkę. Nowe wiersze dodawaj bez numeru."
+  },
+  "iwtable_legend": {
+    "status": "unverified",
+    "text": "Kolory: niebieski — znalezione przez linki innych artykułów; żółty — zgadza się tytuł lub jego brzmienie; zielony — znalezione w słowniku bota; pomarańczowy — podobny tytuł (najedź kursorem, aby zobaczyć procent); czerwony — link prowadzi do nieistniejącego artykułu. Komórki bez koloru to linki, które już są."
+  },
+  "iwtable_go": {
+    "status": "unverified",
+    "text": "Gdy skończysz ze wszystkimi częściami, wyślij botowi /go {id}. Sprawdzi tabelę i ustawi linki, a jeśli znajdzie błędy — odpowie ich listą, a zadanie poczeka na poprawki."
+  },
+  "iwtable_parts": {
+    "status": "unverified",
+    "text": "Części tabeli: {parts}."
+  },
+  "iwtable_doubts": {
+    "status": "unverified",
+    "text": "Do rozstrzygnięcia ręcznie"
+  },
+  "iwcell_back": {
+    "status": "unverified",
+    "text": "wersja {code} linkuje do tego artykułu"
+  },
+  "iwcell_chain": {
+    "status": "unverified",
+    "text": "znalezione przez linki innych wersji językowych"
+  },
+  "iwcell_same": {
+    "status": "unverified",
+    "text": "taki sam tytuł"
+  },
+  "iwcell_redirect": {
+    "status": "unverified",
+    "text": "zgadza się z przekierowaniem «{via}»"
+  },
+  "iwcell_key": {
+    "status": "unverified",
+    "text": "tytuł brzmi tak samo"
+  },
+  "iwcell_similar": {
+    "status": "unverified",
+    "text": "podobny tytuł, {pct}%"
+  },
+  "iwcell_broken": {
+    "status": "unverified",
+    "text": "nie ma takiego artykułu"
+  },
+  "iwcell_via": {
+    "status": "unverified",
+    "text": "link prowadził do przekierowania «{via}»"
+  },
+  "iwdoubt_broken": {
+    "status": "unverified",
+    "text": "Wiersz {row}: «{title}» linkuje do {code}:«{target}», ale takiego artykułu nie ma. Wpisz do komórki właściwy artykuł albo ją wyczyść — wtedy bot usunie zepsuty link."
+  },
+  "iwdoubt_redirect": {
+    "status": "unverified",
+    "text": "Wiersz {row}: link do {code}:«{target}» prowadzi do przekierowania na «{final}». Bot zastąpi go linkiem bezpośrednim; jeśli to błąd, popraw komórkę."
+  },
+  "iwdoubt_mismatch": {
+    "status": "unverified",
+    "text": "Wiersz {row}: «{title}» linkuje do {code}:«{target}», a tamten artykuł z powrotem do «{back}». Jeden z tych linków jest błędny. Jeśli para w wierszu jest prawidłowa, zostaw ją — bot poprawi link na {code}:«{target}»; jeśli nie, popraw komórkę."
+  },
+  "iwdoubt_back_many": {
+    "status": "unverified",
+    "text": "Wiersz {row}: do «{title}» linkuje kilka artykułów wersji {code}: {options}. Wpisz właściwy do komórki {code}; zbędne linki na pozostałych popraw ręcznie."
+  },
+  "iwdoubt_chain": {
+    "status": "unverified",
+    "text": "Wiersz {row}: linki innych języków dają dla «{title}» różne artykuły {code}: {options}. Wpisz właściwy do komórki {code}."
+  },
+  "iwdoubt_several": {
+    "status": "unverified",
+    "text": "Wiersz {row}: do «{title}» pasuje kilka artykułów {code}: {options}. Wpisz właściwy do komórki {code} albo zostaw ją pustą."
+  },
+  "iwdoubt_taken": {
+    "status": "unverified",
+    "text": "Wiersz {row}: artykuł {code} «{candidate}» wygląda na pasujący, ale jest już powiązany z «{other}». Jeśli tamto powiązanie jest błędne, wpisz «{candidate}» do tego wiersza; w przeciwnym razie zostaw komórkę pustą."
+  },
+  "iwdoubt_short": {
+    "status": "unverified",
+    "text": "Wiersz {row}: krótki tytuł «{title}» zgadza się z {code}:«{candidate}». Przy krótkich tytułach łatwo o pomyłkę — upewnij się, że to ten sam temat, albo wyczyść komórkę."
+  },
+  "iwdoubt_contested": {
+    "status": "unverified",
+    "text": "Wiersze {rows}: artykuł {code}:«{candidate}» pasuje do kilku wierszy, więc bot nie wpisał go nigdzie. Wpisz go do właściwego wiersza."
+  },
+  "iwnote_cut": {
+    "status": "unverified",
+    "text": "Podobne tytuły porównywano przez {seconds} s i {count} artykułów nie zdążono porównać. Zawęź listę stron lub języków, jeśli są ważne."
+  },
+  "iwnote_han": {
+    "status": "unverified",
+    "text": "W wersji {code} {count} artykułów ma tytuły w kanji lub hanzi bez odczytu kaną (DEFAULTSORT), więc bot nie może porównać ich tytułów. Pary dla nich znajdź samodzielnie."
+  },
+  "iwnote_unreachable": {
+    "status": "unverified",
+    "text": "Wersja {code} nie odpowiedziała ({error}), więc w tabeli nie ma jej kolumny."
+  },
+  "note_iwtable_written": {
+    "status": "unverified",
+    "text": "Tabela została zapisana: {pages}. Wierszy: {rows}, pytań do rozstrzygnięcia ręcznie: {doubts}. Sprawdź ją i w razie potrzeby popraw, potem wyślij /go — strony do edycji bot weźmie z tabeli."
+  },
+  "note_iwtable_nothing": {
+    "status": "unverified",
+    "text": "Nie ma czego zaproponować: wybrane artykuły mają już linki albo nie znaleziono par. Aby wpisać pary ręcznie, uruchom zadanie z opcją «artykuły bez propozycji»."
+  },
+  "note_iwtable_stale": {
+    "status": "unverified",
+    "text": "Strony {pages} zostały po wcześniejszych tabelach i nie należą do tego zadania — bot ich nie czyta."
+  },
+  "note_iwtable_changed": {
+    "status": "unverified",
+    "text": "Na «{title}» link {code} zmienił się po sprawdzeniu tabeli (teraz «{now}», w tabeli «{table}») — pozostawiono go bez zmian."
+  },
+  "note_iwtable_children": {
+    "status": "unverified",
+    "text": "Utworzono zadania dla pozostałych wiki: {tasks}. Każde uruchomi się samo, gdy przejdzie kontrole na swojej wiki."
+  },
+  "note_iwtable_child_failed": {
+    "status": "unverified",
+    "text": "Nie udało się utworzyć zadania dla wersji {code}: {error}"
+  },
+  "iwerr_title": {
+    "status": "unverified",
+    "text": "Zadanie nr {id}: w tabeli są błędy, linków nie ustawiono. Popraw je i wyślij ponownie /go {id}."
+  },
+  "iwerr_more": {
+    "status": "unverified",
+    "text": "…i jeszcze {count}."
+  },
+  "iwwhere_row": {
+    "status": "unverified",
+    "text": "wiersz {row}"
+  },
+  "iwwhere_line": {
+    "status": "unverified",
+    "text": "nowy wiersz w {line}. linii kodu źródłowego"
+  },
+  "iwerr_nothing_written": {
+    "status": "unverified",
+    "text": "Tabeli nie ma: przy jej budowaniu bot nie znalazł nic do zaproponowania. Utwórz zadanie ponownie z opcją «artykuły bez propozycji», aby wypełnić ją ręcznie."
+  },
+  "iwerr_wiki_unreachable": {
+    "status": "unverified",
+    "text": "Wersja {code} nie odpowiada ({error}), więc nie da się sprawdzić tabeli. Wyślij /go ponownie później."
+  },
+  "iwerr_page_missing": {
+    "status": "unverified",
+    "text": "Nie znaleziono strony {page}. Przywróć ją albo utwórz zadanie ponownie."
+  },
+  "iwerr_no_mark": {
+    "status": "unverified",
+    "text": "Na stronie {page} brakuje na początku linii serwisowej <!-- interwiki-table … -->. Przywróć ją — po niej bot rozpoznaje swoją tabelę."
+  },
+  "iwerr_other_task": {
+    "status": "unverified",
+    "text": "Stronę {page} nadpisało zadanie nr {other}, więc ta tabela nie jest już kompletna. Utwórz zadanie ponownie albo kontynuuj z zadaniem nr {other}."
+  },
+  "iwerr_no_table": {
+    "status": "unverified",
+    "text": "Na stronie {page} nie znaleziono tabeli: brakuje linii {{| lub |}}."
+  },
+  "iwerr_no_header": {
+    "status": "unverified",
+    "text": "Tabela na stronie {page} nie ma wiersza nagłówka (! № !! pl !! …)."
+  },
+  "iwerr_header": {
+    "status": "unverified",
+    "text": "{page}: kolumna nagłówka «{column}» nie jest językiem tego zadania. Dozwolone: {langs}."
+  },
+  "iwerr_header_twice": {
+    "status": "unverified",
+    "text": "{page}: język {code} występuje w nagłówku dwa razy."
+  },
+  "iwerr_cells": {
+    "status": "unverified",
+    "text": "{page}, {where}: komórek {found}, a kolumn {expected}. Wygląda na to, że komórka zginęła albo przybyła zbędna — każda zaczyna się od |."
+  },
+  "iwerr_number": {
+    "status": "unverified",
+    "text": "{page}, {where}: «{value}» w kolumnie № nie jest liczbą. Zostaw numer bez zmian albo wyczyść go dla nowego wiersza."
+  },
+  "iwerr_brackets": {
+    "status": "unverified",
+    "text": "{page}, {where}, kolumna {code}: niezamknięty link «{text}» — sprawdź [[ i ]]."
+  },
+  "iwerr_number_twice": {
+    "status": "unverified",
+    "text": "Numer wiersza {row} występuje dwa razy ({pages}). Zostaw go w jednym wierszu, w nowym wyczyść."
+  },
+  "iwerr_missing_title": {
+    "status": "unverified",
+    "text": "{page}, {where}: nie ma artykułu {code}:«{title}». Sprawdź pisownię albo wyczyść komórkę."
+  },
+  "iwerr_title_twice": {
+    "status": "unverified",
+    "text": "Artykuł {code}:«{title}» stoi w kilku wierszach ({rows}). Artykuł może mieć tylko jeden wiersz."
+  },
+  "iwerr_conflict": {
+    "status": "unverified",
+    "text": "{page}, {where}: {code}:«{title}» ma już link do {other}:«{current}», a tabela podaje «{wanted}». Popraw tabelę albo link na stronie."
+  },
+  "iwerr_empty": {
+    "status": "unverified",
+    "text": "Nie ma nic do zrobienia: w tabeli nie ma wiersza z co najmniej dwoma artykułami ani linku do usunięcia."
+  },
+  "iwwarn_editors": {
+    "status": "unverified",
+    "text": "Zadanie nr {id}: po bocie tabelę edytowali {users}. Jeśli to nie Ty, sprawdź ich zmiany — bot ustawi linki tak, jak są teraz w tabeli."
+  },
+  "task_review_failed": {
+    "status": "unverified",
+    "text": "Zadanie nr {id}: nie udało się sprawdzić tabeli ({error}). Zadanie czeka — wyślij /go ponownie później."
+  },
+  "task_review_elsewhere": {
+    "status": "unverified",
+    "text": "Zadanie nr {id} jeszcze się nie rozpoczęło: odpowiedź o tabeli wysłano na czat, w którym zadanie utworzono."
+  },
+  "iwnote_skipped": {
+    "status": "unverified",
+    "text": "Czytanie wersji językowych trwało ponad {seconds} s, więc {langs} nie zostały przeczytane i nie mają kolumn. Utwórz dla nich osobne zadanie z mniejszą liczbą języków."
+  },
+  "param_interwiki_mode": {
+    "status": "unverified",
+    "text": "Co zrobić z interwiki?"
+  },
+  "iw_mode_complete": {
+    "status": "unverified",
+    "text": "uzupełnić i uporządkować istniejące linki"
+  },
+  "iw_mode_table": {
+    "status": "unverified",
+    "text": "znaleźć pary artykułów i wystawić tabelę do sprawdzenia; linki — po /go"
+  },
+  "iwcell_dictionary": {
+    "status": "unverified",
+    "text": "znalezione w słowniku bota"
+  },
+  "iwnote_dict_errors": {
+    "status": "unverified",
+    "text": "Słownik bota w wersji {code}: wierszy z błędami znaczników — {count}, pominięto je."
+  },
+  "iwnote_dict_unreadable": {
+    "status": "unverified",
+    "text": "Słownika bota w wersji {code} nie da się odczytać jako tabeli — pominięto go."
+  },
+  "note_iwdict_used": {
+    "status": "unverified",
+    "text": "Użyto słownika bota: {rows} wierszy (wersje: {wikis})."
+  },
+  "note_iwdict_created": {
+    "status": "unverified",
+    "text": "Utworzono pusty słownik bota: {page}. Wpisz do niego nazwy, których transliteracja nie znajdzie — następna tabela je uwzględni."
+  },
+  "iwdict_intro": {
+    "status": "unverified",
+    "text": "To słownik, którego bot używa, gdy buduje tabelę interwiki. Każdy wiersz to jedna nazwa lub słowo w różnych językach, każda kolumna to język (kod w nagłówku). Cały tytuł bot szuka bez zmian, a słowa podstawia w tytułach przed porównaniem — na przykład «List» za «Список» albo «and» za «i». Dodawaj wiersze i kolumny; puste komórki są dozwolone. Słowniki ze stron bota we wszystkich porównywanych wersjach językowych są łączone."
+  },
+  "iwdict_example": {
+    "status": "unverified",
+    "text": "Przykładowy wiersz — po «|-» w nowej linii: «| Lista odcinków || List of episodes»"
+  },
+  "note_publog_failed": {
+    "status": "unverified",
+    "text": "Nie udało się zapisać wiersza w publicznym dzienniku zadań: {error}"
+  }
 }

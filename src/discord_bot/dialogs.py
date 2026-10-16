@@ -73,11 +73,15 @@ class DiscordConversation(Conversation):
 
     async def ask(self, text):
         """Send a question and wait for this person's next text message."""
+        import db
+        db.touch_task_request(self.platform, self.user_id)
         message = await self._reply(text)
         return message.content if message is not None else None
 
     async def ask_text_or_file(self, text):
         """Accept a pasted list or one bounded UTF-8 .txt attachment."""
+        import db
+        db.touch_task_request(self.platform, self.user_id)
         message = await self._reply(text)
         if message is None:
             return None

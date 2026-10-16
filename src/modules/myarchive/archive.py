@@ -18,15 +18,29 @@ that differs is read back and committed.
 made by the owner alone, or an update after other people's edits, naming them.
 Who edited is asked of the wiki: every revision since the file's last commit.
 The editors config.MYARCHIVE["coauthors"] knows are added as co-authors, so
-the commit shows on their GitHub profile too.
+the commit shows on their GitHub profile too. That is why every page is its
+own commit: one commit for the night would name all the co-authors at once
+and no longer say whose edit is which.
+
+**An empty page** is filed as one line saying so (config.MYARCHIVE["empty"]),
+written as a comment in a script, a stylesheet or a Lua module and as a JSON
+string in JSON, so that a file restored from the archive still loads. The
+line stands in for the page before the comparison as well, which is what
+makes an empty page one commit rather than one every night.
+
+**How fast**: commits go one at a time, at least a second apart
+(github.WRITE_PAUSE), and the first rate-limit answer from GitHub ends the
+pass. Nothing is lost by stopping: the next pass finds the pages already
+committed equal to their files and goes on with the rest.
 
 Blocking; called from a worker thread by the module's job.
 """
 import hashlib
+import json
 import logging
 
 from modules.myarchive import fandom
-from modules.myarchive.github import GitHub
+from modules.myarchive.github import GitHub, RateLimited
 
 logger = logging.getLogger("fd.modules.myarchive.archive")
 
@@ -39,6 +53,30 @@ MESSAGES = {
 }
 """The commit messages when config.MYARCHIVE names none. The repository is
 the operator's, so its language is theirs to choose there."""
+
+EMPTY = "Empty page"
+"""What the file of an empty page says when config.MYARCHIVE["empty"] names
+nothing else — the operator's language again, like the messages."""
+
+_EMPTY_FORMS = {
+    "javascript": "// {}",
+    "css": "/* {} */",
+    "sanitized-css": "/* {} */",
+    "Scribunto": "-- {}",
+}
+"""How the empty-page line is written, by content model: as a comment in a
+language that has one. Wikitext and anything unknown get the bare line."""
+
+def file_text(page, empty):
+    """The text a page's file holds: the page's own, or — for a page with
+    nothing but whitespace in it — the empty-page line in its model's form."""
+    content = page.get("content") or ""
+    if content.strip():
+        return content
+    model = page.get("model")
+    if model == "json":
+        return json.dumps(empty, ensure_ascii=False)
+    return _EMPTY_FORMS.get(model, "{}").format(empty)
 
 def repo_path(lang, subdomain, page, namespaces):
     """Where one page lives in the repository."""
@@ -97,19 +135,25 @@ def _group(urls):
     return wikis, bad
 
 def run_pass(cfg, token):
-    """Archive every configured page once. -> a mapping of counters and lists."""
+    """Archive every configured page once. -> a mapping of counters and lists.
+
+    Nothing in it is worded for a person: `bad` holds the addresses that are
+    not page addresses and `stopped` the (page, GitHub's answer) a rate limit
+    ended the pass on, and the module's job words them in the service
+    language. `missing` and `errors` carry page labels and the errors' own
+    text, which are not translated anywhere in the bot."""
     messages = dict(MESSAGES)
     messages.update(cfg.get("messages") or {})
     owner = cfg.get("owner")
     coauthors = dict(cfg.get("coauthors") or {})
+    empty = cfg.get("empty") or EMPTY
     github = GitHub(token, cfg["repo"], cfg.get("branch"))
     me = github.login()
     tree = github.tree()
 
-    result = {"created": 0, "updated": 0, "unchanged": 0, "missing": [],
-              "errors": []}
     wikis, bad = _group(cfg.get("pages") or [])
-    result["errors"] += ["not a page address: {}".format(url) for url in bad]
+    result = {"created": 0, "updated": 0, "unchanged": 0, "missing": [],
+              "errors": [], "bad": bad, "stopped": None}
 
     for (host, lang_path), titles in wikis.items():
         wiki = fandom.Wiki(host, lang_path)
@@ -132,7 +176,7 @@ def run_pass(cfg, token):
                 continue
             path = repo_path(info["lang"], wiki.subdomain, page,
                              info["namespaces"])
-            data = page["content"].encode("utf-8")
+            data = file_text(page, empty).encode("utf-8")
             stored_sha = tree.get(path)
             try:
                 if stored_sha in (blob_sha(data), blob_sha(data + b"\n")):
@@ -151,6 +195,11 @@ def run_pass(cfg, token):
                 trailers = _trailers(github, editors, coauthors, me)
                 message = first + ("\n\n" + "\n".join(trailers) if trailers else "")
                 github.put(path, data, message, sha=stored_sha)
+            except RateLimited as e:
+                logger.warning("GitHub rate limit at %s, the pass stops: %s",
+                               label, e)
+                result["stopped"] = (label, str(e))
+                return result
             except Exception as e:
                 logger.warning("could not archive %s: %s", label, e)
                 result["errors"].append("{}: {}".format(label, e))
