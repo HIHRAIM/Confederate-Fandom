@@ -709,8 +709,8 @@
     "text": "Интервики"
   },
   "mech_interwiki_desc": {
-    "status": "verified",
-    "text": "дописать недостающие ссылки на другие языковые версии, собрать их в конце и отсортировать"
+    "status": "unverified",
+    "text": "дописать недостающие ссылки на другие языковые версии, собрать их в конце и отсортировать — или построить таблицу пар статей на проверку и расставить ссылки по ней"
   },
   "mech_listpages": {
     "status": "verified",
@@ -853,8 +853,8 @@
     "text": "На странице «{title}» две ссылки на один язык — оставлена как есть."
   },
   "note_interwiki_elsewhere": {
-    "status": "verified",
-    "text": "На другом хосте: {langs} — их ссылки сохраняются, но не проверяются и не дополняются."
+    "status": "unverified",
+    "text": "На другом хосте: {langs} — их бот читает без входа в аккаунт."
   },
   "note_interwiki_langs": {
     "status": "verified",
@@ -866,7 +866,7 @@
   },
   "note_interwiki_unreachable": {
     "status": "verified",
-    "text": "Языковая версия «{lang}» недоступна: {error}"
+    "text": "Языковая версия «{code}» недоступна: {error}"
   },
   "note_mechanic_failed": {
     "status": "verified",
@@ -1412,6 +1412,14 @@
     "status": "verified",
     "text": "Архив страниц не обновлён: {error}"
   },
+  "service_archive_not_a_page": {
+    "status": "unverified",
+    "text": "это не адрес страницы: {url}"
+  },
+  "service_archive_stopped": {
+    "status": "unverified",
+    "text": "{page}: GitHub попросил снизить частоту запросов, поэтому проход остановлен на этой странице; остальные страницы будут сохранены при следующем проходе ({error})"
+  },
   "service_channel_failed": {
     "status": "verified",
     "text": "Не удалось прочитать канал-источник {channel}: {error}"
@@ -1767,7 +1775,7 @@
   "slash_sponsor": {"status": "unverified", "text": "Показать подписку и лимиты работы на Fandom"},
   "slash_sponsor_wiki": {"status": "unverified", "text": "Закрепить вики, где вы входите в команду"},
   "slash_sponsor_unwiki": {"status": "unverified", "text": "Освободить закреплённую вики"},
-  "sponsor_status": {"status": "unverified", "text": "Уровень {tier}. Вики {wikis}/{wiki_limit}: {names}. Сегодня: задач {tasks}/{task_limit}, запланированных страниц {pages}/{page_limit}. Подписка: {url}"},
+  "sponsor_status": {"status": "unverified", "text": "Уровень {tier}. Подписка: {url}"},
   "sponsor_not_active": {"status": "unverified", "text": "Активная роль Patreon не найдена. Оформите подписку на {url} и привяжите Discord."},
   "sponsor_wiki_invalid": {"status": "unverified", "text": "Не удалось проверить вики или аккаунт Fandom."},
   "sponsor_wiki_staff": {"status": "unverified", "text": "Этот аккаунт Fandom должен иметь права команды на данной вики."},
@@ -1868,5 +1876,326 @@
   "param_file_pages": {"status": "unverified", "text": "Названия исходных страниц, по одному на строку; вставьте текст или приложите UTF-8 .txt (до 128 КиБ):"},
   "param_file_category": {"status": "unverified", "text": "Название исходной категории:"},
   "param_file_categories": {"status": "unverified", "text": "Названия исходных категорий, по одной на строку; вставьте текст или приложите UTF-8 .txt (до 128 КиБ):"},
-  "dialog_file_list_invalid": {"status": "unverified", "text": "Отправьте непустой файл UTF-8 .txt размером до 128 КиБ либо вставьте список текстом."}
+  "dialog_file_list_invalid": {"status": "unverified", "text": "Отправьте непустой файл UTF-8 .txt размером до 128 КиБ либо вставьте список текстом."},
+  "slash_limit": {"status": "unverified", "text": "Текущее использование лимитов подписки"},
+  "cmd_limit": {"status": "unverified", "text": "/limit — текущее использование лимитов подписки (только спонсоры)."},
+  "limit_sponsors_only": {"status": "unverified", "text": "Команда доступна только действующим спонсорам, включая период продления работы. Для Telegram сначала свяжите аккаунт с Discord-аккаунтом подписчика."},
+  "limit_status": {"status": "unverified", "text": "Вики: {wikis}/{wiki_limit} ({names}); сообщества: {communities}/{community_limit}.\nЗадачи, принятые сегодня UTC: оценка >5 мин {over5}/{cap5}; >10 мин {over10}/{cap10}; >30 мин {over30}/{cap30}. До 5 минут — без суточного лимита. Длинная задача расходует также все нижние пороги. Суточные лимиты обновляются в 00:00 UTC и общие для связанных аккаунтов.\nОграничение при нагрузке: {load}; активных пользователей: {people}. Ваших незавершённых запущенных задач: {queued}; осталось до следующего запуска: {wait} с. При нагрузке: один запуск в 60 секунд и до двух незавершённых запущенных задач."},
+  "limit_load_on": {"status": "unverified", "text": "включено"},
+  "limit_load_off": {"status": "unverified", "text": "выключено"},
+  "sponsor_duration_limit": {"status": "unverified", "text": "Суточный лимит задач по оценке длительности исчерпан. Задачи более 5, 10 и 30 минут расходуют вложенные лимиты. Повторите /go после 00:00 UTC."},
+  "sponsor_load_limit": {"status": "unverified", "text": "Бот занят задачами нескольких пользователей. При нагрузке доступен один запуск в 60 секунд и до двух незавершённых запущенных задач. Проверьте /limit и повторите /go позже."},
+  "task_estimate": {"status": "unverified", "text": "Примерное время работы: {duration}, без ожидания в очереди. Оценка основана на скорости сходных проходов или осторожном расчёте на страницу; фактическое время может отличаться."},
+  "note_interwiki_redirect": {
+    "status": "unverified",
+    "text": "На «{page}» ссылка {code}:«{title}» ведёт на перенаправление к «{target}» — оставлена как есть; лучше заменить её прямой ссылкой."
+  },
+  "note_interwiki_redirect_added": {
+    "status": "unverified",
+    "text": "На «{page}» дописана прямая ссылка {code}:«{target}»: соседняя версия ссылалась на перенаправление «{title}»."
+  },
+  "param_iw_langs": {
+    "status": "unverified",
+    "text": "Какие языковые версии сравнивать? Коды через пробел (например: en uk pl) или * — все."
+  },
+  "param_iw_threshold": {
+    "status": "unverified",
+    "text": "Насколько похожими должны быть названия, в процентах (от 50 до 100)? 100 — только совпадающие по звучанию; 90 — обычно хороший выбор."
+  },
+  "param_iw_scope": {
+    "status": "unverified",
+    "text": "Где расставить ссылки после проверки таблицы?"
+  },
+  "iw_scope_this": {
+    "status": "unverified",
+    "text": "только на этой вики"
+  },
+  "iw_scope_all": {
+    "status": "unverified",
+    "text": "на всех вики из таблицы — для каждой бот создаст свою задачу, и на каждой нужны ваши права"
+  },
+  "param_interwiki_table_flags": {
+    "status": "unverified",
+    "text": "Дополнительно:"
+  },
+  "flag_iwt_empty": {
+    "status": "unverified",
+    "text": "добавить в таблицу и статьи без предложений — чтобы вписать пары вручную"
+  },
+  "error_iwtable_langs": {
+    "status": "unverified",
+    "text": "Таких языковых версий у этой вики нет: {langs}. Есть: {available}."
+  },
+  "iwtable_intro": {
+    "status": "unverified",
+    "text": "Это таблица интервики задачи №{id} для {wiki}, часть {part} из {parts}. Каждая строка — одна тема в разных языковых версиях, каждый столбец — язык."
+  },
+  "iwtable_howto": {
+    "status": "unverified",
+    "text": "Проверьте цветные ячейки — их предложил бот. Исправьте неверную ячейку, очистите лишнюю, допишите недостающую: ссылкой или просто названием статьи — язык берётся из столбца. Пустая ячейка значит, что статьи на этом языке нет. Строку, которую не нужно трогать, удалите целиком. Чтобы убрать существующую ссылку, очистите её ячейку. Новые строки добавляйте без номера."
+  },
+  "iwtable_legend": {
+    "status": "unverified",
+    "text": "Цвета: голубой — найдено по ссылкам других статей; жёлтый — совпало название или его звучание; зелёный — найдено по словарю бота; оранжевый — похожее название (наведите курсор, чтобы увидеть процент); красный — ссылка ведёт на несуществующую статью. Ячейки без цвета — ссылки, которые уже стоят."
+  },
+  "iwtable_go": {
+    "status": "unverified",
+    "text": "Когда закончите со всеми частями, отправьте боту /go {id}. Он проверит таблицу и расставит ссылки, а если найдёт ошибки — ответит их списком, и задача подождёт исправлений."
+  },
+  "iwtable_parts": {
+    "status": "unverified",
+    "text": "Части таблицы: {parts}."
+  },
+  "iwtable_doubts": {
+    "status": "unverified",
+    "text": "Нужно решить вручную"
+  },
+  "iwcell_back": {
+    "status": "unverified",
+    "text": "на эту статью ссылается версия {code}"
+  },
+  "iwcell_chain": {
+    "status": "unverified",
+    "text": "найдено по ссылкам других языковых версий"
+  },
+  "iwcell_same": {
+    "status": "unverified",
+    "text": "такое же название"
+  },
+  "iwcell_redirect": {
+    "status": "unverified",
+    "text": "совпало с перенаправлением «{via}»"
+  },
+  "iwcell_key": {
+    "status": "unverified",
+    "text": "совпало звучание названия"
+  },
+  "iwcell_similar": {
+    "status": "unverified",
+    "text": "похожее название, {pct}%"
+  },
+  "iwcell_broken": {
+    "status": "unverified",
+    "text": "такой статьи нет"
+  },
+  "iwcell_via": {
+    "status": "unverified",
+    "text": "ссылка вела на перенаправление «{via}»"
+  },
+  "iwdoubt_broken": {
+    "status": "unverified",
+    "text": "Строка {row}: на «{title}» стоит ссылка на {code}:«{target}», но такой статьи нет. Впишите в ячейку правильную статью или очистите её — тогда бот уберёт битую ссылку."
+  },
+  "iwdoubt_redirect": {
+    "status": "unverified",
+    "text": "Строка {row}: ссылка на {code}:«{target}» ведёт на перенаправление к «{final}». Бот заменит её прямой ссылкой; если это неверно, исправьте ячейку."
+  },
+  "iwdoubt_mismatch": {
+    "status": "unverified",
+    "text": "Строка {row}: «{title}» ссылается на {code}:«{target}», а та статья — обратно на «{back}». Одна из этих ссылок ошибочна. Если пара в строке верна, оставьте её — бот исправит ссылку на {code}:«{target}»; если нет, исправьте ячейку."
+  },
+  "iwdoubt_back_many": {
+    "status": "unverified",
+    "text": "Строка {row}: на «{title}» ссылаются сразу несколько статей версии {code}: {options}. Впишите в ячейку {code} верную; лишние ссылки на тех статьях исправьте вручную."
+  },
+  "iwdoubt_chain": {
+    "status": "unverified",
+    "text": "Строка {row}: по ссылкам других языков для «{title}» на {code} получаются разные статьи: {options}. Впишите в ячейку {code} верную."
+  },
+  "iwdoubt_several": {
+    "status": "unverified",
+    "text": "Строка {row}: для «{title}» на {code} подходят несколько статей: {options}. Впишите в ячейку {code} нужную или оставьте её пустой."
+  },
+  "iwdoubt_taken": {
+    "status": "unverified",
+    "text": "Строка {row}: на {code} похожа статья «{candidate}», но она уже связана со статьёй «{other}». Если та связь ошибочна, впишите «{candidate}» в эту строку; иначе оставьте ячейку пустой."
+  },
+  "iwdoubt_short": {
+    "status": "unverified",
+    "text": "Строка {row}: короткое название «{title}» совпало с {code}:«{candidate}». По коротким названиям легко ошибиться — убедитесь, что это одна и та же тема, или очистите ячейку."
+  },
+  "iwdoubt_contested": {
+    "status": "unverified",
+    "text": "Строки {rows}: статья {code}:«{candidate}» подходит сразу к нескольким строкам, поэтому бот её никуда не вписал. Впишите её в одну нужную строку."
+  },
+  "iwnote_cut": {
+    "status": "unverified",
+    "text": "Похожие названия сравнивались {seconds} с, и {count} статей не успели сравнить. Сузьте выборку страниц или языков, если они важны."
+  },
+  "iwnote_han": {
+    "status": "unverified",
+    "text": "В версии {code} {count} статей названы иероглифами без чтения каной (DEFAULTSORT) — бот не может сравнить их названия. Пары для них ищите сами."
+  },
+  "iwnote_unreachable": {
+    "status": "unverified",
+    "text": "Версия {code} не ответила ({error}), поэтому её столбца в таблице нет."
+  },
+  "note_iwtable_written": {
+    "status": "unverified",
+    "text": "Таблица записана: {pages}. Строк: {rows}, вопросов для ручной проверки: {doubts}. Проверьте и при необходимости исправьте её, затем отправьте /go — страницы для правки бот возьмёт из таблицы."
+  },
+  "note_iwtable_nothing": {
+    "status": "unverified",
+    "text": "Предложить нечего: у выбранных статей ссылки уже на месте или пар не нашлось. Чтобы вписать пары вручную, запустите задачу с флажком «статьи без предложений»."
+  },
+  "note_iwtable_stale": {
+    "status": "unverified",
+    "text": "Страницы {pages} остались от прежних таблиц и в эту задачу не входят — бот их не читает."
+  },
+  "note_iwtable_changed": {
+    "status": "unverified",
+    "text": "На «{title}» ссылка на {code} изменилась после проверки таблицы (сейчас «{now}», в таблице «{table}») — оставлена как есть."
+  },
+  "note_iwtable_children": {
+    "status": "unverified",
+    "text": "Созданы задачи для других вики: {tasks}. Каждая запустится сама, когда пройдёт проверки на своей вики."
+  },
+  "note_iwtable_child_failed": {
+    "status": "unverified",
+    "text": "Задачу для версии {code} создать не удалось: {error}"
+  },
+  "iwerr_title": {
+    "status": "unverified",
+    "text": "Задача №{id}: в таблице есть ошибки, ссылки не расставлены. Исправьте их и снова отправьте /go {id}."
+  },
+  "iwerr_more": {
+    "status": "unverified",
+    "text": "…и ещё {count}."
+  },
+  "iwwhere_row": {
+    "status": "unverified",
+    "text": "строка {row}"
+  },
+  "iwwhere_line": {
+    "status": "unverified",
+    "text": "новая строка в {line}-й линии исходного текста"
+  },
+  "iwerr_nothing_written": {
+    "status": "unverified",
+    "text": "Таблицы нет: при построении бот не нашёл, что предложить. Создайте задачу заново с флажком «статьи без предложений», чтобы заполнить её вручную."
+  },
+  "iwerr_wiki_unreachable": {
+    "status": "unverified",
+    "text": "Версия {code} не отвечает ({error}) — проверить таблицу нельзя. Повторите /go позже."
+  },
+  "iwerr_page_missing": {
+    "status": "unverified",
+    "text": "Страница {page} не найдена. Восстановите её или создайте задачу заново."
+  },
+  "iwerr_no_mark": {
+    "status": "unverified",
+    "text": "На странице {page} нет служебной строки <!-- interwiki-table … --> в начале. Верните её — по ней бот узнаёт свою таблицу."
+  },
+  "iwerr_other_task": {
+    "status": "unverified",
+    "text": "Страницу {page} перезаписала задача №{other}, поэтому эта таблица больше не цела. Создайте задачу заново или продолжайте с задачей №{other}."
+  },
+  "iwerr_no_table": {
+    "status": "unverified",
+    "text": "На странице {page} не найдена таблица: нет строки {{| или |}}."
+  },
+  "iwerr_no_header": {
+    "status": "unverified",
+    "text": "У таблицы на странице {page} нет строки заголовка (! № !! ru !! …)."
+  },
+  "iwerr_header": {
+    "status": "unverified",
+    "text": "{page}: в заголовке столбец «{column}» — это не язык этой задачи. Допустимы: {langs}."
+  },
+  "iwerr_header_twice": {
+    "status": "unverified",
+    "text": "{page}: язык {code} указан в заголовке дважды."
+  },
+  "iwerr_cells": {
+    "status": "unverified",
+    "text": "{page}, {where}: ячеек {found}, а столбцов {expected}. Похоже, ячейка потерялась или добавилась лишняя — каждая начинается с |."
+  },
+  "iwerr_number": {
+    "status": "unverified",
+    "text": "{page}, {where}: «{value}» в столбце № — не число. Оставьте номер как был или очистите его для новой строки."
+  },
+  "iwerr_brackets": {
+    "status": "unverified",
+    "text": "{page}, {where}, столбец {code}: незакрытая ссылка «{text}» — проверьте [[ и ]]."
+  },
+  "iwerr_number_twice": {
+    "status": "unverified",
+    "text": "Номер строки {row} встречается дважды ({pages}). Оставьте его одной строке, у новой очистите."
+  },
+  "iwerr_missing_title": {
+    "status": "unverified",
+    "text": "{page}, {where}: статьи {code}:«{title}» нет. Проверьте написание или очистите ячейку."
+  },
+  "iwerr_title_twice": {
+    "status": "unverified",
+    "text": "Статья {code}:«{title}» стоит в нескольких строках ({rows}). У статьи может быть только одна строка."
+  },
+  "iwerr_conflict": {
+    "status": "unverified",
+    "text": "{page}, {where}: на {code}:«{title}» уже стоит ссылка на {other}:«{current}», а в таблице — «{wanted}». Исправьте таблицу или ссылку на странице."
+  },
+  "iwerr_empty": {
+    "status": "unverified",
+    "text": "Расставлять нечего: в таблице нет ни одной строки хотя бы с двумя статьями и ни одной ссылки, которую нужно убрать."
+  },
+  "iwwarn_editors": {
+    "status": "unverified",
+    "text": "Задача №{id}: после бота таблицу правили {users}. Если это не вы, проверьте их правки — бот расставит ссылки так, как в таблице сейчас."
+  },
+  "task_review_failed": {
+    "status": "unverified",
+    "text": "Задача №{id}: проверить таблицу не удалось ({error}). Задача ждёт — повторите /go позже."
+  },
+  "task_review_elsewhere": {
+    "status": "unverified",
+    "text": "Задача №{id} пока не запущена: ответ о таблице отправлен в чат, где задача создавалась."
+  },
+  "iwnote_skipped": {
+    "status": "unverified",
+    "text": "Чтение языковых версий заняло больше {seconds} с, поэтому {langs} не прочитаны и столбцов для них нет. Создайте для них отдельную задачу с меньшим числом языков."
+  },
+  "param_interwiki_mode": {
+    "status": "unverified",
+    "text": "Что сделать с интервики?"
+  },
+  "iw_mode_complete": {
+    "status": "unverified",
+    "text": "дополнить и упорядочить ссылки, которые уже есть"
+  },
+  "iw_mode_table": {
+    "status": "unverified",
+    "text": "найти пары статей и выложить таблицу на проверку; ссылки — после /go"
+  },
+  "iwcell_dictionary": {
+    "status": "unverified",
+    "text": "найдено по словарю бота"
+  },
+  "iwnote_dict_errors": {
+    "status": "unverified",
+    "text": "Словарь бота в версии {code}: строк с ошибками разметки — {count}, они пропущены."
+  },
+  "iwnote_dict_unreadable": {
+    "status": "unverified",
+    "text": "Словарь бота в версии {code} не читается как таблица — он пропущен."
+  },
+  "note_iwdict_used": {
+    "status": "unverified",
+    "text": "Использован словарь бота: {rows} строк (версии: {wikis})."
+  },
+  "note_iwdict_created": {
+    "status": "unverified",
+    "text": "Создан пустой словарь бота: {page}. Впишите в него названия, которые транслитерацией не найти, — следующая таблица их учтёт."
+  },
+  "iwdict_intro": {
+    "status": "unverified",
+    "text": "Это словарь, которым бот пользуется, когда строит таблицу интервики. Каждая строка — одно название или слово на разных языках, каждый столбец — язык (код в заголовке). Целое название бот ищет как есть, а слова подставляет в названия перед сравнением — например, «Список» и «List» или «и» и «and». Добавляйте строки и столбцы; пустые ячейки допустимы. Словари со страниц бота во всех сравниваемых языковых версиях объединяются."
+  },
+  "iwdict_example": {
+    "status": "unverified",
+    "text": "Пример строки — после «|-» с новой строки: «| Список эпизодов || List of episodes»"
+  },
+  "note_publog_failed": {
+    "status": "unverified",
+    "text": "Не удалось записать строку в публичный журнал задач: {error}"
+  }
 }

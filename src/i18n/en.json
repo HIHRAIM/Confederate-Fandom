@@ -709,8 +709,8 @@
     "text": "Interlanguage links"
   },
   "mech_interwiki_desc": {
-    "status": "verified",
-    "text": "add the missing links to other language versions, gather them at the end and sort them"
+    "status": "unverified",
+    "text": "complete the links to other language versions, gather them at the end and sort them — or build a table of matching articles for review and set the links from it"
   },
   "mech_listpages": {
     "status": "verified",
@@ -853,8 +853,8 @@
     "text": "«{title}» links one language twice — left as it is."
   },
   "note_interwiki_elsewhere": {
-    "status": "verified",
-    "text": "On another host: {langs} — their links are kept, but not checked or completed."
+    "status": "unverified",
+    "text": "On another host: {langs} — the bot reads them without signing in."
   },
   "note_interwiki_langs": {
     "status": "verified",
@@ -866,7 +866,7 @@
   },
   "note_interwiki_unreachable": {
     "status": "verified",
-    "text": "The «{lang}» version is unreachable: {error}"
+    "text": "The «{code}» version is unreachable: {error}"
   },
   "note_mechanic_failed": {
     "status": "verified",
@@ -1412,6 +1412,14 @@
     "status": "verified",
     "text": "The page archive was not updated: {error}"
   },
+  "service_archive_not_a_page": {
+    "status": "unverified",
+    "text": "not a page address: {url}"
+  },
+  "service_archive_stopped": {
+    "status": "unverified",
+    "text": "{page}: GitHub asked to slow down, so the pass stopped here; the remaining pages will be saved on the next pass ({error})"
+  },
   "service_channel_failed": {
     "status": "verified",
     "text": "The source channel {channel} could not be read: {error}"
@@ -1767,7 +1775,7 @@
   "slash_sponsor": {"status": "unverified", "text": "Show your sponsorship and Fandom work budget"},
   "slash_sponsor_wiki": {"status": "unverified", "text": "Claim a wiki where you are Fandom staff"},
   "slash_sponsor_unwiki": {"status": "unverified", "text": "Release your wiki claim"},
-  "sponsor_status": {"status": "unverified", "text": "Tier {tier}. Wikis {wikis}/{wiki_limit}: {names}. Today: tasks {tasks}/{task_limit}, planned pages {pages}/{page_limit}. Subscribe: {url}"},
+  "sponsor_status": {"status": "unverified", "text": "Tier {tier}. Subscribe: {url}"},
   "sponsor_not_active": {"status": "unverified", "text": "No active Patreon role was found. Subscribe at {url} and connect Patreon to Discord."},
   "sponsor_wiki_invalid": {"status": "unverified", "text": "The wiki or Fandom account could not be verified."},
   "sponsor_wiki_staff": {"status": "unverified", "text": "This Fandom account needs staff rights on that wiki."},
@@ -1868,5 +1876,326 @@
   "param_file_pages": {"status": "unverified", "text": "Source page titles, one per line; paste text or attach a UTF-8 .txt file (up to 128 KiB):"},
   "param_file_category": {"status": "unverified", "text": "Source category name:"},
   "param_file_categories": {"status": "unverified", "text": "Source category names, one per line; paste text or attach a UTF-8 .txt file (up to 128 KiB):"},
-  "dialog_file_list_invalid": {"status": "unverified", "text": "Send a nonempty UTF-8 .txt file up to 128 KiB, or paste the list as text."}
+  "dialog_file_list_invalid": {"status": "unverified", "text": "Send a nonempty UTF-8 .txt file up to 128 KiB, or paste the list as text."},
+  "slash_limit": {"status": "unverified", "text": "Show your current subscription usage"},
+  "cmd_limit": {"status": "unverified", "text": "/limit — your current subscription usage (sponsors only)."},
+  "limit_sponsors_only": {"status": "unverified", "text": "This command is available only to active sponsors, including working grace. Link Telegram to the subscribing Discord account first."},
+  "limit_status": {"status": "unverified", "text": "Wiki slots: {wikis}/{wiki_limit} ({names}); communities: {communities}/{community_limit}.\nTasks admitted today UTC: estimated >5 min {over5}/{cap5}; >10 min {over10}/{cap10}; >30 min {over30}/{cap30}. Tasks up to 5 min have no daily quota. A longer task also uses every lower threshold. Daily budgets reset at 00:00 UTC and are shared by linked accounts.\nLoad restriction: {load}; active people: {people}. Your admitted unfinished tasks: {queued}; cooldown remaining: {wait} s. Under load: one admission per 60 seconds and at most two admitted unfinished tasks."},
+  "limit_load_on": {"status": "unverified", "text": "active"},
+  "limit_load_off": {"status": "unverified", "text": "inactive"},
+  "sponsor_duration_limit": {"status": "unverified", "text": "Your estimated-duration task allowance is used for today UTC. Tasks over 5, 10 and 30 minutes use nested daily budgets. Retry /go after 00:00 UTC."},
+  "sponsor_load_limit": {"status": "unverified", "text": "The bot is busy with several users. Under load you may admit one task per 60 seconds and keep up to two admitted unfinished tasks. Use /limit to check, then retry /go."},
+  "task_estimate": {"status": "unverified", "text": "Estimated worker time: {duration}, excluding queue waits. This estimate uses measured matching passes or a conservative per-page default; actual duration can differ."},
+  "note_interwiki_redirect": {
+    "status": "unverified",
+    "text": "On «{page}» the link {code}:«{title}» leads to a redirect to «{target}». It was left as written; better replace it with a direct link."
+  },
+  "note_interwiki_redirect_added": {
+    "status": "unverified",
+    "text": "On «{page}» the link {code}:«{target}» was added directly: the other language version pointed at the redirect «{title}»."
+  },
+  "param_iw_langs": {
+    "status": "unverified",
+    "text": "Which language versions should be compared? Codes separated by spaces (for example: en uk pl) or * for all."
+  },
+  "param_iw_threshold": {
+    "status": "unverified",
+    "text": "How alike must titles be, in percent (50 to 100)? 100 — only titles that sound the same; 90 is usually a good choice."
+  },
+  "param_iw_scope": {
+    "status": "unverified",
+    "text": "Where should the links be set once the table is checked?"
+  },
+  "iw_scope_this": {
+    "status": "unverified",
+    "text": "on this wiki only"
+  },
+  "iw_scope_all": {
+    "status": "unverified",
+    "text": "on every wiki of the table — the bot makes a task for each, and each needs your standing there"
+  },
+  "param_interwiki_table_flags": {
+    "status": "unverified",
+    "text": "Also:"
+  },
+  "flag_iwt_empty": {
+    "status": "unverified",
+    "text": "put articles with no suggestion in the table too — to fill in pairs by hand"
+  },
+  "error_iwtable_langs": {
+    "status": "unverified",
+    "text": "This wiki has no such language versions: {langs}. It has: {available}."
+  },
+  "iwtable_intro": {
+    "status": "unverified",
+    "text": "This is the interwiki table of task #{id} for {wiki}, part {part} of {parts}. Each row is one topic in the different language versions; each column is a language."
+  },
+  "iwtable_howto": {
+    "status": "unverified",
+    "text": "Check the coloured cells — the bot suggested them. Fix a wrong cell, clear an unwanted one, fill in a missing one: with a link or just the article title — the column gives the language. An empty cell means there is no article in that language. Delete a whole row you want left alone. To remove a link that exists, clear its cell. Add new rows without a number."
+  },
+  "iwtable_legend": {
+    "status": "unverified",
+    "text": "Colours: blue — found through the links of other articles; yellow — the title or its sound matched; green — found in the bot's dictionary; orange — a similar title (hover to see the percentage); red — the link leads to an article that does not exist. Cells without colour are links already in place."
+  },
+  "iwtable_go": {
+    "status": "unverified",
+    "text": "When you are done with every part, send the bot /go {id}. It will check the table and set the links; if it finds mistakes, it will answer with a list of them and the task will wait for the fixes."
+  },
+  "iwtable_parts": {
+    "status": "unverified",
+    "text": "Parts of the table: {parts}."
+  },
+  "iwtable_doubts": {
+    "status": "unverified",
+    "text": "To decide by hand"
+  },
+  "iwcell_back": {
+    "status": "unverified",
+    "text": "the {code} version links to this article"
+  },
+  "iwcell_chain": {
+    "status": "unverified",
+    "text": "found through the links of other language versions"
+  },
+  "iwcell_same": {
+    "status": "unverified",
+    "text": "the same title"
+  },
+  "iwcell_redirect": {
+    "status": "unverified",
+    "text": "matched the redirect «{via}»"
+  },
+  "iwcell_key": {
+    "status": "unverified",
+    "text": "the title sounds the same"
+  },
+  "iwcell_similar": {
+    "status": "unverified",
+    "text": "a similar title, {pct}%"
+  },
+  "iwcell_broken": {
+    "status": "unverified",
+    "text": "there is no such article"
+  },
+  "iwcell_via": {
+    "status": "unverified",
+    "text": "the link led to the redirect «{via}»"
+  },
+  "iwdoubt_broken": {
+    "status": "unverified",
+    "text": "Row {row}: «{title}» links to {code}:«{target}», but there is no such article. Write the right article into the cell or clear it — then the bot removes the broken link."
+  },
+  "iwdoubt_redirect": {
+    "status": "unverified",
+    "text": "Row {row}: the link to {code}:«{target}» leads to a redirect to «{final}». The bot will replace it with a direct link; if that is wrong, fix the cell."
+  },
+  "iwdoubt_mismatch": {
+    "status": "unverified",
+    "text": "Row {row}: «{title}» links to {code}:«{target}», but that article links back to «{back}». One of the two links is wrong. If the pair in this row is right, keep it — the bot will fix the link on {code}:«{target}»; if not, fix the cell."
+  },
+  "iwdoubt_back_many": {
+    "status": "unverified",
+    "text": "Row {row}: several {code} articles link to «{title}»: {options}. Write the right one into the {code} cell; fix the extra links on the others by hand."
+  },
+  "iwdoubt_chain": {
+    "status": "unverified",
+    "text": "Row {row}: the links of other languages give different {code} articles for «{title}»: {options}. Write the right one into the {code} cell."
+  },
+  "iwdoubt_several": {
+    "status": "unverified",
+    "text": "Row {row}: several {code} articles fit «{title}»: {options}. Write the one you want into the {code} cell or leave it empty."
+  },
+  "iwdoubt_taken": {
+    "status": "unverified",
+    "text": "Row {row}: the {code} article «{candidate}» looks like a match, but it is already linked to «{other}». If that link is wrong, write «{candidate}» into this row; otherwise leave the cell empty."
+  },
+  "iwdoubt_short": {
+    "status": "unverified",
+    "text": "Row {row}: the short title «{title}» matched {code}:«{candidate}». Short titles are easy to mistake — make sure it is the same topic, or clear the cell."
+  },
+  "iwdoubt_contested": {
+    "status": "unverified",
+    "text": "Rows {rows}: the {code} article «{candidate}» fits several rows, so the bot put it in none. Write it into the one row it belongs to."
+  },
+  "iwnote_cut": {
+    "status": "unverified",
+    "text": "Similar titles were compared for {seconds} s, and {count} articles were left uncompared. Narrow the page list or the languages if they matter."
+  },
+  "iwnote_han": {
+    "status": "unverified",
+    "text": "In the {code} version {count} articles are titled in kanji or hanzi with no kana reading (DEFAULTSORT), so the bot cannot compare their titles. Look for their pairs yourself."
+  },
+  "iwnote_unreachable": {
+    "status": "unverified",
+    "text": "The {code} version did not answer ({error}), so the table has no column for it."
+  },
+  "note_iwtable_written": {
+    "status": "unverified",
+    "text": "The table is written: {pages}. Rows: {rows}, questions to decide by hand: {doubts}. Check it and fix it if needed, then send /go — the bot will take the pages to edit from the table."
+  },
+  "note_iwtable_nothing": {
+    "status": "unverified",
+    "text": "Nothing to suggest: the chosen articles already have their links, or no pairs were found. To fill in pairs by hand, run the task with the «articles with no suggestion» option."
+  },
+  "note_iwtable_stale": {
+    "status": "unverified",
+    "text": "The pages {pages} are left over from earlier tables and are not part of this task — the bot does not read them."
+  },
+  "note_iwtable_changed": {
+    "status": "unverified",
+    "text": "On «{title}» the {code} link changed after the table was checked (now «{now}», the table says «{table}») — it was left as it is."
+  },
+  "note_iwtable_children": {
+    "status": "unverified",
+    "text": "Tasks were made for the other wikis: {tasks}. Each starts by itself once it passes the checks on its own wiki."
+  },
+  "note_iwtable_child_failed": {
+    "status": "unverified",
+    "text": "The task for the {code} version could not be made: {error}"
+  },
+  "iwerr_title": {
+    "status": "unverified",
+    "text": "Task #{id}: the table has mistakes, no links were set. Fix them and send /go {id} again."
+  },
+  "iwerr_more": {
+    "status": "unverified",
+    "text": "…and {count} more."
+  },
+  "iwwhere_row": {
+    "status": "unverified",
+    "text": "row {row}"
+  },
+  "iwwhere_line": {
+    "status": "unverified",
+    "text": "the new row at source line {line}"
+  },
+  "iwerr_nothing_written": {
+    "status": "unverified",
+    "text": "There is no table: when it was built, the bot found nothing to suggest. Make the task again with the «articles with no suggestion» option to fill it in by hand."
+  },
+  "iwerr_wiki_unreachable": {
+    "status": "unverified",
+    "text": "The {code} version does not answer ({error}), so the table cannot be checked. Send /go again later."
+  },
+  "iwerr_page_missing": {
+    "status": "unverified",
+    "text": "The page {page} was not found. Restore it or make the task again."
+  },
+  "iwerr_no_mark": {
+    "status": "unverified",
+    "text": "The page {page} lacks the service line <!-- interwiki-table … --> at the top. Put it back — it is how the bot knows its table."
+  },
+  "iwerr_other_task": {
+    "status": "unverified",
+    "text": "The page {page} was overwritten by task #{other}, so this table is no longer whole. Make this task again, or carry on with task #{other}."
+  },
+  "iwerr_no_table": {
+    "status": "unverified",
+    "text": "No table was found on the page {page}: the {{| or |}} line is missing."
+  },
+  "iwerr_no_header": {
+    "status": "unverified",
+    "text": "The table on {page} has no header row (! № !! ru !! …)."
+  },
+  "iwerr_header": {
+    "status": "unverified",
+    "text": "{page}: the header column «{column}» is not a language of this task. Allowed: {langs}."
+  },
+  "iwerr_header_twice": {
+    "status": "unverified",
+    "text": "{page}: the language {code} appears twice in the header."
+  },
+  "iwerr_cells": {
+    "status": "unverified",
+    "text": "{page}, {where}: {found} cells for {expected} columns. A cell seems to have been lost or added — each one starts with |."
+  },
+  "iwerr_number": {
+    "status": "unverified",
+    "text": "{page}, {where}: «{value}» in the № column is not a number. Keep the number as it was, or clear it for a new row."
+  },
+  "iwerr_brackets": {
+    "status": "unverified",
+    "text": "{page}, {where}, column {code}: the link «{text}» is not closed — check [[ and ]]."
+  },
+  "iwerr_number_twice": {
+    "status": "unverified",
+    "text": "Row number {row} appears twice ({pages}). Keep it on one row and clear it on the new one."
+  },
+  "iwerr_missing_title": {
+    "status": "unverified",
+    "text": "{page}, {where}: there is no article {code}:«{title}». Check the spelling or clear the cell."
+  },
+  "iwerr_title_twice": {
+    "status": "unverified",
+    "text": "The article {code}:«{title}» stands in several rows ({rows}). An article can have only one row."
+  },
+  "iwerr_conflict": {
+    "status": "unverified",
+    "text": "{page}, {where}: {code}:«{title}» already links to {other}:«{current}», but the table says «{wanted}». Fix the table or the link on the page."
+  },
+  "iwerr_empty": {
+    "status": "unverified",
+    "text": "Nothing to do: the table has no row with at least two articles and no link to remove."
+  },
+  "iwwarn_editors": {
+    "status": "unverified",
+    "text": "Task #{id}: after the bot, the table was edited by {users}. If that was not you, check their edits — the bot sets the links as the table has them now."
+  },
+  "task_review_failed": {
+    "status": "unverified",
+    "text": "Task #{id}: the table could not be checked ({error}). The task is waiting — send /go again later."
+  },
+  "task_review_elsewhere": {
+    "status": "unverified",
+    "text": "Task #{id} has not started yet: the answer about its table was sent to the chat where the task was made."
+  },
+  "iwnote_skipped": {
+    "status": "unverified",
+    "text": "Reading the language versions took longer than {seconds} s, so {langs} were not read and have no column. Make a task with fewer languages for them."
+  },
+  "param_interwiki_mode": {
+    "status": "unverified",
+    "text": "What should be done with the interwiki links?"
+  },
+  "iw_mode_complete": {
+    "status": "unverified",
+    "text": "complete and sort the links that already exist"
+  },
+  "iw_mode_table": {
+    "status": "unverified",
+    "text": "find matching articles and post a table for review; the links come after /go"
+  },
+  "iwcell_dictionary": {
+    "status": "unverified",
+    "text": "found in the bot's dictionary"
+  },
+  "iwnote_dict_errors": {
+    "status": "unverified",
+    "text": "The bot's dictionary in the {code} version: {count} rows have broken markup and were skipped."
+  },
+  "iwnote_dict_unreadable": {
+    "status": "unverified",
+    "text": "The bot's dictionary in the {code} version cannot be read as a table, so it was skipped."
+  },
+  "note_iwdict_used": {
+    "status": "unverified",
+    "text": "The bot's dictionary was used: {rows} rows (versions: {wikis})."
+  },
+  "note_iwdict_created": {
+    "status": "unverified",
+    "text": "An empty dictionary of the bot was created: {page}. Write into it the names transliteration cannot find — the next table will use them."
+  },
+  "iwdict_intro": {
+    "status": "unverified",
+    "text": "This is the dictionary the bot uses when it builds an interwiki table. Each row is one name or word in different languages; each column is a language (its code in the header). The bot looks a whole title up as it is, and puts the words in place of the words of a title before comparing — «List» for «Список», «and» for «и». Add rows and columns; empty cells are fine. The dictionary pages of the bot in every language version compared are joined."
+  },
+  "iwdict_example": {
+    "status": "unverified",
+    "text": "An example row, after «|-» on a new line: «| Список эпизодов || List of episodes»"
+  },
+  "note_publog_failed": {
+    "status": "unverified",
+    "text": "The line in the public task log could not be written: {error}"
+  }
 }

@@ -28,23 +28,12 @@ async def sponsor_unlink_cmd(interaction: discord.Interaction):
 
 @tree.command(name="sponsor", description=slash("slash_sponsor"))
 async def sponsor_cmd(interaction: discord.Interaction):
-    """Show the role tier and account-wide wiki/task/page usage."""
+    """Show the role tier and shared slots, duration budgets and load state."""
     lang = lang_of("discord", interaction.user.id)
     tier = await sponsors.refresh_tier(interaction.user.id)
-    limits = sponsors.limits(tier)
-    tasks, pages = db.sponsor_usage(interaction.user.id)
-    wikis = db.claimed_wikis(interaction.user.id)
-    message = localized(
-        "sponsor_status", lang,
-        tier=(localized("sponsor_tier_community", lang) if tier == -1 else tier),
-        wikis=len(wikis),
-        wiki_limit=limits["wikis"], tasks=tasks, task_limit=limits["tasks"],
-        pages=pages, page_limit=limits["pages"],
-        names=", ".join(row["wiki"] for row in wikis) or "—",
-        url=SPONSOR_URL)
-    message += "\n" + localized("sponsor_community_usage", lang,
-                                  communities=len(db.claimed_communities(interaction.user.id)),
-                                  limit=limits["communities"])
+    message = localized("sponsor_status", lang,
+        tier=localized("sponsor_tier_community", lang) if tier == -1 else tier,
+        url=SPONSOR_URL) + "\n" + sponsors.limit_text(interaction.user.id, lang)
     addendum = sponsors.status_addendum(interaction.user.id, lang)
     if addendum:
         message += "\n" + addendum
@@ -187,3 +176,14 @@ async def sponsor_uncommunity_cmd(interaction: discord.Interaction):
     await interaction.response.send_message(localized(
         "sponsor_community_released" if changed else "sponsor_community_not_owned", lang),
         ephemeral=True)
+
+@tree.command(name="limit", description=slash("slash_limit"))
+async def limit_cmd(interaction: discord.Interaction):
+    """Show only the caller's active subscription usage; admins get no bypass."""
+    lang = lang_of("discord", interaction.user.id)
+    owner = str(interaction.user.id)
+    await interaction.response.defer(ephemeral=True)
+    await sponsors.refresh_tier(owner)
+    text = (sponsors.limit_text(owner, lang) if db.sponsor_tier(owner) != 0
+            else localized("limit_sponsors_only", lang))
+    await interaction.followup.send(text, ephemeral=True)

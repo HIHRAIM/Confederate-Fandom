@@ -109,9 +109,12 @@ def needs_source(mechanics):
     return any(not mechanic.standalone and not mechanic.own_pages
                for mechanic in mechanics)
 
-def schedulable(mechanics):
-    """Whether this set of mechanics may repeat on a schedule at all."""
-    return all(mechanic.schedulable for mechanic in mechanics)
+def schedulable(mechanics, params=None):
+    """Whether this set of mechanics may repeat on a schedule at all — with
+    these answers to the dialog, when they are given (Mechanic.repeats)."""
+    if params is None:
+        return all(mechanic.schedulable for mechanic in mechanics)
+    return all(mechanic.repeats(params) for mechanic in mechanics)
 
 def redirects_wanted(mechanics, params):
     """Whether the page list should hold redirects. -> True, False or None.

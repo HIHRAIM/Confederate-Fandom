@@ -1,6 +1,6 @@
 # Confederate Fandom
 
-Confederate Fandom is a bot for automating work on the wikis of the Fandom farm from Discord and Telegram. The people its operator appoints set it to work with a command and a short dialog: twenty mechanics — find and replace, Russian and Ukrainian spelling and punctuation, markup cleanup, categories, interlanguage links, redirects, files, renames, protection, deletion, undoing a run of edits, page lists, template counts, category trees and file import from other MediaWiki wikis — over any Fandom wiki named by its address. File import is a one-time task; the other eligible mechanics can run once or on a schedule. Every run is planned before it writes anything: the pages are counted and the first twenty shown, a preview returns every diff as a file without touching the wiki, the rights of both the bot and the person who asked are checked on that very wiki, and the run ends with a report. Everything goes through one queue, so a walk of nine thousand articles and the work that cannot wait never stand in each other's way. The bot speaks six languages, and each person chooses their own with `/lang`; English until they do. Beside the work it is asked for, the bot can run standing modules on schedules of their own: it keeps the news block on the main pages of Telepedia and Radiopedia in step with a Telegram channel, standardises the Russian names of Pokémon species on the Pokémon Wiki once a night, and commits chosen wiki pages to a GitHub repository every midnight. The modules ship switched off: a bot set up for wiki work alone never mentions them and spends nothing on them.
+Confederate Fandom is a bot for automating work on the wikis of the Fandom farm from Discord and Telegram. The people its operator appoints set it to work with a command and a short dialog: twenty mechanics — find and replace, Russian and Ukrainian spelling and punctuation, markup cleanup, categories, interlanguage links (completed, or found and reviewed in a table), redirects, files, renames, protection, deletion, undoing a run of edits, page lists, template counts, category trees and file import from other MediaWiki wikis — over any Fandom wiki named by its address. File import is a one-time task; the other eligible mechanics can run once or on a schedule. Every run is planned before it writes anything: the pages are counted and the first twenty shown, a preview returns every diff as a file without touching the wiki, the rights of both the bot and the person who asked are checked on that very wiki, and the run ends with a report. Everything goes through one queue, so a walk of nine thousand articles and the work that cannot wait never stand in each other's way. The bot speaks six languages, and each person chooses their own with `/lang`; English until they do. Beside the work it is asked for, the bot can run standing modules on schedules of their own: it keeps the news block on the main pages of Telepedia and Radiopedia in step with a Telegram channel, standardises the Russian names of Pokémon species on the Pokémon Wiki once a night, and commits chosen wiki pages to a GitHub repository every midnight. The modules ship switched off: a bot set up for wiki work alone never mentions them and spends nothing on them.
 
 ## Sponsorship
 
@@ -10,8 +10,16 @@ Bot Admins and appointed wiki administrators retain their existing access. A spo
 |---|---:|---:|---:|---:|
 | Claimed wikis | 2 | 2 | 6 | 10 |
 | Discord servers and Telegram groups combined | 2 | 2 | 6 | 10 |
-| New tasks per UTC day | 2 | 2 | 6 | 10 |
-| Planned pages per UTC day | 30 | 30 | 90 | 150 |
+| Tasks estimated at up to 5 minutes per UTC day | Unlimited | Unlimited | Unlimited | Unlimited |
+| Tasks estimated over 5 minutes per UTC day | 10 | 10 | 30 | 50 |
+| Of those, tasks over 10 minutes | 5 | 5 | 15 | 25 |
+| Of those, tasks over 30 minutes | 2 | 2 | 6 | 10 |
+
+The three duration thresholds are nested: a task over 30 minutes uses all three budgets. The bot settles the page list once and shows an approximate worker-time estimate before `/go`. It uses recent matching wiki/mechanic passes in the same preview mode; without measurements it allows ten seconds per page and one additional second per extra mechanic. Queue waits and pauses for other jobs are excluded. Estimates can differ from actual duration. There is no daily page-count quota. Budgets reset at 00:00 UTC and are reserved once when `/go` admits the task; previews and scheduled runs count too. Rejected or repeated starts consume nothing; stopping an admitted task does not refund it.
+
+When at least six distinct people have open task dialogs or unfinished tasks admitted for execution, sponsor admission also allows one start per 60 seconds and at most two admitted unfinished tasks per person. Linked accounts count as one person. Finishing or cancelling a dialog, and completing or stopping a task, immediately removes it from the load count. With one active person this load restriction stays off regardless of how many tasks they submit. A refused manual task remains ready for a later `/go`; a scheduled occurrence refused by either budget is skipped until the schedule's next occurrence. Bot Admins and explicitly appointed wiki administrators retain their separate task access.
+
+Use `/limit` on either platform to see current slot usage, all three daily counters and the current load restriction. Only active sponsors, including working grace, may use it.
 
 Use `/sponsor`, `/sponsor-wiki` and `/sponsor-community` on Discord to claim wikis and communities you administer. On Telegram, claim an administered group with `/sponsor_community`. Releasing a wiki or community starts a 30-day pause before that sponsor can assign a new slot, preventing one subscription from serving a rotating queue. To use the same allowance on Telegram, run `/sponsor-link` on Discord and send the one-use code to the bot in a private Telegram chat with `/sponsor_link CODE` within ten minutes. Either account can unlink; a link shares one budget. Bot Admins can work in a sponsor's community. Either community role on the Patreon server grants the €1 allowance after seven days of continuous observed membership, with one day of continued work after loss. Paid roles have 30 days of continued work after loss. Thirty days after working grace ends, unsupported wiki claims and their tasks are erased; unsupported communities' scoped tasks are erased and the bot leaves them. Another sponsor or a Bot Admin can take over a community before that deadline.
 
@@ -91,7 +99,7 @@ For a Telegram `/wikiadmin @name <Fandom account>` invitation, the invited perso
    - `SPECIES_REQUIRE_BOT_FLAG` — whether the walk refuses to start on a wiki where the account has no bot flag. On by default: hundreds of unflagged edits at once flood Recent changes.
 
    The archive module (see [The archive module](#the-archive-module)) — on when `MYARCHIVE` is set and `MYARCHIVE_GITHUB_TOKEN` is in `.env`:
-   - `MYARCHIVE` — a dict: `repo`, the `pages` to archive, the Fandom `owner` whose lone edits make a plain update, `coauthors` (Fandom account → GitHub login), the commit `messages`, and optionally `branch`, `at`, `timezone` and `main_pages`. `config.example.py` shows its shape.
+   - `MYARCHIVE` — a dict: `repo`, the `pages` to archive, the Fandom `owner` whose lone edits make a plain update, `coauthors` (Fandom account → GitHub login), the commit `messages`, what the file of an `empty` page says, and optionally `branch`, `at`, `timezone` and `main_pages`. `config.example.py` shows its shape.
 
 7. **Set up the Discord application.** In the Developer Portal, on the *Bot* page, switch on the **Message Content Intent**: the dialogs are answered with ordinary messages, and without it every answer arrives empty. Invite the application with both `bot` and `applications.commands`, or the slash commands never appear. The tree is synced once when the gateway comes up, so a new command shows after a restart.
 
@@ -158,17 +166,22 @@ src/
     report.py            the files that come back
     notify.py            answering the person, and the service log
     queue.py             the job that drives it all; places and estimates
+    publiclog.py         the public log of started tasks on each wiki
     lists.py             what /tasks, /jobs, /schedule, /help and
                          /wikiadmin say, for both messengers
 
   scripts/             the twenty mechanics, each named after its script
     wikitools.py         masking, cosmetics, the AWB rule format, summaries
+    translit.py          phonetic keys of titles across scripts, with self-tests
+    interwiki_table.py   the table mode of `interwiki`: analysis, check, links
+    interwiki_table_page.py  the interwiki table as wikitext, written and read
     data/                the typo lists and the 2019 Ukrainian rules
 
   wiki/                the wiki side
     site.py              Pywikibot's directory, one session and cookie jar
                          per wiki
     families.py          a Pywikibot family generated from a domain
+    anon.py              reading a wiki's api.php without logging in
     rights.py            groups and rights
     pages.py             writing the news templates and files
 
@@ -279,7 +292,7 @@ Twenty mechanics, each a Pywikibot script (or one of the operator's own) with it
 | 6 | `pravopys-uk` | Ukrainian: §35, §36 and §126 of the 2019 spelling rules, plus 172 typo rules | edit |
 | 7 | `cosmetic` | The markup alone: spaces in headings, indents, spare blank lines, a dash for a hyphen | edit |
 | 8 | `category` | Add, remove or move a category | edit |
-| 9 | `interwiki` | Complete the interlanguage links, gather them at the end, sort them | edit |
+| 9 | `interwiki` | Complete the interlanguage links, gather them at the end, sort them — or find the matching articles, post a table for review, then set the links from it | edit |
 | 10 | `redirect` | Fix double redirects, point links straight at the target, find the broken ones | edit |
 | 11 | `image` | Swap a file for another, or take it off the pages that show it | edit |
 | 12 | `delinker` | Take files already deleted from the wiki off the pages that still show them | edit |
@@ -299,6 +312,32 @@ Twenty mechanics, each a Pywikibot script (or one of the operator's own) with it
 **Any Fandom wiki, by domain.** The dialog asks for the wiki and takes anything a person is likely to paste — `telepedia.fandom.com/ru`, a link to an article, or the `family:lang` shorthand the bot prints. A wiki the bot has never seen is looked up once (`meta=siteinfo`) and a Pywikibot family file is generated for it; from then on it costs nothing.
 
 **A rename leaves redirects behind, and the redirects that pointed at the old title become double.** MediaWiki on Fandom does not repoint them on its own. A `redirect` run that fixes the double ones, after a batch of renames, is what closes that gap.
+
+### Interlanguage links
+
+`interwiki` (9) has two modes; the dialog asks which.
+
+**Complete** fills in the links an article already has. It reads the pages it links to in the other language versions and brings back the languages they know and it does not, through as many hops as there are, and every link it adds is checked to exist first. It never pairs articles by their titles. A link to a redirect on another wiki is followed to its article: a link brought back is written to the article itself, and one the page already had is kept as written and reported, so that a person can make it direct. Language versions on another Fandom host — a Japanese version on its own domain, say — are read without logging in, followed and added like the others. One run edits one wiki.
+
+**Table** is for the articles that have no links yet, which *complete* cannot help. It works in three steps, with `/go` in the last one:
+
+1. **The table.** Besides the usual questions — the wiki, where the pages come from — the dialog then asks which language versions to compare (codes such as `en uk pl`, or `*` for every one the wiki declares), how alike titles must be (50–100 %), and where the links go once the table is checked: on this wiki only, or on every wiki of the table. As soon as the dialog ends, before anything is confirmed, the bot reads the chosen pages and language versions and writes a table to `User:<bot>/Interwiki/1`, `/2`… — 200 rows a page, one row per article, one column per language, each cell a `[[w:c:…]]` link. It then names the pages it wrote, and any higher-numbered page left over from an earlier, larger table, which this task does not read.
+2. **Review.** A cell the bot proposes is coloured by how it was found: blue — through the links of other articles; yellow — the same title, a redirect with that title, or the same sound; green — the bot's dictionary; orange — a similar sound, with the percentage in the tooltip; red — an existing link to an article that does not exist. Uncoloured cells are links already in place. Fix a cell, clear one, fill one in — with a link or just the title: the column gives the language. Clearing a cell that held an existing link removes that link on both sides; deleting a row leaves its article alone; a new row is added without a number. Under the table, *To decide by hand* lists what the bot was unsure of, each item saying what to do: several candidates, a candidate already linked to another article, one candidate claimed by two rows, a short title, links that disagree, a broken link, a link to a redirect.
+3. **`/go`.** The table is read back and checked: the markup, the number of cells in each row, that every named article exists (a redirect is followed to its article), that no article stands in two rows, and that no page has been given a different link since. Every problem is answered in one message, by page and row, and the task waits for the next `/go`. When the table is right, the bot sets the links on this wiki; with *every wiki* it then makes one task for each other wiki, which starts by itself once it passes the usual checks there — the bot's standing and yours on that wiki. If somebody other than the person who asked edited the table after the bot, `/go` names them.
+
+**How titles are compared.** Every title is reduced to a rough phonetic key, so that one name written in different scripts meets: Russian and Ukrainian Cyrillic (Belarusian, Bulgarian and Serbian too), Latin read the English, French, German, Spanish, Polish, Portuguese, Italian and Serbian way, Japanese kana by Hepburn — the Russian Polivanov and Ukrainian Kovalenko spellings fold to the same key — and Korean Hangul. «Сибуя», «Шибуя», Shibuya and シブヤ are one key. Titles in kanji or hanzi cannot be read without a dictionary: a Japanese article whose DEFAULTSORT is written in kana is compared by it, and the rest are counted in a note under the table. A title shorter than six letters counts only when its key is equal, and such a match is listed for a person to check. Planning holds the bot's one worker, so it is bounded: reading the language versions stops after three minutes and names the versions it did not reach, and comparing similar titles stops after 90 seconds and says how many articles were left. A narrower page list or fewer languages finish in time — on pokemon:ru against the English wiki, seven thousand articles take about a minute and a half.
+
+**Limits.** A link found by its title alone is never written before the table has been reviewed. Titles that are translations rather than transliterations — «Список эпизодов» and «List of episodes» — cannot be found; write them into the table yourself, and choose *put articles with no suggestion in the table too* to get rows to fill. The table mode does not repeat on a schedule, and the dialog does not offer one for it. For a sponsor, each task the *every wiki* choice creates counts like any other task.
+
+**The dictionary.** Translated titles and official names that differ — «Список эпизодов» and «List of episodes», «Сатоси» and «Ash Ketchum» — are found through the bot's dictionary, `User:<bot>/Dictionary`, which anybody may edit: a table whose columns are language codes and whose rows are one name or word in each. A row matches a whole title; its words are also put in place of the words of a title before the sound is compared, so a row «и | and» lets «Эш и Пикачу» meet «Ash and Pikachu». The dictionary pages of the wiki and of every language version compared are joined, rows with broken markup are skipped and reported under the table, and a table task on a wiki that has no dictionary yet creates an empty one with an explanation. The examples the transliteration was built for (`scripts/translit.py`) are its self-test, not a dictionary: they change only when the rules do.
+
+### The public task log
+
+Every task that may edit leaves a line on the wiki it runs on, on `User:<bot>/Archive <n>`:
+
+    * 14:05, 8 October 2026 (UTC): Task <code>replace, cosmetic</code> was started by user Somebody
+
+— the time the task started, its mechanics, and the Fandom account of whoever started it (*a bot administrator* when the bot does not know one). The first line of every page says where to report harmful edits: a message wall and the Discord and Telegram links set in `PUBLIC_LOG` in `config.py`; without that setting there is no log. A dry run writes nothing, so it leaves no line, and neither does a task of report mechanics alone. The page is the bot's own: it is rebuilt from the bot's last revision every time, so an edit somebody made after the bot is undone by the same edit that adds the next line, and a page created by somebody else before the bot wrote to it is started afresh. After 500 lines the log continues on the next page.
 
 ### The dialog
 
@@ -346,7 +385,7 @@ The task is created as soon as the dialog ends, and the queue takes over: it ope
 
 Then the task waits. `/go <id>` runs it; `/go <id> dry` computes every diff and writes nothing, which is how a page list should be read before it is acted on. There is no cap on how many diffs come back — they arrive as a file. A dry run never writes, whatever else happens: the flag is read from the database before every page, so a preview asked for after the plan was made is still a preview. The mechanics that cannot be undone by an edit — renaming, protection, deletion, reverting — are marked in the catalogue and said out loud in the confirmation.
 
-The page list is settled once, into the database. That is what makes a run countable before its first edit, interruptible by `/stop` at any page, and resumable after a restart from exactly where it stopped.
+The page list is settled once, into the database. That is what makes a run countable before its first edit, interruptible by `/stop` at any page, and resumable after a restart from exactly where it stopped. The one exception is the interwiki table: its pages are known only after a person has reviewed the table, so they are settled at `/go`, from the table, before the first edit — never during the run.
 
 ### Who may ask, and what the bot checks
 
@@ -579,7 +618,11 @@ Every midnight in Kyiv the bot reads a list of wiki pages — site stylesheets a
 
 **Where a page goes.** `Pages/<language>/<wiki>/<title>` — `https://pokemon.fandom.com/ru/wiki/MediaWiki:Common.css` becomes `Pages/ru/pokemon/MediaWiki:Common.css`. A page of the Module namespace is filed under its canonical name, `Module:`, whatever the wiki calls the namespace, and a Lua module gets `.lua` unless its title already ends so: `Модуль:PokemonData/data` becomes `Module:PokemonData/data.lua`. A module's `/doc` page is wikitext and keeps its title as it is. A slash in a title is a directory. With `main_pages` (on by default) the main page of every wiki in the list is archived too, under the title the wiki itself gives it (`meta=siteinfo`, which is what `MediaWiki:Mainpage` sets).
 
-**What a commit says.** One commit per changed page, with the message from `MYARCHIVE["messages"]`: `created` for a new file, `updated` when only the `owner` edited the page since the file's last commit, and `updated_by` — with `{editors}`, the accounts in the order they first edited — when somebody else did. The editors `MYARCHIVE["coauthors"]` links to a GitHub login are added as `Co-authored-by:`, so the commit shows on their profile too. A page equal to its file, or to its file with a final newline, is not committed; that is decided by comparing hashes, so an unchanged night costs one request to GitHub for the whole tree.
+**What a commit says.** One commit per changed page, with the message from `MYARCHIVE["messages"]`: `created` for a new file, `updated` when only the `owner` edited the page since the file's last commit, and `updated_by` — with `{editors}`, the accounts in the order they first edited — when somebody else did. The editors `MYARCHIVE["coauthors"]` links to a GitHub login are added as `Co-authored-by:`, so the commit shows on their profile too — and because each page is its own commit, the history of a file says whose edit each version carries. A page equal to its file, or to its file with a final newline, is not committed; that is decided by comparing hashes, so an unchanged night costs one request to GitHub for the whole tree.
+
+**An empty page** is archived as one line saying so — `MYARCHIVE["empty"]`, `Empty page` by default — written as a comment in a script, a stylesheet or a Lua module (`// …`, `/* … */`, `-- …`), so that a file restored from the archive still loads. It is compared in that form too, so an empty page is committed once, not every night.
+
+**How fast.** Commits go one at a time, at least a second apart, which is GitHub's own advice for requests that change something. If GitHub answers with a rate limit, the pass stops at once and says so in the service chats: GitHub warns that an integration which keeps asking may be banned. Nothing is lost — the next night the pages already committed compare equal and the rest follow.
 
 **What it needs, and what stays private.** The repository, the page list and the account links are `config.MYARCHIVE` in the untracked `config.py`; the token is `MYARCHIVE_GITHUB_TOKEN` in the untracked `src/.env`. Without both the module is off. To make the token: GitHub → *Settings* → *Developer settings* → *Personal access tokens* → *Fine-grained tokens* → *Generate new token*; *Resource owner* the owner of the repository, *Repository access* → *Only select repositories* and that one repository, *Permissions* → *Repository permissions* → *Contents: Read and write* (GitHub adds *Metadata: Read-only* by itself), and an expiry date you will remember to renew. The commits are authored by the account the token belongs to.
 

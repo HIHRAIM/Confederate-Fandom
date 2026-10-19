@@ -119,7 +119,9 @@ async def go_cmd(interaction: discord.Interaction, task_id: int, dry: bool = Fal
         db.set_dry_run(task_id)
     outcome = await task_queue.start(task_id)
     key = ("task_confirmed" if outcome is True else
-           "sponsor_page_limit" if outcome == "quota" else
+           "task_review_elsewhere" if outcome == "review" else
+           "sponsor_duration_limit" if outcome == "quota" else
+           "sponsor_load_limit" if outcome == "load" else
            "sponsor_wiki_required" if outcome == "forbidden" else "task_not_waiting")
     await interaction.followup.send(localized(
         key, lang, id=task_id, limit=0, wiki=row["wiki"], state=row["state"]), ephemeral=True)

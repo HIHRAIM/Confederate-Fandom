@@ -131,10 +131,20 @@ async def go_cmd(message: Message):
     if flags == ["dry"]:
         db.set_dry_run(task_id)
     outcome = await task_queue.start(task_id)
-    if outcome is not True:
-        await message.answer(localized("sponsor_page_limit" if outcome == "quota"
-                                       else "sponsor_wiki_required", lang,
-                                       limit=0, wiki=row["wiki"]))
+    if outcome is True:
+        return
+    if outcome == "review":
+        from tasks.notify import chat_key
+
+        here = chat_key("telegram", message.chat.id, message.message_thread_id)
+        if here != row["reply_chat"]:
+            await message.answer(localized("task_review_elsewhere", lang, id=task_id))
+        return
+    key = ("sponsor_duration_limit" if outcome == "quota" else
+           "sponsor_load_limit" if outcome == "load" else
+           "sponsor_wiki_required" if outcome == "forbidden" else "task_not_waiting")
+    await message.answer(localized(key, lang, id=task_id, limit=0, wiki=row["wiki"],
+                                   state=row["state"]))
 
 @router.message(Command("jobs"))
 async def jobs_cmd(message: Message):

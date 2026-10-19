@@ -225,8 +225,9 @@ SPECIES_REQUIRE_BOT_FLAG = True
 
 # ---------------------------------------------------------------------------
 # The archive module (modules/myarchive): chosen wiki pages committed to a
-# GitHub repository once a night, one commit per changed page. Off while
-# MYARCHIVE is None or MYARCHIVE_GITHUB_TOKEN is missing from src/.env.
+# GitHub repository once a night, one commit per changed page, at least a
+# second apart. Off while MYARCHIVE is None or MYARCHIVE_GITHUB_TOKEN is
+# missing from src/.env.
 #
 #   repo       — "owner/name" of the repository.
 #   branch     — optional; the repository's default branch otherwise.
@@ -239,6 +240,8 @@ SPECIES_REQUIRE_BOT_FLAG = True
 #   coauthors  — Fandom account -> GitHub login, added as co-authors of a
 #                commit that archives their edits.
 #   messages   — the commit messages; {editors} is the list of accounts.
+#   empty      — what the file of an empty page says ("Empty page" by
+#                default); a comment in .js, .css and Lua files.
 #
 # A page goes to Pages/<lang>/<wiki>/<Title>; a Lua module to
 # Pages/<lang>/<wiki>/Module:<Name>.lua.
@@ -256,6 +259,27 @@ MYARCHIVE = None
 #         "updated": "обновление",
 #         "updated_by": "обновление после правок {editors}",
 #     },
+#     "empty": "Пустая страница",
+# }
+
+# ---------------------------------------------------------------------------
+# The public task log (tasks/publiclog.py): every task that may edit adds a
+# line to User:<bot>/Archive <n> on its wiki — when it started and who started
+# it, by their Fandom account — under a first line that says where to report
+# harmful edits. Off while PUBLIC_LOG is None or any of its four values is
+# missing.
+#
+#   wall_wiki — the w:c: address of the wiki whose message wall takes the
+#               reports: "ru.confederation" for confederation.fandom.com/ru.
+#   wall_user — the account whose message wall that is.
+#   discord   — an invitation link to the Discord server.
+#   telegram  — a link to the Telegram chat or bot.
+PUBLIC_LOG = None
+# PUBLIC_LOG = {
+#     "wall_wiki": "ru.EXAMPLE",
+#     "wall_user": "FANDOM_ACCOUNT",
+#     "discord": "https://discord.gg/INVITE",
+#     "telegram": "https://t.me/CHAT",
 # }
 
 COMMUNITY_SPONSOR_ROLE_IDS = (1249359989282443314, 869587188327788564)
